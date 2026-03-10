@@ -12,6 +12,7 @@
 *.a
 *.exe
 *.out
+*.whl
 .idea
 **.DS_Store**
 **/__pycache__/**
