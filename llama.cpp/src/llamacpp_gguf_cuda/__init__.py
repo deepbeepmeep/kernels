@@ -7,9 +7,12 @@ from .version import __version__
 
 
 _LINEAR_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE"
+_MATMUL_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE"
+_BF16_FP16_ENV = "WGP_GGUF_LLAMACPP_CUDA_BF16_FP16"
 _FAST_LINEAR_QTYPES = {"Q2_K", "Q3_K", "Q4_0", "Q4_1", "Q4_K", "Q5_0", "Q5_1", "Q5_K", "Q6_K", "Q8_0", "IQ1_S", "IQ2_S", "IQ2_XS", "IQ2_XXS", "IQ3_S", "IQ3_XXS", "IQ4_NL", "IQ4_XS"}
 _FAST_EMBEDDING_QTYPES = {"Q4_K", "Q6_K"}
 _LOGGED = set()
+_ENV_CONFIG = ("auto", False, False)
 
 
 def _add_dll_dirs() -> None:
@@ -33,13 +36,49 @@ def _log_once(key: str, message: str) -> None:
     print(message.encode("ascii", errors="ignore").decode("ascii"))
 
 
+def _read_env_config() -> tuple[str, bool, bool]:
+    raw = str(os.environ.get(_MATMUL_MODE_ENV, "")).strip().lower()
+    if raw in ("fast", "materialized", "dense", "cublas"):
+        mode = "fast"
+    elif raw in ("mmq", "packed", "low_vram"):
+        mode = "mmq"
+    else:
+        linear_raw = str(os.environ.get(_LINEAR_MODE_ENV, "auto")).strip().lower()
+        if linear_raw in ("mmq", "legacy", "v3", "mmq_v3", "v4_mmq"):
+            mode = "mmq"
+        elif linear_raw in ("cublas", "dequant", "v4_cublas"):
+            mode = "cublas"
+        else:
+            mode = "auto"
+    bf16_fp16 = str(os.environ.get(_BF16_FP16_ENV, "")).strip().lower() in ("1", "true", "yes", "on")
+    return mode, bool(raw), bf16_fp16
+
+
+def refresh_env() -> str:
+    global _ENV_CONFIG
+    _ENV_CONFIG = _read_env_config()
+    return _ENV_CONFIG[0]
+
+
 def _linear_mode() -> str:
-    raw = str(os.environ.get(_LINEAR_MODE_ENV, "auto")).strip().lower()
-    if raw in ("mmq", "legacy", "v3", "mmq_v3", "v4_mmq"):
-        return "mmq"
-    if raw in ("cublas", "dequant", "v4_cublas"):
-        return "cublas"
-    return "auto"
+    return _ENV_CONFIG[0]
+
+
+def _linear_mode_for_dtype(output_dtype: torch.dtype) -> str:
+    mode, matmul_explicit, bf16_fp16 = _ENV_CONFIG
+    if mode == "fast":
+        _log_once("llamacpp_gguf_cuda_fast", "[GGUF][llama.cpp CUDA v1] matmul mode=fast (MMQ for small workloads, native-dtype materialized cuBLAS otherwise).")
+    elif mode == "mmq" and matmul_explicit:
+        _log_once("llamacpp_gguf_cuda_low_vram", "[GGUF][llama.cpp CUDA v1] matmul mode=mmq (packed weights, no dense weight materialization).")
+    if output_dtype == torch.bfloat16 and mode == "auto" and bf16_fp16:
+        _log_once("llamacpp_gguf_cuda_bf16_fp16", f"[GGUF][llama.cpp CUDA v1] {_BF16_FP16_ENV}=1: BF16 uses the legacy FP16 cuBLAS path.")
+        return "cublas_fp16"
+    if output_dtype == torch.bfloat16 and mode == "auto":
+        _log_once("llamacpp_gguf_cuda_bf16_mmq", "[GGUF][llama.cpp CUDA v1] BF16 auto policy=MMQ on supported GPUs.")
+    return mode
+
+
+refresh_env()
 
 
 def load_error():
@@ -71,7 +110,7 @@ def supports_qtype_name(qtype_name: str) -> bool:
 
 def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype):
     dtype_name = str(output_dtype).replace("torch.", "")
-    return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, dtype_name, _linear_mode())
+    return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, dtype_name, _linear_mode_for_dtype(output_dtype))
 
 
 def embedding(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, indices: torch.Tensor, output_dtype: torch.dtype):
@@ -86,6 +125,7 @@ __all__ = [
     "load_error",
     "may_support_embedding_qtype_name",
     "may_support_linear_qtype_name",
+    "refresh_env",
     "supports_embedding_qtype_name",
     "supports_linear_qtype_name",
     "supports_qtype_name",

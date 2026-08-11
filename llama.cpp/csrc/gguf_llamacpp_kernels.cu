@@ -402,6 +402,12 @@ std::string normalize_linear_mode(const std::string & linear_mode_name) {
     if (linear_mode_name == "cublas" || linear_mode_name == "dequant" || linear_mode_name == "v4_cublas") {
         return "cublas";
     }
+    if (linear_mode_name == "cublas_fp16") {
+        return "cublas_fp16";
+    }
+    if (linear_mode_name == "fast") {
+        return "fast";
+    }
     return "auto";
 }
 
@@ -566,9 +572,39 @@ void gguf_cuda_mul_mat_q_switch_type(ggml_backend_cuda_context & ctx, const mmq_
     }
 }
 
+template <typename src_t>
+static __global__ void compute_mmq_row_scales(
+        const src_t * __restrict__ x, float * __restrict__ row_scales,
+        const int64_t ncols, const float safe_abs) {
+    const int64_t row = blockIdx.x;
+    float amax = 0.0f;
+    for (int64_t col = threadIdx.x; col < ncols; col += blockDim.x) {
+        amax = fmaxf(amax, fabsf(ggml_cuda_cast<float>(x[row * ncols + col])));
+    }
+
+    __shared__ float maxima[256];
+    maxima[threadIdx.x] = amax;
+    __syncthreads();
+    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (threadIdx.x < stride) {
+            maxima[threadIdx.x] = fmaxf(maxima[threadIdx.x], maxima[threadIdx.x + stride]);
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        const float ratio = maxima[0] / safe_abs;
+        row_scales[row] = ratio > 1.0f ? exp2f(ceilf(log2f(ratio))) : 1.0f;
+    }
+}
+
+template <typename src_t>
+void compute_mmq_row_scales_cuda(const src_t * x, float * row_scales, const int64_t nrows, const int64_t ncols, const float safe_abs, cudaStream_t stream) {
+    compute_mmq_row_scales<src_t><<<nrows, 256, 0, stream>>>(x, row_scales, ncols, safe_abs);
+}
+
 template <typename src_t, mmq_q8_1_ds_layout ds_layout>
 static __global__ void quantize_mmq_q8_1_typed(
-        const src_t * __restrict__ x, const int32_t * __restrict__ ids, void * __restrict__ vy,
+        const src_t * __restrict__ x, const int32_t * __restrict__ ids, const float * __restrict__ row_scales, void * __restrict__ vy,
         const int64_t ne00, const int64_t s01, const int64_t s02, const int64_t s03,
         const int64_t ne0, const int ne1, const int ne2) {
 
@@ -593,13 +629,14 @@ static __global__ void quantize_mmq_q8_1_typed(
     const int64_t ib0 = blockIdx.z * ((int64_t) gridDim.x * gridDim.y * blockDim.x / QK8_1);
     const int64_t ib = ib0 + (i0 / (4 * QK8_1)) * ne1 + blockIdx.x;
     const int64_t iqs = i0 % (4 * QK8_1);
+    const float inv_row_scale = ds_layout == MMQ_Q8_1_DS_LAYOUT_D4 ? 1.0f : 1.0f / row_scales[i01];
 
     const float4 xi = i0 < ne00
         ? make_float4(
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 0]),
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 1]),
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 2]),
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 3]))
+            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 0]) * inv_row_scale,
+            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 1]) * inv_row_scale,
+            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 2]) * inv_row_scale,
+            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 3]) * inv_row_scale)
         : make_float4(0.0f, 0.0f, 0.0f, 0.0f);
 
     float amax = fabsf(xi.x);
@@ -658,7 +695,7 @@ static __global__ void quantize_mmq_q8_1_typed(
 
 template <typename src_t>
 void quantize_mmq_q8_1_typed_cuda(
-        const src_t * x, const int32_t * ids, void * vy, const ggml_type type_src0,
+        const src_t * x, const int32_t * ids, const float * row_scales, void * vy, const ggml_type type_src0,
         const int64_t ne00, const int64_t s01, const int64_t s02, const int64_t s03,
         const int64_t ne0, const int64_t ne1, const int64_t ne2, const int64_t ne3, cudaStream_t stream) {
     GGML_ASSERT(ne00 % 4 == 0);
@@ -669,13 +706,13 @@ void quantize_mmq_q8_1_typed_cuda(
     const dim3 block_size(CUDA_QUANTIZE_BLOCK_SIZE_MMQ, 1, 1);
     switch (mmq_get_q8_1_ds_layout(type_src0)) {
         case MMQ_Q8_1_DS_LAYOUT_D4:
-            quantize_mmq_q8_1_typed<src_t, MMQ_Q8_1_DS_LAYOUT_D4><<<num_blocks, block_size, 0, stream>>>(x, ids, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
+            quantize_mmq_q8_1_typed<src_t, MMQ_Q8_1_DS_LAYOUT_D4><<<num_blocks, block_size, 0, stream>>>(x, ids, row_scales, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
             break;
         case MMQ_Q8_1_DS_LAYOUT_DS4:
-            quantize_mmq_q8_1_typed<src_t, MMQ_Q8_1_DS_LAYOUT_DS4><<<num_blocks, block_size, 0, stream>>>(x, ids, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
+            quantize_mmq_q8_1_typed<src_t, MMQ_Q8_1_DS_LAYOUT_DS4><<<num_blocks, block_size, 0, stream>>>(x, ids, row_scales, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
             break;
         case MMQ_Q8_1_DS_LAYOUT_D2S6:
-            quantize_mmq_q8_1_typed<src_t, MMQ_Q8_1_DS_LAYOUT_D2S6><<<num_blocks, block_size, 0, stream>>>(x, ids, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
+            quantize_mmq_q8_1_typed<src_t, MMQ_Q8_1_DS_LAYOUT_D2S6><<<num_blocks, block_size, 0, stream>>>(x, ids, row_scales, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
             break;
         default:
             GGML_ABORT("fatal error");
@@ -683,7 +720,7 @@ void quantize_mmq_q8_1_typed_cuda(
     }
 }
 
-at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor input_2d) {
+at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor input_2d, at::ScalarType output_dtype) {
     const int64_t out_features = tensor_shape.at(0);
     const int64_t in_features = tensor_shape.at(1);
     TORCH_CHECK(input_2d.dim() == 2, "Expected 2D input matrix");
@@ -691,25 +728,46 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
 
     at::Tensor input = input_2d.is_contiguous() ? input_2d : input_2d.contiguous();
     const int64_t batch_rows = input.size(0);
-    at::Tensor output = at::zeros({batch_rows, out_features}, input.options().dtype(at::kFloat));
+    const mmq_dst_type dst_type = output_dtype == at::kBFloat16 ? MMQ_DST_BF16 : output_dtype == at::kHalf ? MMQ_DST_F16 : MMQ_DST_F32;
+    at::Tensor output = at::zeros({batch_rows, out_features}, input.options().dtype(dst_type == MMQ_DST_F32 ? at::kFloat : output_dtype));
     ggml_tensor src0 = make_quantized_src0(raw_weight, type, out_features, in_features);
     cudaStream_t stream = at::cuda::getCurrentCUDAStream(input.device().index()).stream();
     ggml_backend_cuda_context & ctx = get_backend_ctx(input.device().index(), stream);
 
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
+    const mmq_q8_1_ds_layout ds_layout = mmq_get_q8_1_ds_layout(type);
+    const bool rescale_rows = ds_layout != MMQ_Q8_1_DS_LAYOUT_D4;
+    at::Tensor row_scales;
+    if (rescale_rows) {
+        row_scales = at::empty({batch_rows}, input.options().dtype(at::kFloat));
+        const float safe_abs = ds_layout == MMQ_Q8_1_DS_LAYOUT_DS4 ? 2000.0f : 4000.0f;
+        switch (input.scalar_type()) {
+            case at::kFloat:
+                compute_mmq_row_scales_cuda<float>(input.data_ptr<float>(), row_scales.data_ptr<float>(), batch_rows, in_features, safe_abs, stream);
+                break;
+            case at::kHalf:
+                compute_mmq_row_scales_cuda<half>(reinterpret_cast<const half *>(input.data_ptr<at::Half>()), row_scales.data_ptr<float>(), batch_rows, in_features, safe_abs, stream);
+                break;
+            case at::kBFloat16:
+                compute_mmq_row_scales_cuda<nv_bfloat16>(reinterpret_cast<const nv_bfloat16 *>(input.data_ptr<at::BFloat16>()), row_scales.data_ptr<float>(), batch_rows, in_features, safe_abs, stream);
+                break;
+            default:
+                TORCH_CHECK(false, "Unsupported GGUF CUDA input dtype for linear: ", input.scalar_type());
+        }
+    }
     const int64_t padded_row = GGML_PAD(in_features, MATRIX_ROW_PADDING);
     const size_t q8_bytes = static_cast<size_t>(batch_rows * padded_row) * sizeof(block_q8_1) / QK8_1
         + static_cast<size_t>(get_mmq_x_max_host(cc)) * sizeof(block_q8_1_mmq);
     at::Tensor quantized_input = at::zeros({static_cast<int64_t>(q8_bytes)}, input.options().dtype(at::kByte));
     switch (input.scalar_type()) {
         case at::kFloat:
-            quantize_mmq_q8_1_typed_cuda<float>(input.data_ptr<float>(), nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);
+            quantize_mmq_q8_1_typed_cuda<float>(input.data_ptr<float>(), nullptr, rescale_rows ? row_scales.data_ptr<float>() : nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);
             break;
         case at::kHalf:
-            quantize_mmq_q8_1_typed_cuda<half>(reinterpret_cast<const half *>(input.data_ptr<at::Half>()), nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);
+            quantize_mmq_q8_1_typed_cuda<half>(reinterpret_cast<const half *>(input.data_ptr<at::Half>()), nullptr, rescale_rows ? row_scales.data_ptr<float>() : nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);
             break;
         case at::kBFloat16:
-            quantize_mmq_q8_1_typed_cuda<nv_bfloat16>(reinterpret_cast<const nv_bfloat16 *>(input.data_ptr<at::BFloat16>()), nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);
+            quantize_mmq_q8_1_typed_cuda<nv_bfloat16>(reinterpret_cast<const nv_bfloat16 *>(input.data_ptr<at::BFloat16>()), nullptr, rescale_rows ? row_scales.data_ptr<float>() : nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);
             break;
         default:
             TORCH_CHECK(false, "Unsupported GGUF CUDA input dtype for linear: ", input.scalar_type());
@@ -717,14 +775,15 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
     CUDA_CHECK(cudaGetLastError());
 
     const int64_t s01 = src0.nb[1] / ggml_type_size(src0.type);
-    const bool use_stream_k = false;
+    const bool use_stream_k = (GGML_CUDA_CC_IS_NVIDIA(cc) && ggml_cuda_highest_compiled_arch(cc) >= GGML_CUDA_CC_VOLTA)
+                            || GGML_CUDA_CC_IS_CDNA(cc);
     const mmq_args args = {
         static_cast<const char *>(src0.data),
         src0.type,
         reinterpret_cast<const int *>(quantized_input.data_ptr()),
         nullptr,
         nullptr,
-        output.data_ptr<float>(),
+        output.data_ptr(),
         in_features,
         out_features,
         batch_rows,
@@ -743,13 +802,18 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
         0,
         use_stream_k,
         batch_rows,
+        dst_type,
+        rescale_rows ? row_scales.data_ptr<float>() : nullptr,
     };
     gguf_cuda_mul_mat_q_switch_type(ctx, args, stream);
     CUDA_CHECK(cudaGetLastError());
+    if (rescale_rows && dst_type == MMQ_DST_F32) {
+        output.mul_(row_scales.unsqueeze(1));
+    }
     return output;
 }
 
-at::Tensor run_linear_cuda_cublas(const at::Tensor & raw_weight, ggml_type type, const std::vector<int64_t> & tensor_shape, const at::Tensor & input_2d, at::ScalarType output_dtype) {
+at::Tensor run_linear_cuda_cublas(const at::Tensor & raw_weight, ggml_type type, const std::vector<int64_t> & tensor_shape, const at::Tensor & input_2d, at::ScalarType output_dtype, bool force_fp16) {
     const int64_t out_features = tensor_shape.at(0);
     const int64_t in_features = tensor_shape.at(1);
     at::Tensor input = input_2d.is_contiguous() ? input_2d : input_2d.contiguous();
@@ -758,7 +822,37 @@ at::Tensor run_linear_cuda_cublas(const at::Tensor & raw_weight, ggml_type type,
     ggml_backend_cuda_context & ctx = get_backend_ctx(input.device().index(), stream);
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
 
-    if (fast_fp16_hardware_available(cc)) {
+    if (output_dtype == at::kBFloat16 && !force_fp16 && bf16_mma_hardware_available(cc)) {
+        at::Tensor weight_bf16 = convert_contiguous_cuda(raw_weight.data_ptr(), type, at::kBFloat16, out_features * in_features, raw_weight.options(), stream).reshape({out_features, in_features});
+        at::Tensor input_bf16 = cast_tensor_cuda(input, at::kBFloat16, stream);
+        at::Tensor output_bf16 = at::empty({batch_rows, out_features}, input.options().dtype(at::kBFloat16));
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
+        CUBLAS_CHECK(cublasSetStream(ctx.cublas_handle(), stream));
+        CUBLAS_CHECK(cublasGemmEx(
+            ctx.cublas_handle(),
+            CUBLAS_OP_T,
+            CUBLAS_OP_N,
+            out_features,
+            batch_rows,
+            in_features,
+            &alpha,
+            weight_bf16.data_ptr<at::BFloat16>(),
+            CUDA_R_16BF,
+            in_features,
+            input_bf16.data_ptr<at::BFloat16>(),
+            CUDA_R_16BF,
+            in_features,
+            &beta,
+            output_bf16.data_ptr<at::BFloat16>(),
+            CUDA_R_16BF,
+            out_features,
+            CUBLAS_COMPUTE_32F,
+            CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+        return output_bf16;
+    }
+
+    if (fast_fp16_hardware_available(cc) && (output_dtype != at::kBFloat16 || force_fp16)) {
         at::Tensor weight_f16 = convert_contiguous_cuda(raw_weight.data_ptr(), type, at::kHalf, out_features * in_features, raw_weight.options(), stream).reshape({out_features, in_features});
         at::Tensor input_f16 = cast_tensor_cuda(input, at::kHalf, stream);
         at::Tensor output_f16 = at::empty({batch_rows, out_features}, input.options().dtype(at::kHalf));
@@ -1078,6 +1172,9 @@ at::Tensor gguf_cuda_linear(
     const std::string & linear_mode_name) {
     TORCH_CHECK(tensor_shape.size() == 2, "GGUF CUDA linear expects a 2D tensor shape");
     check_cuda_tensor(raw_weight, "raw_weight");
+    if (!input.is_contiguous()) {
+        input = input.contiguous();
+    }
     check_cuda_tensor(input, "input");
     TORCH_CHECK(raw_weight.device() == input.device(), "raw_weight and input must be on the same CUDA device");
 
@@ -1091,8 +1188,10 @@ at::Tensor gguf_cuda_linear(
 
     const std::string linear_mode = normalize_linear_mode(linear_mode_name);
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
-    const bool use_mmq = linear_mode == "mmq" || (linear_mode == "auto" && gguf_cuda_should_use_mmq_local(type, cc, input_2d.size(0)));
-    at::Tensor output = use_mmq ? run_linear_cuda(raw_weight, type, tensor_shape, input_2d) : run_linear_cuda_cublas(raw_weight, type, tensor_shape, input_2d, output_dtype);
+    const bool use_mmq = linear_mode == "mmq"
+        || (linear_mode == "auto" && output_dtype == at::kBFloat16 && ggml_cuda_highest_compiled_arch(cc) >= GGML_CUDA_CC_DP4A)
+        || ((linear_mode == "auto" || linear_mode == "fast") && gguf_cuda_should_use_mmq_local(type, cc, input_2d.size(0)));
+    at::Tensor output = use_mmq ? run_linear_cuda(raw_weight, type, tensor_shape, input_2d, output_dtype) : run_linear_cuda_cublas(raw_weight, type, tensor_shape, input_2d, output_dtype, linear_mode == "cublas_fp16");
     if (output.scalar_type() != output_dtype) {
         output = output.to(output_dtype);
     }
