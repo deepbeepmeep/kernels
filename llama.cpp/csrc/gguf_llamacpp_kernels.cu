@@ -13,6 +13,7 @@
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDAGuard.h>
 
+#include <atomic>
 #include <cstdarg>
 #include <cstdio>
 #include <memory>
@@ -149,6 +150,23 @@ std::mutex g_cuda_info_mutex;
 std::unique_ptr<ggml_cuda_device_info> g_cuda_info;
 std::mutex g_backend_ctx_mutex;
 std::unique_ptr<ggml_backend_cuda_context> g_backend_contexts[GGML_CUDA_MAX_DEVICES];
+constexpr int64_t kDefaultStreamKWorkspaceSize = 16LL * 1024 * 1024;
+std::atomic<bool> g_stream_k_enabled{true};
+std::atomic<int64_t> g_stream_k_workspace_size{kDefaultStreamKWorkspaceSize};
+std::mutex g_stream_k_workspace_mutex;
+
+struct StreamKWorkspace {
+    at::Tensor tensor;
+    int64_t capacity = 0;
+};
+
+struct StreamKWorkspaceView {
+    void * data = nullptr;
+    size_t size = 0;
+};
+
+StreamKWorkspace g_stream_k_workspaces[GGML_CUDA_MAX_DEVICES];
+std::vector<at::Tensor> g_retired_stream_k_workspaces[GGML_CUDA_MAX_DEVICES];
 
 std::string format_message(const char * fmt, va_list args) {
     char buffer[4096];
@@ -597,6 +615,32 @@ static __global__ void compute_mmq_row_scales(
     }
 }
 
+StreamKWorkspaceView get_stream_k_workspace(int device, cudaStream_t stream, const at::TensorOptions & options) {
+    if (!g_stream_k_enabled.load(std::memory_order_relaxed)) {
+        return {};
+    }
+    const int64_t requested_size = g_stream_k_workspace_size.load(std::memory_order_relaxed);
+    if (requested_size <= 0) {
+        return {};
+    }
+
+    std::lock_guard<std::mutex> lock(g_stream_k_workspace_mutex);
+    StreamKWorkspace & workspace = g_stream_k_workspaces[device];
+    if (workspace.capacity < requested_size) {
+        cudaStreamCaptureStatus capture_status = cudaStreamCaptureStatusNone;
+        CUDA_CHECK(cudaStreamIsCapturing(stream, &capture_status));
+        if (capture_status != cudaStreamCaptureStatusNone) {
+            return {};
+        }
+        if (workspace.tensor.defined()) {
+            g_retired_stream_k_workspaces[device].push_back(workspace.tensor);
+        }
+        workspace.tensor = at::empty({requested_size}, options.dtype(at::kByte));
+        workspace.capacity = requested_size;
+    }
+    return {workspace.tensor.data_ptr(), static_cast<size_t>(requested_size)};
+}
+
 template <typename src_t>
 void compute_mmq_row_scales_cuda(const src_t * x, float * row_scales, const int64_t nrows, const int64_t ncols, const float safe_abs, cudaStream_t stream) {
     compute_mmq_row_scales<src_t><<<nrows, 256, 0, stream>>>(x, row_scales, ncols, safe_abs);
@@ -775,8 +819,9 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
     CUDA_CHECK(cudaGetLastError());
 
     const int64_t s01 = src0.nb[1] / ggml_type_size(src0.type);
-    const bool use_stream_k = (GGML_CUDA_CC_IS_NVIDIA(cc) && ggml_cuda_highest_compiled_arch(cc) >= GGML_CUDA_CC_VOLTA)
-                            || GGML_CUDA_CC_IS_CDNA(cc);
+    const bool use_stream_k = g_stream_k_enabled.load(std::memory_order_relaxed)
+        && ((GGML_CUDA_CC_IS_NVIDIA(cc) && ggml_cuda_highest_compiled_arch(cc) >= GGML_CUDA_CC_VOLTA) || GGML_CUDA_CC_IS_CDNA(cc));
+    const StreamKWorkspaceView stream_k_workspace = use_stream_k ? get_stream_k_workspace(input.device().index(), stream, input.options()) : StreamKWorkspaceView{};
     const mmq_args args = {
         static_cast<const char *>(src0.data),
         src0.type,
@@ -804,6 +849,8 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
         batch_rows,
         dst_type,
         rescale_rows ? row_scales.data_ptr<float>() : nullptr,
+        stream_k_workspace.data,
+        stream_k_workspace.size,
     };
     gguf_cuda_mul_mat_q_switch_type(ctx, args, stream);
     CUDA_CHECK(cudaGetLastError());
@@ -1149,6 +1196,21 @@ template void mul_mat_q_case<GGML_TYPE_IQ3_S>(ggml_backend_cuda_context & ctx, c
 template void mul_mat_q_case<GGML_TYPE_IQ3_XXS>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
 template void mul_mat_q_case<GGML_TYPE_IQ4_NL>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
 template void mul_mat_q_case<GGML_TYPE_IQ4_XS>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
+
+void gguf_cuda_configure_stream_k(bool enabled, int64_t workspace_size) {
+    TORCH_CHECK(workspace_size >= 0, "Stream-K workspace size must be non-negative");
+    g_stream_k_workspace_size.store(workspace_size, std::memory_order_relaxed);
+    g_stream_k_enabled.store(enabled && workspace_size > 0, std::memory_order_relaxed);
+}
+
+std::vector<int64_t> gguf_cuda_stream_k_config() {
+    std::lock_guard<std::mutex> lock(g_stream_k_workspace_mutex);
+    int64_t allocated_size = 0;
+    for (const StreamKWorkspace & workspace : g_stream_k_workspaces) {
+        allocated_size += workspace.capacity;
+    }
+    return {g_stream_k_enabled.load(std::memory_order_relaxed) ? 1 : 0, g_stream_k_workspace_size.load(std::memory_order_relaxed), allocated_size};
+}
 
 bool gguf_cuda_supports_linear_qtype_name(const std::string & qtype_name) {
     return qtype_name == "Q2_K" || qtype_name == "Q3_K" || qtype_name == "Q4_0" || qtype_name == "Q4_1" || qtype_name == "Q4_K" || qtype_name == "Q5_0" || qtype_name == "Q5_1" || qtype_name == "Q5_K" || qtype_name == "Q6_K" || qtype_name == "Q8_0" || qtype_name == "IQ1_S" || qtype_name == "IQ2_S" || qtype_name == "IQ2_XS" || qtype_name == "IQ2_XXS" || qtype_name == "IQ3_S" || qtype_name == "IQ3_XXS" || qtype_name == "IQ4_NL" || qtype_name == "IQ4_XS";

@@ -1,3 +1,4 @@
+import math
 import os
 from pathlib import Path
 
@@ -9,10 +10,13 @@ from .version import __version__
 _LINEAR_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE"
 _MATMUL_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE"
 _BF16_FP16_ENV = "WGP_GGUF_LLAMACPP_CUDA_BF16_FP16"
+_STREAM_K_ENV = "WGP_GGUF_LLAMACPP_CUDA_STREAM_K"
+_STREAM_K_BUFFER_MB_ENV = "WGP_GGUF_LLAMACPP_CUDA_STREAM_K_BUFFER_MB"
+_DEFAULT_STREAM_K_BUFFER_SIZE = 16 * 1024 * 1024
 _FAST_LINEAR_QTYPES = {"Q2_K", "Q3_K", "Q4_0", "Q4_1", "Q4_K", "Q5_0", "Q5_1", "Q5_K", "Q6_K", "Q8_0", "IQ1_S", "IQ2_S", "IQ2_XS", "IQ2_XXS", "IQ3_S", "IQ3_XXS", "IQ4_NL", "IQ4_XS"}
 _FAST_EMBEDDING_QTYPES = {"Q4_K", "Q6_K"}
 _LOGGED = set()
-_ENV_CONFIG = ("auto", False, False)
+_ENV_CONFIG = ("auto", False, False, True, _DEFAULT_STREAM_K_BUFFER_SIZE)
 
 
 def _add_dll_dirs() -> None:
@@ -36,7 +40,30 @@ def _log_once(key: str, message: str) -> None:
     print(message.encode("ascii", errors="ignore").decode("ascii"))
 
 
-def _read_env_config() -> tuple[str, bool, bool]:
+def _read_bool_env(name: str, default: bool) -> bool:
+    raw = str(os.environ.get(name, "")).strip().lower()
+    if raw in ("", "auto", "default"):
+        return default
+    if raw in ("1", "true", "yes", "on", "enable", "enabled"):
+        return True
+    if raw in ("0", "false", "no", "off", "disable", "disabled"):
+        return False
+    raise ValueError(f"{name} must be auto, on, or off; got {raw!r}")
+
+
+def _read_stream_k_buffer_size() -> int:
+    raw = str(os.environ.get(_STREAM_K_BUFFER_MB_ENV, "16")).strip()
+    try:
+        size_mib = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{_STREAM_K_BUFFER_MB_ENV} must be a non-negative MiB value; got {raw!r}") from exc
+    if not math.isfinite(size_mib) or size_mib < 0:
+        raise ValueError(f"{_STREAM_K_BUFFER_MB_ENV} must be a finite, non-negative MiB value; got {raw!r}")
+    size = int(size_mib * 1024 * 1024)
+    return (size + 255) // 256 * 256
+
+
+def _read_env_config() -> tuple[str, bool, bool, bool, int]:
     raw = str(os.environ.get(_MATMUL_MODE_ENV, "")).strip().lower()
     if raw in ("fast", "materialized", "dense", "cublas"):
         mode = "fast"
@@ -51,12 +78,15 @@ def _read_env_config() -> tuple[str, bool, bool]:
         else:
             mode = "auto"
     bf16_fp16 = str(os.environ.get(_BF16_FP16_ENV, "")).strip().lower() in ("1", "true", "yes", "on")
-    return mode, bool(raw), bf16_fp16
+    stream_k = _read_bool_env(_STREAM_K_ENV, True)
+    stream_k_buffer_size = _read_stream_k_buffer_size()
+    return mode, bool(raw), bf16_fp16, stream_k and stream_k_buffer_size > 0, stream_k_buffer_size
 
 
 def refresh_env() -> str:
     global _ENV_CONFIG
     _ENV_CONFIG = _read_env_config()
+    _C.configure_stream_k(_ENV_CONFIG[3], _ENV_CONFIG[4])
     return _ENV_CONFIG[0]
 
 
@@ -65,7 +95,7 @@ def _linear_mode() -> str:
 
 
 def _linear_mode_for_dtype(output_dtype: torch.dtype) -> str:
-    mode, matmul_explicit, bf16_fp16 = _ENV_CONFIG
+    mode, matmul_explicit, bf16_fp16 = _ENV_CONFIG[:3]
     if mode == "fast":
         _log_once("llamacpp_gguf_cuda_fast", "[GGUF][llama.cpp CUDA v1] matmul mode=fast (MMQ for small workloads, native-dtype materialized cuBLAS otherwise).")
     elif mode == "mmq" and matmul_explicit:

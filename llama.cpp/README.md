@@ -44,6 +44,18 @@ Materialized BF16 uses BF16 inputs and weights with FP32 accumulation.
 Environment selection is cached at import. After changing one of these variables in
 an existing Python process, call `llamacpp_gguf_cuda.refresh_env()` between generations.
 
+Stream-K is enabled by default. `WGP_GGUF_LLAMACPP_CUDA_STREAM_K=0` disables only
+Stream-K while retaining the packed-weight MMQ path; `1`, `on`, and `auto` enable it.
+`WGP_GGUF_LLAMACPP_CUDA_STREAM_K_BUFFER_MB` sets the persistent per-device fixup
+workspace in MiB and defaults to `16`. A value of `0` also disables Stream-K. The
+workspace is allocated lazily by the first eager MMQ call, retained until module/process
+shutdown, and reused during CUDA graph recording and replay. If a requested MMQ launch
+needs more than the configured workspace, that launch transparently uses conventional
+MMQ tiling. Both variables are cached by the same `refresh_env()` call and are never
+read from the environment in the kernel call path.
+Refreshing changes eager calls and subsequent graph captures; already-recorded CUDA
+graphs must be recreated before they can reflect a new Stream-K setting.
+
 In `auto` mode, BF16 output uses MMQ on supported GPUs. Set
 `WGP_GGUF_LLAMACPP_CUDA_BF16_FP16=1` to restore the legacy behavior that
 computes BF16 requests through the FP16 cuBLAS path. An explicit

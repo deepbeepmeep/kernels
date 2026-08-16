@@ -3942,6 +3942,7 @@ struct mmq_args {
     int64_t nchannels_x; int64_t nchannels_y; int64_t stride_channel_x; int64_t stride_channel_y; int64_t stride_channel_dst;
     int64_t nsamples_x; int64_t nsamples_y; int64_t stride_sample_x; int64_t stride_sample_y; int64_t stride_sample_dst;
     bool use_stream_k; int64_t ncols_max; mmq_dst_type dst_type; const float * dst_scales;
+    void * stream_k_workspace; size_t stream_k_workspace_size;
 };
 
 template<ggml_type type>
@@ -3956,6 +3957,7 @@ static size_t mmq_get_nbytes_shared(const int mmq_x, const int mmq_y, const int 
 
 template <ggml_type type, int mmq_x>
 static void launch_mul_mat_q(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream) {
+    GGML_UNUSED(ctx);
     const int id = ggml_cuda_get_device();
     const int cc = ggml_cuda_info().devices[id].cc;
     const int nsm = ggml_cuda_info().devices[id].nsm;
@@ -3980,7 +3982,15 @@ static void launch_mul_mat_q(ggml_backend_cuda_context & ctx, const mmq_args & a
     const int channel_ratio = args.nchannels_y / args.nchannels_x;
     const int sample_ratio  = args.nsamples_y  / args.nsamples_x;
 
-    if (!args.use_stream_k) {
+    const dim3 block_nums_stream_k(nsm, 1, 1);
+    const bool fixup_needed = ntx*nty*ntzw % nsm != 0;
+    const size_t fixup_elements = static_cast<size_t>(block_nums_stream_k.x) * mmq_x*mmq_y;
+    const size_t fixup_buffers = args.dst_type == MMQ_DST_F32 ? 1 : 2;
+    const size_t workspace_required = fixup_needed ? fixup_elements * fixup_buffers * sizeof(float) : 0;
+    const bool use_stream_k = args.use_stream_k
+        && (!fixup_needed || (args.stream_k_workspace != nullptr && args.stream_k_workspace_size >= workspace_required));
+
+    if (!use_stream_k) {
         if (args.nrows_x % mmq_y == 0) {
             constexpr bool need_check = false;
             mul_mat_q<type, mmq_x, need_check><<<block_nums_xy_tiling, block_dims, nbytes_shared, stream>>>
@@ -4001,23 +4011,13 @@ static void launch_mul_mat_q(ggml_backend_cuda_context & ctx, const mmq_args & a
         return;
     }
 
-    const dim3 block_nums_stream_k(nsm, 1, 1);
-    const bool fixup_needed = ntx*nty*ntzw % nsm != 0;
-
-    ggml_cuda_pool & pool = ctx.pool(id);
-    ggml_cuda_pool_alloc<float> tmp_fixup(pool);
-    ggml_cuda_pool_alloc<float> tmp_fixup_begin(pool);
-    if (fixup_needed) {
-        tmp_fixup.alloc(block_nums_stream_k.x * mmq_x*mmq_y);
-        if (args.dst_type != MMQ_DST_F32) {
-            tmp_fixup_begin.alloc(block_nums_stream_k.x * mmq_x*mmq_y);
-        }
-    }
+    float * tmp_fixup = fixup_needed ? static_cast<float *>(args.stream_k_workspace) : nullptr;
+    float * tmp_fixup_begin = fixup_needed && args.dst_type != MMQ_DST_F32 ? tmp_fixup + fixup_elements : nullptr;
 
     if (args.nrows_x % mmq_y == 0) {
         constexpr bool need_check = false;
         mul_mat_q<type, mmq_x, need_check><<<block_nums_stream_k, block_dims, nbytes_shared, stream>>>
-            (args.x, args.y, args.ids_dst, args.expert_bounds, args.dst, tmp_fixup.ptr, tmp_fixup_begin.ptr, args.dst_scales,
+            (args.x, args.y, args.ids_dst, args.expert_bounds, args.dst, tmp_fixup, tmp_fixup_begin, args.dst_scales,
              args.ncols_x, args.nrows_x, args.ncols_dst, args.stride_row_x, args.ncols_y, args.nrows_dst,
              channel_ratio, args.nchannels_y, args.stride_channel_x, args.stride_channel_y, args.stride_channel_dst,
              sample_ratio, args.nsamples_y, args.stride_sample_x, args.stride_sample_y, args.stride_sample_dst,
@@ -4028,13 +4028,13 @@ static void launch_mul_mat_q(ggml_backend_cuda_context & ctx, const mmq_args & a
         }
 
         mul_mat_q_stream_k_fixup<type, mmq_x, need_check><<<block_nums_stream_k, block_dims, 0, stream>>>
-            (args.ids_dst, args.expert_bounds, args.dst, tmp_fixup.ptr, tmp_fixup_begin.ptr, args.dst_scales, args.ncols_x, args.nrows_x, args.ncols_dst,
+            (args.ids_dst, args.expert_bounds, args.dst, tmp_fixup, tmp_fixup_begin, args.dst_scales, args.ncols_x, args.nrows_x, args.ncols_dst,
              args.nrows_dst, args.nchannels_y, args.stride_channel_dst, args.nsamples_y, args.stride_sample_dst,
              args.ncols_max, args.dst_type);
     } else {
         constexpr bool need_check = true;
         mul_mat_q<type, mmq_x, need_check><<<block_nums_stream_k, block_dims, nbytes_shared, stream>>>
-            (args.x, args.y, args.ids_dst, args.expert_bounds, args.dst, tmp_fixup.ptr, tmp_fixup_begin.ptr, args.dst_scales,
+            (args.x, args.y, args.ids_dst, args.expert_bounds, args.dst, tmp_fixup, tmp_fixup_begin, args.dst_scales,
              args.ncols_x, args.nrows_x, args.ncols_dst, args.stride_row_x, args.ncols_y, args.nrows_dst,
              channel_ratio, args.nchannels_y, args.stride_channel_x, args.stride_channel_y, args.stride_channel_dst,
              sample_ratio, args.nsamples_y, args.stride_sample_x, args.stride_sample_y, args.stride_sample_dst,
@@ -4045,7 +4045,7 @@ static void launch_mul_mat_q(ggml_backend_cuda_context & ctx, const mmq_args & a
         }
 
         mul_mat_q_stream_k_fixup<type, mmq_x, need_check><<<block_nums_stream_k, block_dims, 0, stream>>>
-            (args.ids_dst, args.expert_bounds, args.dst, tmp_fixup.ptr, tmp_fixup_begin.ptr, args.dst_scales, args.ncols_x, args.nrows_x, args.ncols_dst,
+            (args.ids_dst, args.expert_bounds, args.dst, tmp_fixup, tmp_fixup_begin, args.dst_scales, args.ncols_x, args.nrows_x, args.ncols_dst,
              args.nrows_dst, args.nchannels_y, args.stride_channel_dst, args.nsamples_y, args.stride_sample_dst,
              args.ncols_max, args.dst_type);
     }

@@ -8,6 +8,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("supports_linear_qtype_name", &gguf_cuda_supports_linear_qtype_name, "Return whether the CUDA GGUF linear fast path supports the qtype.");
     m.def("supports_embedding_qtype_name", &gguf_cuda_supports_embedding_qtype_name, "Return whether the CUDA GGUF embedding fast path supports the qtype.");
     m.def("supports_qtype_name", &gguf_cuda_supports_qtype_name, "Return whether the CUDA GGUF fast path supports the qtype.");
+    m.def("configure_stream_k", &gguf_cuda_configure_stream_k, "Configure cached Stream-K state and its persistent workspace size.");
+    m.def("stream_k_config", &gguf_cuda_stream_k_config, "Return Stream-K enabled, configured, and allocated workspace bytes.");
     m.def(
         "linear",
         &gguf_cuda_linear,

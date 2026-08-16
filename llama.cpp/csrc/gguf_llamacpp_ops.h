@@ -9,6 +9,8 @@
 bool gguf_cuda_supports_linear_qtype_name(const std::string & qtype_name);
 bool gguf_cuda_supports_embedding_qtype_name(const std::string & qtype_name);
 bool gguf_cuda_supports_qtype_name(const std::string & qtype_name);
+void gguf_cuda_configure_stream_k(bool enabled, int64_t workspace_size);
+std::vector<int64_t> gguf_cuda_stream_k_config();
 
 at::Tensor gguf_cuda_linear(
     at::Tensor raw_weight,
