@@ -68,7 +68,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.8"
+BASE_VERSION = "1.0.11"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")
@@ -120,8 +120,13 @@ extra_compile_args = {
     "nvcc": NVCC_FLAGS,
 }
 
-ext_modules = [
-    CUDAExtension(
+BUILD_COMPONENTS = {name.strip() for name in os.environ.get("LLAMACPP_GGUF_CUDA_BUILD_COMPONENTS", "linear,attention").split(",") if name.strip()}
+if not BUILD_COMPONENTS <= {"linear", "attention"}:
+    raise ValueError(f"Unknown LLAMACPP_GGUF_CUDA_BUILD_COMPONENTS: {sorted(BUILD_COMPONENTS)}")
+
+ext_modules = []
+if "linear" in BUILD_COMPONENTS:
+    ext_modules.append(CUDAExtension(
         name="llamacpp_gguf_cuda._C",
         sources=[
             str(CSRC / "gguf_llamacpp_bindings.cpp"),
@@ -139,8 +144,22 @@ ext_modules = [
         ],
         extra_compile_args=extra_compile_args,
         libraries=["cublas"],
-    )
-]
+    ))
+if "attention" in BUILD_COMPONENTS:
+    ext_modules.append(CUDAExtension(
+        name="llamacpp_gguf_cuda._attention",
+        sources=[
+            str(CSRC / "q8_paged_attention_bindings.cpp"),
+            str(CSRC / "q8_paged_attention.cu"),
+        ],
+        include_dirs=[
+            str(ROOT / GGML / "include"),
+            str(ROOT / GGML / "src"),
+            str(ROOT / GGML / "src" / "ggml-cuda"),
+            str(ROOT / CSRC),
+        ],
+        extra_compile_args=extra_compile_args,
+    ))
 
 setup(
     version=PACKAGE_VERSION,

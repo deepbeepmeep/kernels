@@ -5,6 +5,9 @@ Reusable GGUF CUDA kernels packaged as a wheel.
 This package exposes the unified GGUF CUDA path used in WanGP:
 - `linear` with `auto/mmq/cublas` backend selection
 - `embedding` for supported GGUF qtypes
+- decode-only paged Q8 KV-cache attention derived from llama.cpp `fattn-vec`, with native FP16/BF16 I/O and FP32 accumulation
+
+`q8_paged_attention` consumes INT8 K/V pages with one FP16 Q8_0 scale per 32 values. Its paged traversal and reduction adapt llama.cpp's vector attention structure to Nano-vLLM block tables, while Q8_1 query quantization and Q8_0 x Q8_1 `dp4a` products reuse llama.cpp CUDA primitives directly. It supports grouped-query attention, batched single-token decode, and causal multi-token speculative verification without materializing the full cache. It selects power-of-two split-K partitions with llama.cpp's occupancy and GPU-wave-efficiency heuristic, constrained by cache capacity and capped at 32 after SM89 graph-replay tuning. Temporary storage uses PyTorch and is safe to record and replay in CUDA graphs. Prompt prefill is intentionally outside this API.
 
 ## Build
 
@@ -15,6 +18,7 @@ C:\Users\Marc\anaconda3\envs\py311\python.exe -m pip wheel . --no-build-isolatio
 
 By default the wheel builds a fatbin for every GPU code reported by the local CUDA toolkit `nvcc --list-gpu-code`.
 Set `TORCH_CUDA_ARCH_LIST` explicitly if you want to override that and build a narrower wheel.
+Set `LLAMACPP_GGUF_CUDA_BUILD_COMPONENTS=attention` to rebuild only the attention extension while repackaging an existing compatible MMQ/cuBLAS `_C` binary.
 
 ## Install
 

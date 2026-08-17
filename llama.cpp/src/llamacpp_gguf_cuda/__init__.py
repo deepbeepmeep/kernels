@@ -32,6 +32,11 @@ _add_dll_dirs()
 
 from . import _C
 
+try:
+    from . import _attention
+except ImportError:  # Older wheels remain usable for GGUF linear operations.
+    _attention = None
+
 
 def _log_once(key: str, message: str) -> None:
     if key in _LOGGED:
@@ -115,6 +120,26 @@ def load_error():
     return None
 
 
+def has_q8_paged_attention() -> bool:
+    return _attention is not None
+
+
+def q8_paged_attention_format() -> str:
+    return "q8_0_fp16_scales_v1" if _attention is not None else ""
+
+
+def q8_paged_attention(query, key_cache, value_cache, key_scales, value_scales, block_table, context_lens, softmax_scale, forced_num_splits=0):
+    if _attention is None:
+        raise RuntimeError("This llamacpp-gguf-cuda wheel does not include Q8 paged attention.")
+    return _attention.q8_paged_attention(query, key_cache, value_cache, key_scales, value_scales, block_table, context_lens, softmax_scale, forced_num_splits)
+
+
+def q8_paged_attention_num_splits(query, cache_capacity):
+    if _attention is None:
+        raise RuntimeError("This llamacpp-gguf-cuda wheel does not include Q8 paged attention.")
+    return _attention.q8_paged_attention_num_splits(query, cache_capacity)
+
+
 def may_support_linear_qtype_name(qtype_name: str) -> bool:
     return qtype_name in _FAST_LINEAR_QTYPES
 
@@ -153,9 +178,13 @@ __all__ = [
     "embedding",
     "linear",
     "load_error",
+    "has_q8_paged_attention",
+    "q8_paged_attention_format",
     "may_support_embedding_qtype_name",
     "may_support_linear_qtype_name",
     "refresh_env",
+    "q8_paged_attention",
+    "q8_paged_attention_num_splits",
     "supports_embedding_qtype_name",
     "supports_linear_qtype_name",
     "supports_qtype_name",
