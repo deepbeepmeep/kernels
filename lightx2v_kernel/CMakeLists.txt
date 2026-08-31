@@ -20,6 +20,8 @@ endif()
 
 # Torch
 find_package(Torch REQUIRED)
+# to fix compilation under windows with P3.13cu131 see https://github.com/pytorch/pytorch/issues/166123#issuecomment-3983442525
+add_compile_definitions(WIN32_LEAN_AND_MEAN)
 # clean Torch Flag
 clear_cuda_arches(CMAKE_FLAG)
 

@@ -1,8 +1,16 @@
 # lightx2v_kernel
 
 ### Preparation
+
+In Windows you need to install cmake. For example you run this in a MSVC developer console.
+
+
+Create a python virtual environment then install torch, uv and scikit:
+
 ```
-# Install torch, at least version 2.7
+
+# Install torch, at least version 2.7 e.g. 
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
 
 pip install scikit_build_core uv
 ```
@@ -10,21 +18,34 @@ pip install scikit_build_core uv
 ### Build whl
 
 ```
+#clone cutlass
 git clone https://github.com/NVIDIA/cutlass.git
+#clone this repo
+git clone https://github.com/deepbeepmeep/kernels
 
-git clone https://github.com/ModelTC/LightX2V.git
+cd kernels
+cd lightx2v_kernel
+```
 
-cd LightX2V/lightx2v_kernel
+Set the max Jobs and parallel level to the amount of cores that you have.
+Set the /path/to/cutlass below to the absolute path of cutlass you download.
 
-# Set the /path/to/cutlass below to the absolute path of cutlass you download.
 
-MAX_JOBS=$(nproc) && CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
-uv build --wheel \
-    -Cbuild-dir=build . \
-    -Ccmake.define.CUTLASS_PATH=/path/to/cutlass \
-    --verbose \
-    --color=always \
-    --no-build-isolation
+in windows
+```bash
+set MAX_JOBS=6 
+set CMAKE_BUILD_PARALLEL_LEVEL=6
+``` 
+
+in Linux
+```bash
+set MAX_JOBS=6 
+set CMAKE_BUILD_PARALLEL_LEVEL=6
+``` 
+
+no build the wheel
+``` 
+uv build --wheel -Cbuild-dir=build . -Ccmake.define.CUTLASS_PATH=/path/to/cutlass --verbose --color=always --no-build-isolation
 ```
 
 
