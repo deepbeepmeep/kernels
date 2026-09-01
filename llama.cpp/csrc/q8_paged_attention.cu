@@ -169,7 +169,7 @@ void launch_partials_dim(const int8_t * q, const __half * qs, const int8_t * k, 
 template <int SPLITS>
 void launch_partials(const int8_t * q, const __half * qs, const int8_t * k, const int8_t * v, const __half * ks, const __half * vs, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int num_queries, int num_sequences, int qh, int kvh, int dim, int page, int blocks, int width, float scale, cudaStream_t stream) {
     #define CASE_DIM(D) case D: launch_partials_dim<SPLITS, D>(q, qs, k, v, ks, vs, tables, lengths, pv, pm, ps, num_queries, num_sequences, qh, kvh, page, blocks, width, scale, stream); break
-    switch (dim) { CASE_DIM(32); CASE_DIM(64); CASE_DIM(128); CASE_DIM(256); }
+    switch (dim) { CASE_DIM(32); CASE_DIM(64); CASE_DIM(96); CASE_DIM(128); CASE_DIM(160); CASE_DIM(192); CASE_DIM(224); CASE_DIM(256); }
     #undef CASE_DIM
 }
 
@@ -181,7 +181,7 @@ void launch_reduce_dim(const float * v, const float * m, const float * s, T * ou
 template <typename T, int SPLITS>
 void launch_reduce(const float * v, const float * m, const float * s, T * out, int batch, int heads, int dim, cudaStream_t stream) {
     #define CASE_DIM(D) case D: launch_reduce_dim<T, SPLITS, D>(v, m, s, out, batch, heads, stream); break
-    switch (dim) { CASE_DIM(32); CASE_DIM(64); CASE_DIM(128); CASE_DIM(256); }
+    switch (dim) { CASE_DIM(32); CASE_DIM(64); CASE_DIM(96); CASE_DIM(128); CASE_DIM(160); CASE_DIM(192); CASE_DIM(224); CASE_DIM(256); }
     #undef CASE_DIM
 }
 } // namespace
