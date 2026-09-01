@@ -15,6 +15,17 @@ template <typename T> __device__ __forceinline__ T from_float(float value);
 template <> __device__ __forceinline__ __half from_float(float value) { return __float2half_rn(value); }
 template <> __device__ __forceinline__ __nv_bfloat16 from_float(float value) { return __float2bfloat16_rn(value); }
 
+__device__ __forceinline__ int packed_dot_i8(int a, int b) {
+#if __CUDA_ARCH__ >= 610
+    return __dp4a(a, b, 0);
+#else
+    int result = 0;
+    #pragma unroll
+    for (int byte = 0; byte < 4; ++byte) result += static_cast<int>(static_cast<int8_t>(a >> (byte * 8))) * static_cast<int>(static_cast<int8_t>(b >> (byte * 8)));
+    return result;
+#endif
+}
+
 template <typename T>
 __global__ void quantize_query_kernel(const T * query, int8_t * quantized_query, float * scales, float * sums, int query_heads, int head_dim) {
     const int q_index = blockIdx.x, q_head = blockIdx.y, q_block = blockIdx.z;
@@ -71,7 +82,7 @@ __global__ void attention_partials_kernel(const int8_t * query, const float * qu
             local_pack = 0;
             for (int pack = threadIdx.x; pack < packed_count; pack += kThreads, ++local_pack) {
                 const int key_pack = reinterpret_cast<const int *>(key_cache + cache_base)[pack];
-                dot += static_cast<float>(__dp4a(query_packs[local_pack], key_pack, 0)) * packed_scales[local_pack] * __half2float(key_scales[scale_base + (pack * 4) / kQuantBlock]);
+                dot += static_cast<float>(packed_dot_i8(query_packs[local_pack], key_pack)) * packed_scales[local_pack] * __half2float(key_scales[scale_base + (pack * 4) / kQuantBlock]);
             }
         }
         for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(0xffffffff, dot, offset);
