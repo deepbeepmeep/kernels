@@ -68,7 +68,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.11"
+BASE_VERSION = "1.0.12"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")
@@ -84,6 +84,11 @@ BASE_NVCC_FLAGS = [
     "-U__CUDA_NO_BFLOAT16_CONVERSIONS__",
     "-U__CUDA_NO_HALF2_OPERATORS__",
 ]
+if os.name == "nt":
+    BASE_NVCC_FLAGS.extend(["-Xcompiler", "/Zc:preprocessor"])
+NVCC_THREADS = os.environ.get("LLAMACPP_GGUF_CUDA_NVCC_THREADS", "").strip()
+if NVCC_THREADS:
+    BASE_NVCC_FLAGS.append(f"--threads={NVCC_THREADS}")
 
 
 def _fatbin_arch_flags() -> list[str]:
@@ -108,6 +113,13 @@ def _fatbin_arch_flags() -> list[str]:
 NVCC_FLAGS = BASE_NVCC_FLAGS + _fatbin_arch_flags()
 
 
+def _env_path_list(name: str) -> list[str]:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return []
+    return [path for path in raw.split(os.pathsep) if path and os.path.isdir(path)]
+
+
 def _write_version_file() -> None:
     version_file = ROOT / "src" / "llamacpp_gguf_cuda" / "version.py"
     version_file.write_text(f'__version__ = "{PACKAGE_VERSION}"\n', encoding="utf-8")
@@ -115,18 +127,21 @@ def _write_version_file() -> None:
 
 _write_version_file()
 
+EXTRA_INCLUDE_DIRS = _env_path_list("LLAMACPP_GGUF_CUDA_INCLUDE_DIRS")
+EXTRA_LIBRARY_DIRS = _env_path_list("LLAMACPP_GGUF_CUDA_LIB_DIRS")
+EXTRA_LINK_ARGS: list[str] = []
+if os.name != "nt":
+    EXTRA_LINK_ARGS.extend(["-static-libstdc++", "-static-libgcc"])
+    for library_dir in EXTRA_LIBRARY_DIRS:
+        EXTRA_LINK_ARGS.extend(["-Wl,-rpath," + library_dir])
+
 extra_compile_args = {
-    "cxx": ["/std:c++17", "/EHsc", "/O2"] if os.name == "nt" else ["-std=c++17", "-O3"],
+    "cxx": ["/std:c++17", "/EHsc", "/O2", "/Zc:preprocessor"] if os.name == "nt" else ["-std=c++17", "-O3"],
     "nvcc": NVCC_FLAGS,
 }
 
-BUILD_COMPONENTS = {name.strip() for name in os.environ.get("LLAMACPP_GGUF_CUDA_BUILD_COMPONENTS", "linear,attention").split(",") if name.strip()}
-if not BUILD_COMPONENTS <= {"linear", "attention"}:
-    raise ValueError(f"Unknown LLAMACPP_GGUF_CUDA_BUILD_COMPONENTS: {sorted(BUILD_COMPONENTS)}")
-
-ext_modules = []
-if "linear" in BUILD_COMPONENTS:
-    ext_modules.append(CUDAExtension(
+ext_modules = [
+    CUDAExtension(
         name="llamacpp_gguf_cuda._C",
         sources=[
             str(CSRC / "gguf_llamacpp_bindings.cpp"),
@@ -141,25 +156,20 @@ if "linear" in BUILD_COMPONENTS:
             str(ROOT / GGML / "src"),
             str(ROOT / GGML / "src" / "ggml-cuda"),
             str(ROOT / CSRC),
-        ],
+        ] + EXTRA_INCLUDE_DIRS,
         extra_compile_args=extra_compile_args,
+        extra_link_args=EXTRA_LINK_ARGS,
         libraries=["cublas"],
-    ))
-if "attention" in BUILD_COMPONENTS:
-    ext_modules.append(CUDAExtension(
+        library_dirs=EXTRA_LIBRARY_DIRS,
+    ),
+    CUDAExtension(
         name="llamacpp_gguf_cuda._attention",
-        sources=[
-            str(CSRC / "q8_paged_attention_bindings.cpp"),
-            str(CSRC / "q8_paged_attention.cu"),
-        ],
-        include_dirs=[
-            str(ROOT / GGML / "include"),
-            str(ROOT / GGML / "src"),
-            str(ROOT / GGML / "src" / "ggml-cuda"),
-            str(ROOT / CSRC),
-        ],
+        sources=[str(CSRC / "q8_paged_attention_bindings.cpp"), str(CSRC / "q8_paged_attention.cu")],
         extra_compile_args=extra_compile_args,
-    ))
+        extra_link_args=EXTRA_LINK_ARGS,
+        library_dirs=EXTRA_LIBRARY_DIRS,
+    ),
+]
 
 setup(
     version=PACKAGE_VERSION,

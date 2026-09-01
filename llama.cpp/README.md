@@ -11,6 +11,25 @@ This package exposes the unified GGUF CUDA path used in WanGP:
 
 ## Build
 
+### WSL / Linux
+
+The repo includes a target-aware WSL build helper:
+
+```bash
+cd /mnt/e/ML/kernels/llama.cpp
+chmod +x scripts/build_wsl_wheels.sh
+./scripts/build_wsl_wheels.sh py310
+./scripts/build_wsl_wheels.sh py311
+```
+
+Supported Linux targets:
+- `py310`: conda `base`, Python `3.10`, PyTorch `2.7.1+cu128`, Linux CUDA toolkit `12.8`
+- `py311`: conda `py311`, Python `3.11`, PyTorch `2.10.0+cu130`, env-local CUDA toolkit `13.x`
+
+Set `MAX_JOBS` to control parallel compilation and `TORCH_CUDA_ARCH_LIST` if you want to narrow the generated fatbin.
+
+### Windows
+
 ```powershell
 cd E:\ML\kernels\llama.cpp
 C:\Users\Marc\anaconda3\envs\py311\python.exe -m pip wheel . --no-build-isolation -w dist
