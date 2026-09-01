@@ -46,7 +46,8 @@ void validate_inputs(const at::Tensor & query, const at::Tensor & key_cache, con
     TORCH_CHECK(block_tables.is_cuda() && context_lens.is_cuda() && block_tables.scalar_type() == at::kInt && context_lens.scalar_type() == at::kInt, "block_tables and context_lens must be CUDA int32 tensors");
     TORCH_CHECK(block_tables.dim() == 2 && context_lens.dim() == 1 && block_tables.is_contiguous() && context_lens.is_contiguous(), "block_tables/context_lens have invalid layout");
     TORCH_CHECK(block_tables.size(0) > 0 && block_tables.size(1) > 0 && context_lens.size(0) > 0, "block_tables/context_lens dimensions must be nonzero");
-    TORCH_CHECK(block_tables.size(0) == query.size(0) && context_lens.size(0) == query.size(0), "one block table and context length are required per query row");
+    TORCH_CHECK(block_tables.size(0) == context_lens.size(0), "block_tables and context_lens must have the same sequence count");
+    TORCH_CHECK(block_tables.size(0) == 1 || block_tables.size(0) == query.size(0), "one sequence may own all query rows, otherwise one sequence is required per query row");
     TORCH_CHECK(key_cache.size(2) > 0 && query.size(1) % key_cache.size(2) == 0, "query_heads must be divisible by kv_heads");
     TORCH_CHECK(query.size(2) == key_cache.size(3), "query and cache head dimensions must match");
     TORCH_CHECK(query.size(2) <= 256 && query.size(2) % kQuantBlock == 0, "head_dim must be a multiple of 32 no larger than 256");
@@ -66,8 +67,7 @@ at::Tensor q8_paged_attention(at::Tensor query, at::Tensor key_cache, at::Tensor
 
     auto float_options = query.options().dtype(at::kFloat);
     auto quantized_query = at::empty(query.sizes(), query.options().dtype(at::kChar));
-    auto query_scales = at::empty({query.size(0), query.size(1), query.size(2) / kQuantBlock}, float_options);
-    auto query_sums = at::empty_like(query_scales);
+    auto query_scales = at::empty({query.size(0), query.size(1), query.size(2) / kQuantBlock}, query.options().dtype(at::kHalf));
     auto partial_values = at::empty({query.size(0), query.size(1), num_splits, query.size(2)}, float_options);
     auto partial_maxima = at::empty({query.size(0), query.size(1), num_splits}, float_options);
     auto partial_sums = at::empty({query.size(0), query.size(1), num_splits}, float_options);
@@ -75,9 +75,9 @@ at::Tensor q8_paged_attention(at::Tensor query, at::Tensor key_cache, at::Tensor
     cudaStream_t stream = at::cuda::getCurrentCUDAStream(query.get_device());
     const bool bfloat16 = query.scalar_type() == at::kBFloat16;
 
-    q8_quantize_query_cuda(query.const_data_ptr(), bfloat16, quantized_query.data_ptr<int8_t>(), query_scales.data_ptr<float>(), query_sums.data_ptr<float>(), query.size(0), query.size(1), query.size(2), stream);
+    q8_quantize_query_cuda(query.const_data_ptr(), bfloat16, quantized_query.data_ptr<int8_t>(), query_scales.mutable_data_ptr(), query.size(0), query.size(1), query.size(2), stream);
     C10_CUDA_KERNEL_LAUNCH_CHECK();
-    q8_attention_partials_cuda(quantized_query.data_ptr<int8_t>(), query_scales.data_ptr<float>(), key_cache.data_ptr<int8_t>(), value_cache.data_ptr<int8_t>(), key_scales.const_data_ptr(), value_scales.const_data_ptr(), block_tables.data_ptr<int32_t>(), context_lens.data_ptr<int32_t>(), partial_values.data_ptr<float>(), partial_maxima.data_ptr<float>(), partial_sums.data_ptr<float>(), query.size(0), query.size(1), key_cache.size(2), query.size(2), key_cache.size(1), key_cache.size(0), block_tables.size(1), num_splits, static_cast<float>(softmax_scale), stream);
+    q8_attention_partials_cuda(quantized_query.data_ptr<int8_t>(), query_scales.const_data_ptr(), key_cache.data_ptr<int8_t>(), value_cache.data_ptr<int8_t>(), key_scales.const_data_ptr(), value_scales.const_data_ptr(), block_tables.data_ptr<int32_t>(), context_lens.data_ptr<int32_t>(), partial_values.data_ptr<float>(), partial_maxima.data_ptr<float>(), partial_sums.data_ptr<float>(), query.size(0), block_tables.size(0), query.size(1), key_cache.size(2), query.size(2), key_cache.size(1), key_cache.size(0), block_tables.size(1), num_splits, static_cast<float>(softmax_scale), stream);
     C10_CUDA_KERNEL_LAUNCH_CHECK();
     q8_attention_reduce_cuda(partial_values.data_ptr<float>(), partial_maxima.data_ptr<float>(), partial_sums.data_ptr<float>(), output.mutable_data_ptr(), bfloat16, query.size(0), query.size(1), query.size(2), num_splits, stream);
     C10_CUDA_KERNEL_LAUNCH_CHECK();

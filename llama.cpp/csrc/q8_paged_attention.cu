@@ -6,7 +6,9 @@
 
 namespace {
 constexpr int kQuantBlock = 32;
-constexpr int kThreads = 32;
+constexpr int kWarp = 32;
+constexpr int kWarps = 4;
+constexpr int kThreads = kWarp * kWarps;
 
 template <typename T> __device__ __forceinline__ float to_float(T value);
 template <> __device__ __forceinline__ float to_float(__half value) { return __half2float(value); }
@@ -27,134 +29,178 @@ __device__ __forceinline__ int packed_dot_i8(int a, int b) {
 }
 
 template <typename T>
-__global__ void quantize_query_kernel(const T * query, int8_t * quantized_query, float * scales, float * sums, int query_heads, int head_dim) {
-    const int q_index = blockIdx.x, q_head = blockIdx.y, q_block = blockIdx.z;
-    const int dim = q_block * kQuantBlock + threadIdx.x;
-    const int64_t q_base = (static_cast<int64_t>(q_index) * query_heads + q_head) * head_dim;
-    const float value = to_float(query[q_base + dim]);
+__global__ void quantize_query_kernel(const T * query, int8_t * quantized, __half * scales, int heads, int dim) {
+    const int q = blockIdx.x, head = blockIdx.y, qblock = blockIdx.z;
+    const int d = qblock * kQuantBlock + threadIdx.x;
+    const int64_t base = (static_cast<int64_t>(q) * heads + head) * dim;
+    const float value = to_float(query[base + d]);
     float maximum = fabsf(value);
     for (int offset = 16; offset; offset >>= 1) maximum = fmaxf(maximum, __shfl_down_sync(0xffffffff, maximum, offset));
     maximum = __shfl_sync(0xffffffff, maximum, 0);
     const float scale = fmaxf(maximum / 127.0f, 1.0e-8f);
-    const int quantized = max(-127, min(127, __float2int_rn(value / scale)));
-    quantized_query[q_base + dim] = static_cast<int8_t>(quantized);
-    int sum = quantized;
-    for (int offset = 16; offset; offset >>= 1) sum += __shfl_down_sync(0xffffffff, sum, offset);
-    if (threadIdx.x == 0) {
-        const int64_t index = (static_cast<int64_t>(q_index) * query_heads + q_head) * (head_dim / kQuantBlock) + q_block;
-        scales[index] = scale;
-        sums[index] = scale * static_cast<float>(sum);
-    }
+    quantized[base + d] = static_cast<int8_t>(max(-127, min(127, __float2int_rn(value / scale))));
+    if (threadIdx.x == 0) scales[(static_cast<int64_t>(q) * heads + head) * (dim / kQuantBlock) + qblock] = __float2half_rn(scale);
 }
 
-__global__ void attention_partials_kernel(const int8_t * query, const float * query_scales, const int8_t * key_cache, const int8_t * value_cache, const __half * key_scales, const __half * value_scales, const int32_t * block_tables, const int32_t * context_lens, float * partial_values, float * partial_maxima, float * partial_sums, int query_heads, int kv_heads, int head_dim, int page_size, int num_cache_blocks, int table_width, int num_splits, float softmax_scale) {
-    const int q_index = blockIdx.x, q_head = blockIdx.y, split = blockIdx.z;
-    const int kv_head = q_head / (query_heads / kv_heads);
-    const int context_len = min(max(0, context_lens[q_index]), table_width * page_size);
-    const int split_size = (context_len + num_splits - 1) / num_splits;
-    const int token_begin = split * split_size;
-    const int token_end = min(context_len, token_begin + split_size);
-    const int quant_blocks = head_dim / kQuantBlock;
+template <int SPLITS, int DIM>
+__global__ void attention_partials_kernel(const int8_t * query, const __half * query_scales, const int8_t * keys, const int8_t * values, const __half * key_scales, const __half * value_scales, const int32_t * tables, const int32_t * lengths, float * partial_values, float * partial_maxima, float * partial_sums, int num_queries, int num_sequences, int q_heads, int kv_heads, int page, int blocks, int table_width, float softmax_scale) {
+    const int q = blockIdx.x, head = blockIdx.y, split = blockIdx.z;
+    const int warp = threadIdx.x / kWarp, lane = threadIdx.x % kWarp;
+    const int kv_head = head / (q_heads / kv_heads);
+    const int sequence = num_sequences == num_queries ? q : 0;
+    const int causal_offset = num_sequences == 1 ? num_queries - 1 - q : 0;
+    const int context = min(max(0, lengths[sequence] - causal_offset), table_width * page);
+    const int split_size = (context + SPLITS - 1) / SPLITS;
+    const int begin = split * split_size, end = min(context, begin + split_size);
+    constexpr int qblocks = DIM / kQuantBlock, packs = DIM / 4;
+    const int64_t qbase = (static_cast<int64_t>(q) * q_heads + head) * DIM;
+    int qp[2] = {0, 0};
+    float qs[2] = {0.0f, 0.0f};
+    int lp = 0;
+    for (int pack = lane; pack < packs; pack += kWarp, ++lp) {
+        qp[lp] = reinterpret_cast<const int *>(query + qbase)[pack];
+        qs[lp] = __half2float(query_scales[(static_cast<int64_t>(q) * q_heads + head) * qblocks + pack / 8]);
+    }
     float accumulator[8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     float maximum = -INFINITY, denominator = 0.0f;
-    const int64_t q_base = (static_cast<int64_t>(q_index) * query_heads + q_head) * head_dim;
-    const int packed_count = head_dim / 4;
-    int query_packs[2] = {0, 0};
-    float packed_scales[2] = {0.0f, 0.0f};
-    int local_pack = 0;
-    for (int pack = threadIdx.x; pack < packed_count; pack += kThreads, ++local_pack) {
-        query_packs[local_pack] = reinterpret_cast<const int *>(query + q_base)[pack];
-        packed_scales[local_pack] = query_scales[(static_cast<int64_t>(q_index) * query_heads + q_head) * quant_blocks + (pack * 4) / kQuantBlock];
-    }
 
-    for (int token = token_begin; token < token_end; ++token) {
-        const int logical_block = token / page_size;
-        const int token_in_block = token % page_size;
-        const int physical_block = block_tables[q_index * table_width + logical_block];
-        const bool valid = physical_block >= 0 && physical_block < num_cache_blocks;
+    for (int token = begin + warp; token < end; token += kWarps) {
+        const int physical = tables[sequence * table_width + token / page];
+        const bool valid = physical >= 0 && physical < blocks;
         int64_t cache_base = 0, scale_base = 0;
         if (valid) {
-            cache_base = ((static_cast<int64_t>(physical_block) * page_size + token_in_block) * kv_heads + kv_head) * head_dim;
-            scale_base = ((static_cast<int64_t>(physical_block) * page_size + token_in_block) * kv_heads + kv_head) * quant_blocks;
+            cache_base = ((static_cast<int64_t>(physical) * page + token % page) * kv_heads + kv_head) * DIM;
+            scale_base = ((static_cast<int64_t>(physical) * page + token % page) * kv_heads + kv_head) * qblocks;
         }
         float dot = 0.0f;
         if (valid) {
-            local_pack = 0;
-            for (int pack = threadIdx.x; pack < packed_count; pack += kThreads, ++local_pack) {
-                const int key_pack = reinterpret_cast<const int *>(key_cache + cache_base)[pack];
-                dot += static_cast<float>(packed_dot_i8(query_packs[local_pack], key_pack)) * packed_scales[local_pack] * __half2float(key_scales[scale_base + (pack * 4) / kQuantBlock]);
+            lp = 0;
+            for (int pack = lane; pack < packs; pack += kWarp, ++lp) {
+                dot += static_cast<float>(packed_dot_i8(qp[lp], reinterpret_cast<const int *>(keys + cache_base)[pack])) * qs[lp] * __half2float(key_scales[scale_base + pack / 8]);
             }
         }
         for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(0xffffffff, dot, offset);
         float alpha = 1.0f, probability = 0.0f;
-        if (threadIdx.x == 0 && valid) {
+        if (lane == 0 && valid) {
             const float score = dot * softmax_scale;
-            const float next_maximum = fmaxf(maximum, score);
-            alpha = isfinite(maximum) ? expf(maximum - next_maximum) : 0.0f;
-            probability = expf(score - next_maximum);
+            const float next = fmaxf(maximum, score);
+            alpha = isfinite(maximum) ? expf(maximum - next) : 0.0f;
+            probability = expf(score - next);
             denominator = denominator * alpha + probability;
-            maximum = next_maximum;
+            maximum = next;
         }
         alpha = __shfl_sync(0xffffffff, alpha, 0);
         probability = __shfl_sync(0xffffffff, probability, 0);
         if (valid) {
-            local_pack = 0;
-            for (int pack = threadIdx.x; pack < packed_count; pack += kThreads, ++local_pack) {
-                const int packed_value = reinterpret_cast<const int *>(value_cache + cache_base)[pack];
-                const float value_scale = __half2float(value_scales[scale_base + pack / 8]);
-                const int accumulator_base = local_pack * 4;
-                accumulator[accumulator_base + 0] = accumulator[accumulator_base + 0] * alpha + probability * static_cast<float>(static_cast<int8_t>( packed_value        & 0xff)) * value_scale;
-                accumulator[accumulator_base + 1] = accumulator[accumulator_base + 1] * alpha + probability * static_cast<float>(static_cast<int8_t>((packed_value >>  8) & 0xff)) * value_scale;
-                accumulator[accumulator_base + 2] = accumulator[accumulator_base + 2] * alpha + probability * static_cast<float>(static_cast<int8_t>((packed_value >> 16) & 0xff)) * value_scale;
-                accumulator[accumulator_base + 3] = accumulator[accumulator_base + 3] * alpha + probability * static_cast<float>(static_cast<int8_t>((packed_value >> 24) & 0xff)) * value_scale;
+            lp = 0;
+            for (int pack = lane; pack < packs; pack += kWarp, ++lp) {
+                const int packed = reinterpret_cast<const int *>(values + cache_base)[pack];
+                const float scale = __half2float(value_scales[scale_base + pack / 8]);
+                const int a = lp * 4;
+                accumulator[a + 0] = accumulator[a + 0] * alpha + probability * static_cast<float>(static_cast<int8_t>( packed        & 0xff)) * scale;
+                accumulator[a + 1] = accumulator[a + 1] * alpha + probability * static_cast<float>(static_cast<int8_t>((packed >>  8) & 0xff)) * scale;
+                accumulator[a + 2] = accumulator[a + 2] * alpha + probability * static_cast<float>(static_cast<int8_t>((packed >> 16) & 0xff)) * scale;
+                accumulator[a + 3] = accumulator[a + 3] * alpha + probability * static_cast<float>(static_cast<int8_t>((packed >> 24) & 0xff)) * scale;
             }
         }
     }
-    const int64_t partial = (static_cast<int64_t>(q_index) * query_heads + q_head) * num_splits + split;
-    if (threadIdx.x == 0) { partial_maxima[partial] = maximum; partial_sums[partial] = denominator; }
-    local_pack = 0;
-    for (int pack = threadIdx.x; pack < packed_count; pack += kThreads, ++local_pack) {
-        reinterpret_cast<float4 *>(partial_values + partial * head_dim)[pack] = make_float4(
-            accumulator[local_pack * 4 + 0], accumulator[local_pack * 4 + 1],
-            accumulator[local_pack * 4 + 2], accumulator[local_pack * 4 + 3]);
+
+    extern __shared__ float shared[];
+    float * warp_values = shared;
+    float * warp_maxima = shared + kWarps * DIM;
+    float * warp_sums = warp_maxima + kWarps;
+    lp = 0;
+    for (int pack = lane; pack < packs; pack += kWarp, ++lp) reinterpret_cast<float4 *>(warp_values + warp * DIM)[pack] = make_float4(accumulator[lp * 4], accumulator[lp * 4 + 1], accumulator[lp * 4 + 2], accumulator[lp * 4 + 3]);
+    if (lane == 0) { warp_maxima[warp] = maximum; warp_sums[warp] = denominator; }
+    __syncthreads();
+
+    if (warp == 0) {
+        float merged_maximum = -INFINITY, merged_sum = 0.0f;
+        if (lane == 0) {
+            #pragma unroll
+            for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged_maximum = fmaxf(merged_maximum, warp_maxima[w]);
+            #pragma unroll
+            for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged_sum += warp_sums[w] * expf(warp_maxima[w] - merged_maximum);
+        }
+        merged_maximum = __shfl_sync(0xffffffff, merged_maximum, 0);
+        merged_sum = __shfl_sync(0xffffffff, merged_sum, 0);
+        const int64_t partial = (static_cast<int64_t>(q) * q_heads + head) * SPLITS + split;
+        for (int d = lane; d < DIM; d += kWarp) {
+            float merged = 0.0f;
+            #pragma unroll
+            for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged += warp_values[w * DIM + d] * expf(warp_maxima[w] - merged_maximum);
+            partial_values[partial * DIM + d] = merged;
+        }
+        if (lane == 0) { partial_maxima[partial] = merged_maximum; partial_sums[partial] = merged_sum; }
     }
 }
 
-template <typename T>
-__global__ void attention_reduce_kernel(const float * values, const float * maxima, const float * sums, T * output, int query_heads, int head_dim, int num_splits) {
-    const int q_index = blockIdx.x, q_head = blockIdx.y;
-    const int64_t base = (static_cast<int64_t>(q_index) * query_heads + q_head) * num_splits;
-    float global_maximum = -INFINITY, global_denominator = 0.0f;
+template <typename T, int SPLITS, int DIM>
+__global__ void attention_reduce_kernel(const float * values, const float * maxima, const float * sums, T * output, int heads) {
+    const int q = blockIdx.x, head = blockIdx.y;
+    const int64_t base = (static_cast<int64_t>(q) * heads + head) * SPLITS;
+    float maximum = -INFINITY, denominator = 0.0f;
     if (threadIdx.x == 0) {
-        for (int split = 0; split < num_splits; ++split) if (sums[base + split] > 0.0f) global_maximum = fmaxf(global_maximum, maxima[base + split]);
-        for (int split = 0; split < num_splits; ++split) if (sums[base + split] > 0.0f) global_denominator += sums[base + split] * expf(maxima[base + split] - global_maximum);
+        #pragma unroll
+        for (int s = 0; s < SPLITS; ++s) if (sums[base + s] > 0.0f) maximum = fmaxf(maximum, maxima[base + s]);
+        #pragma unroll
+        for (int s = 0; s < SPLITS; ++s) if (sums[base + s] > 0.0f) denominator += sums[base + s] * expf(maxima[base + s] - maximum);
     }
-    global_maximum = __shfl_sync(0xffffffff, global_maximum, 0);
-    global_denominator = __shfl_sync(0xffffffff, global_denominator, 0);
-    const int64_t output_base = (static_cast<int64_t>(q_index) * query_heads + q_head) * head_dim;
-    for (int dim = threadIdx.x; dim < head_dim; dim += kThreads) {
+    maximum = __shfl_sync(0xffffffff, maximum, 0);
+    denominator = __shfl_sync(0xffffffff, denominator, 0);
+    const int64_t out = (static_cast<int64_t>(q) * heads + head) * DIM;
+    for (int d = threadIdx.x; d < DIM; d += kWarp) {
         float value = 0.0f;
-        if (global_denominator > 0.0f) {
-            for (int split = 0; split < num_splits; ++split) if (sums[base + split] > 0.0f) value += values[(base + split) * head_dim + dim] * expf(maxima[base + split] - global_maximum);
-            value /= global_denominator;
+        if (denominator > 0.0f) {
+            #pragma unroll
+            for (int s = 0; s < SPLITS; ++s) if (sums[base + s] > 0.0f) value += values[(base + s) * DIM + d] * expf(maxima[base + s] - maximum);
+            value /= denominator;
         }
-        output[output_base + dim] = from_float<T>(value);
+        output[out + d] = from_float<T>(value);
     }
+}
+
+template <int SPLITS, int DIM>
+void launch_partials_dim(const int8_t * q, const __half * qs, const int8_t * k, const int8_t * v, const __half * ks, const __half * vs, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int num_queries, int num_sequences, int qh, int kvh, int page, int blocks, int width, float scale, cudaStream_t stream) {
+    constexpr size_t shared = static_cast<size_t>(kWarps) * (DIM + 2) * sizeof(float);
+    attention_partials_kernel<SPLITS, DIM><<<dim3(num_queries, qh, SPLITS), kThreads, shared, stream>>>(q, qs, k, v, ks, vs, tables, lengths, pv, pm, ps, num_queries, num_sequences, qh, kvh, page, blocks, width, scale);
+}
+
+template <int SPLITS>
+void launch_partials(const int8_t * q, const __half * qs, const int8_t * k, const int8_t * v, const __half * ks, const __half * vs, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int num_queries, int num_sequences, int qh, int kvh, int dim, int page, int blocks, int width, float scale, cudaStream_t stream) {
+    #define CASE_DIM(D) case D: launch_partials_dim<SPLITS, D>(q, qs, k, v, ks, vs, tables, lengths, pv, pm, ps, num_queries, num_sequences, qh, kvh, page, blocks, width, scale, stream); break
+    switch (dim) { CASE_DIM(32); CASE_DIM(64); CASE_DIM(128); CASE_DIM(256); }
+    #undef CASE_DIM
+}
+
+template <typename T, int SPLITS, int DIM>
+void launch_reduce_dim(const float * v, const float * m, const float * s, T * out, int batch, int heads, cudaStream_t stream) {
+    attention_reduce_kernel<T, SPLITS, DIM><<<dim3(batch, heads), kWarp, 0, stream>>>(v, m, s, out, heads);
+}
+
+template <typename T, int SPLITS>
+void launch_reduce(const float * v, const float * m, const float * s, T * out, int batch, int heads, int dim, cudaStream_t stream) {
+    #define CASE_DIM(D) case D: launch_reduce_dim<T, SPLITS, D>(v, m, s, out, batch, heads, stream); break
+    switch (dim) { CASE_DIM(32); CASE_DIM(64); CASE_DIM(128); CASE_DIM(256); }
+    #undef CASE_DIM
 }
 } // namespace
 
-void q8_quantize_query_cuda(const void * query, bool bf16, int8_t * quantized, float * scales, float * sums, int batch, int heads, int dim, cudaStream_t stream) {
+void q8_quantize_query_cuda(const void * query, bool bf16, int8_t * quantized, void * scales, int batch, int heads, int dim, cudaStream_t stream) {
     const dim3 grid(batch, heads, dim / kQuantBlock);
-    if (bf16) quantize_query_kernel<<<grid, kQuantBlock, 0, stream>>>(static_cast<const __nv_bfloat16 *>(query), quantized, scales, sums, heads, dim);
-    else quantize_query_kernel<<<grid, kQuantBlock, 0, stream>>>(static_cast<const __half *>(query), quantized, scales, sums, heads, dim);
+    if (bf16) quantize_query_kernel<<<grid, kWarp, 0, stream>>>(static_cast<const __nv_bfloat16 *>(query), quantized, static_cast<__half *>(scales), heads, dim);
+    else quantize_query_kernel<<<grid, kWarp, 0, stream>>>(static_cast<const __half *>(query), quantized, static_cast<__half *>(scales), heads, dim);
 }
 
-void q8_attention_partials_cuda(const int8_t * query, const float * q_scales, const int8_t * keys, const int8_t * values, const void * k_scales, const void * v_scales, const int32_t * tables, const int32_t * lengths, float * partial_values, float * maxima, float * sums, int batch, int q_heads, int kv_heads, int dim, int page, int blocks, int table_width, int splits, float scale, cudaStream_t stream) {
-    attention_partials_kernel<<<dim3(batch, q_heads, splits), kThreads, 0, stream>>>(query, q_scales, keys, values, static_cast<const __half *>(k_scales), static_cast<const __half *>(v_scales), tables, lengths, partial_values, maxima, sums, q_heads, kv_heads, dim, page, blocks, table_width, splits, scale);
+void q8_attention_partials_cuda(const int8_t * q, const void * qs, const int8_t * k, const int8_t * v, const void * ks, const void * vs, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int num_queries, int num_sequences, int qh, int kvh, int dim, int page, int blocks, int width, int splits, float scale, cudaStream_t stream) {
+    #define CASE_PARTIAL(N) case N: launch_partials<N>(q, static_cast<const __half *>(qs), k, v, static_cast<const __half *>(ks), static_cast<const __half *>(vs), tables, lengths, pv, pm, ps, num_queries, num_sequences, qh, kvh, dim, page, blocks, width, scale, stream); break
+    switch (splits) { CASE_PARTIAL(1); CASE_PARTIAL(2); CASE_PARTIAL(4); CASE_PARTIAL(8); CASE_PARTIAL(16); CASE_PARTIAL(32); CASE_PARTIAL(64); CASE_PARTIAL(128); }
+    #undef CASE_PARTIAL
 }
 
-void q8_attention_reduce_cuda(const float * values, const float * maxima, const float * sums, void * output, bool bf16, int batch, int heads, int dim, int splits, cudaStream_t stream) {
-    const dim3 grid(batch, heads);
-    if (bf16) attention_reduce_kernel<<<grid, kThreads, 0, stream>>>(values, maxima, sums, static_cast<__nv_bfloat16 *>(output), heads, dim, splits);
-    else attention_reduce_kernel<<<grid, kThreads, 0, stream>>>(values, maxima, sums, static_cast<__half *>(output), heads, dim, splits);
+void q8_attention_reduce_cuda(const float * v, const float * m, const float * s, void * out, bool bf16, int batch, int heads, int dim, int splits, cudaStream_t stream) {
+    #define CASE_REDUCE(N, T) case N: launch_reduce<T, N>(v, m, s, static_cast<T *>(out), batch, heads, dim, stream); break
+    if (bf16) { switch (splits) { CASE_REDUCE(1, __nv_bfloat16); CASE_REDUCE(2, __nv_bfloat16); CASE_REDUCE(4, __nv_bfloat16); CASE_REDUCE(8, __nv_bfloat16); CASE_REDUCE(16, __nv_bfloat16); CASE_REDUCE(32, __nv_bfloat16); CASE_REDUCE(64, __nv_bfloat16); CASE_REDUCE(128, __nv_bfloat16); } }
+    else { switch (splits) { CASE_REDUCE(1, __half); CASE_REDUCE(2, __half); CASE_REDUCE(4, __half); CASE_REDUCE(8, __half); CASE_REDUCE(16, __half); CASE_REDUCE(32, __half); CASE_REDUCE(64, __half); CASE_REDUCE(128, __half); } }
+    #undef CASE_REDUCE
 }
