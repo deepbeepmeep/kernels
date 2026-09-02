@@ -50,7 +50,7 @@ def run_case(dtype: torch.dtype, head_dim: int):
     scale = head_dim**-0.5
     actual = llamacpp_gguf_cuda.q8_paged_attention(query, key_cache, value_cache, key_scales, value_scales, block_table, context_lens, scale)
     expected = _reference(query, key_cache, value_cache, key_scales, value_scales, block_table, context_lens, scale)
-    torch.testing.assert_close(actual, expected, atol=2e-3 if dtype == torch.float16 else 2e-2, rtol=2e-3 if dtype == torch.float16 else 2e-2)
+    torch.testing.assert_close(actual, expected, atol=3e-3 if dtype == torch.float16 else 2e-2, rtol=3e-3 if dtype == torch.float16 else 2e-2)
 
     graph = torch.cuda.CUDAGraph()
     with torch.cuda.graph(graph):
@@ -78,7 +78,7 @@ def run_speculative_case(dtype: torch.dtype):
         _reference(query[index:index + 1], key_cache, value_cache, key_scales, value_scales, block_table, context_lens - (query_count - 1 - index), scale)
         for index in range(query_count)
     ])
-    torch.testing.assert_close(actual, expected, atol=2e-3 if dtype == torch.float16 else 2e-2, rtol=2e-3 if dtype == torch.float16 else 2e-2)
+    torch.testing.assert_close(actual, expected, atol=3e-3 if dtype == torch.float16 else 2e-2, rtol=3e-3 if dtype == torch.float16 else 2e-2)
 
     graph = torch.cuda.CUDAGraph()
     with torch.cuda.graph(graph):

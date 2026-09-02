@@ -89,6 +89,12 @@ def q8_paged_attention_num_splits(query, cache_capacity):
     return _attention.q8_paged_attention_num_splits(query, cache_capacity)
 
 
+def dense_paged_attention(query, key_cache, value_cache, block_table, context_lens, softmax_scale, forced_num_splits=0):
+    if _attention is None:
+        raise RuntimeError("This llamacpp-gguf-cuda wheel does not include dense paged attention.")
+    return _attention.dense_paged_attention(query, key_cache, value_cache, block_table, context_lens, softmax_scale, forced_num_splits)
+
+
 def may_support_linear_qtype_name(qtype_name: str) -> bool:
     return qtype_name in _FAST_LINEAR_QTYPES
 
@@ -125,6 +131,6 @@ def embedding(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, indices: 
 
 __all__ = [
     "__version__", "embedding", "linear", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
-    "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits",
+    "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits", "dense_paged_attention",
     "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name",
 ]

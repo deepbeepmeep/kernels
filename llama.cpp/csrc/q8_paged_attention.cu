@@ -178,6 +178,82 @@ void launch_reduce_dim(const float * v, const float * m, const float * s, T * ou
     attention_reduce_kernel<T, SPLITS, DIM><<<dim3(batch, heads), kWarp, 0, stream>>>(v, m, s, out, heads);
 }
 
+template <typename T, int SPLITS, int DIM>
+__global__ void dense_attention_partials_kernel(const T * query, const T * keys, const T * values, const int32_t * tables, const int32_t * lengths, float * partial_values, float * partial_maxima, float * partial_sums, int num_queries, int num_sequences, int q_heads, int kv_heads, int page, int blocks, int table_width, float softmax_scale) {
+    const int q = blockIdx.x, head = blockIdx.y, split = blockIdx.z;
+    const int warp = threadIdx.x / kWarp, lane = threadIdx.x % kWarp;
+    const int kv_head = head / (q_heads / kv_heads);
+    const int sequence = num_sequences == num_queries ? q : 0;
+    const int causal_offset = num_sequences == 1 ? num_queries - 1 - q : 0;
+    const int context = min(max(0, lengths[sequence] - causal_offset), table_width * page);
+    const int split_size = (context + SPLITS - 1) / SPLITS;
+    const int begin = split * split_size, end = min(context, begin + split_size);
+    constexpr int per_lane = DIM / kWarp;
+    const int64_t qbase = (static_cast<int64_t>(q) * q_heads + head) * DIM;
+    float qv[per_lane], acc[per_lane];
+    #pragma unroll
+    for (int i = 0; i < per_lane; ++i) { qv[i] = to_float(query[qbase + lane + i * kWarp]); acc[i] = 0.0f; }
+    float maximum = -INFINITY, denominator = 0.0f;
+    for (int token = begin + warp; token < end; token += kWarps) {
+        const int physical = tables[sequence * table_width + token / page];
+        const bool valid = physical >= 0 && physical < blocks;
+        const int64_t base = valid ? ((static_cast<int64_t>(physical) * page + token % page) * kv_heads + kv_head) * DIM : 0;
+        float dot = 0.0f;
+        if (valid) {
+            #pragma unroll
+            for (int i = 0; i < per_lane; ++i) dot += qv[i] * to_float(keys[base + lane + i * kWarp]);
+        }
+        for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(0xffffffff, dot, offset);
+        float alpha = 1.0f, probability = 0.0f;
+        if (lane == 0 && valid) {
+            const float score = dot * softmax_scale, next = fmaxf(maximum, score);
+            alpha = isfinite(maximum) ? expf(maximum - next) : 0.0f;
+            probability = expf(score - next);
+            denominator = denominator * alpha + probability;
+            maximum = next;
+        }
+        alpha = __shfl_sync(0xffffffff, alpha, 0); probability = __shfl_sync(0xffffffff, probability, 0);
+        if (valid) {
+            #pragma unroll
+            for (int i = 0; i < per_lane; ++i) acc[i] = acc[i] * alpha + probability * to_float(values[base + lane + i * kWarp]);
+        }
+    }
+    extern __shared__ float shared[];
+    float * warp_values = shared, * warp_maxima = shared + kWarps * DIM, * warp_sums = warp_maxima + kWarps;
+    #pragma unroll
+    for (int i = 0; i < per_lane; ++i) warp_values[warp * DIM + lane + i * kWarp] = acc[i];
+    if (lane == 0) { warp_maxima[warp] = maximum; warp_sums[warp] = denominator; }
+    __syncthreads();
+    if (warp == 0) {
+        float merged_maximum = -INFINITY, merged_sum = 0.0f;
+        if (lane == 0) {
+            #pragma unroll
+            for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged_maximum = fmaxf(merged_maximum, warp_maxima[w]);
+            #pragma unroll
+            for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged_sum += warp_sums[w] * expf(warp_maxima[w] - merged_maximum);
+        }
+        merged_maximum = __shfl_sync(0xffffffff, merged_maximum, 0); merged_sum = __shfl_sync(0xffffffff, merged_sum, 0);
+        const int64_t partial = (static_cast<int64_t>(q) * q_heads + head) * SPLITS + split;
+        for (int d = lane; d < DIM; d += kWarp) {
+            float merged = 0.0f;
+            #pragma unroll
+            for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged += warp_values[w * DIM + d] * expf(warp_maxima[w] - merged_maximum);
+            partial_values[partial * DIM + d] = merged;
+        }
+        if (lane == 0) { partial_maxima[partial] = merged_maximum; partial_sums[partial] = merged_sum; }
+    }
+}
+
+template <typename T, int SPLITS, int DIM>
+void launch_dense_dim(const T * q, const T * k, const T * v, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int nq, int ns, int qh, int kvh, int page, int blocks, int width, float scale, cudaStream_t stream) {
+    dense_attention_partials_kernel<T, SPLITS, DIM><<<dim3(nq, qh, SPLITS), kThreads, static_cast<size_t>(kWarps) * (DIM + 2) * sizeof(float), stream>>>(q, k, v, tables, lengths, pv, pm, ps, nq, ns, qh, kvh, page, blocks, width, scale);
+}
+
+template <typename T, int SPLITS>
+void launch_dense(const T * q, const T * k, const T * v, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int nq, int ns, int qh, int kvh, int dim, int page, int blocks, int width, float scale, cudaStream_t stream) {
+    if (dim == 256) launch_dense_dim<T, SPLITS, 256>(q, k, v, tables, lengths, pv, pm, ps, nq, ns, qh, kvh, page, blocks, width, scale, stream);
+}
+
 template <typename T, int SPLITS>
 void launch_reduce(const float * v, const float * m, const float * s, T * out, int batch, int heads, int dim, cudaStream_t stream) {
     #define CASE_DIM(D) case D: launch_reduce_dim<T, SPLITS, D>(v, m, s, out, batch, heads, stream); break
@@ -203,4 +279,11 @@ void q8_attention_reduce_cuda(const float * v, const float * m, const float * s,
     if (bf16) { switch (splits) { CASE_REDUCE(1, __nv_bfloat16); CASE_REDUCE(2, __nv_bfloat16); CASE_REDUCE(4, __nv_bfloat16); CASE_REDUCE(8, __nv_bfloat16); CASE_REDUCE(16, __nv_bfloat16); CASE_REDUCE(32, __nv_bfloat16); CASE_REDUCE(64, __nv_bfloat16); CASE_REDUCE(128, __nv_bfloat16); } }
     else { switch (splits) { CASE_REDUCE(1, __half); CASE_REDUCE(2, __half); CASE_REDUCE(4, __half); CASE_REDUCE(8, __half); CASE_REDUCE(16, __half); CASE_REDUCE(32, __half); CASE_REDUCE(64, __half); CASE_REDUCE(128, __half); } }
     #undef CASE_REDUCE
+}
+
+void dense_attention_partials_cuda(const void * q, const void * k, const void * v, bool bf16, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int nq, int ns, int qh, int kvh, int dim, int page, int blocks, int width, int splits, float scale, cudaStream_t stream) {
+    #define CASE_DENSE(N, T) case N: launch_dense<T, N>(static_cast<const T *>(q), static_cast<const T *>(k), static_cast<const T *>(v), tables, lengths, pv, pm, ps, nq, ns, qh, kvh, dim, page, blocks, width, scale, stream); break
+    if (bf16) { switch (splits) { CASE_DENSE(1, __nv_bfloat16); CASE_DENSE(2, __nv_bfloat16); CASE_DENSE(4, __nv_bfloat16); CASE_DENSE(8, __nv_bfloat16); CASE_DENSE(16, __nv_bfloat16); CASE_DENSE(32, __nv_bfloat16); } }
+    else { switch (splits) { CASE_DENSE(1, __half); CASE_DENSE(2, __half); CASE_DENSE(4, __half); CASE_DENSE(8, __half); CASE_DENSE(16, __half); CASE_DENSE(32, __half); } }
+    #undef CASE_DENSE
 }

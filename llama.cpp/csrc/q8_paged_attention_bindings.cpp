@@ -88,7 +88,34 @@ int64_t q8_paged_attention_num_splits(const at::Tensor & query, int64_t cache_ca
     return choose_num_splits(query, cache_capacity);
 }
 
+at::Tensor dense_paged_attention(at::Tensor query, at::Tensor key_cache, at::Tensor value_cache, at::Tensor block_tables, at::Tensor context_lens, double softmax_scale, int64_t forced_num_splits) {
+    TORCH_CHECK(query.is_cuda() && query.dim() == 3 && query.is_contiguous(), "query must be contiguous CUDA [queries, query_heads, head_dim]");
+    TORCH_CHECK(query.scalar_type() == at::kHalf || query.scalar_type() == at::kBFloat16, "query must be fp16 or bf16");
+    TORCH_CHECK(key_cache.is_cuda() && value_cache.is_cuda() && key_cache.dim() == 4 && key_cache.sizes() == value_cache.sizes() && key_cache.is_contiguous() && value_cache.is_contiguous(), "dense K/V caches must be contiguous CUDA [blocks, page, kv_heads, head_dim]");
+    TORCH_CHECK(key_cache.scalar_type() == query.scalar_type() && value_cache.scalar_type() == query.scalar_type(), "query and dense K/V cache dtypes must match");
+    TORCH_CHECK(block_tables.is_cuda() && context_lens.is_cuda() && block_tables.scalar_type() == at::kInt && context_lens.scalar_type() == at::kInt && block_tables.dim() == 2 && context_lens.dim() == 1 && block_tables.is_contiguous() && context_lens.is_contiguous(), "block tables and lengths must be contiguous CUDA int32 tensors");
+    TORCH_CHECK(block_tables.size(0) == context_lens.size(0) && (block_tables.size(0) == 1 || block_tables.size(0) == query.size(0)), "one sequence may own all queries, otherwise one sequence is required per query");
+    TORCH_CHECK(query.size(1) % key_cache.size(2) == 0 && query.size(2) == key_cache.size(3) && query.size(2) == 256, "dense paged attention currently supports head_dim=256");
+    TORCH_CHECK(query.get_device() == key_cache.get_device() && query.get_device() == value_cache.get_device() && query.get_device() == block_tables.get_device() && query.get_device() == context_lens.get_device(), "all tensors must share one CUDA device");
+    c10::cuda::CUDAGuard device_guard(query.device());
+    const int64_t num_splits = forced_num_splits > 0 ? forced_num_splits : choose_num_splits(query, block_tables.size(1) * key_cache.size(1));
+    TORCH_CHECK(num_splits >= 1 && num_splits <= kMaxAutoSplits && (num_splits & (num_splits - 1)) == 0, "forced_num_splits must be a power of two in [1, 32]");
+    auto float_options = query.options().dtype(at::kFloat);
+    auto partial_values = at::empty({query.size(0), query.size(1), num_splits, query.size(2)}, float_options);
+    auto partial_maxima = at::empty({query.size(0), query.size(1), num_splits}, float_options);
+    auto partial_sums = at::empty({query.size(0), query.size(1), num_splits}, float_options);
+    auto output = at::empty({query.size(0), 1, query.size(1), query.size(2)}, query.options());
+    cudaStream_t stream = at::cuda::getCurrentCUDAStream(query.get_device());
+    const bool bfloat16 = query.scalar_type() == at::kBFloat16;
+    dense_attention_partials_cuda(query.const_data_ptr(), key_cache.const_data_ptr(), value_cache.const_data_ptr(), bfloat16, block_tables.data_ptr<int32_t>(), context_lens.data_ptr<int32_t>(), partial_values.data_ptr<float>(), partial_maxima.data_ptr<float>(), partial_sums.data_ptr<float>(), query.size(0), block_tables.size(0), query.size(1), key_cache.size(2), query.size(2), key_cache.size(1), key_cache.size(0), block_tables.size(1), num_splits, static_cast<float>(softmax_scale), stream);
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
+    q8_attention_reduce_cuda(partial_values.data_ptr<float>(), partial_maxima.data_ptr<float>(), partial_sums.data_ptr<float>(), output.mutable_data_ptr(), bfloat16, query.size(0), query.size(1), query.size(2), num_splits, stream);
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
+    return output;
+}
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, module) {
     module.def("q8_paged_attention", &q8_paged_attention, "Direct Q8_0 paged KV attention with split-K online softmax", pybind11::arg("query"), pybind11::arg("key_cache"), pybind11::arg("value_cache"), pybind11::arg("key_scales"), pybind11::arg("value_scales"), pybind11::arg("block_tables"), pybind11::arg("context_lens"), pybind11::arg("softmax_scale"), pybind11::arg("forced_num_splits") = 0);
     module.def("q8_paged_attention_num_splits", &q8_paged_attention_num_splits, "Return the split count selected for a query/cache capacity", pybind11::arg("query"), pybind11::arg("cache_capacity"));
+    module.def("dense_paged_attention", &dense_paged_attention, "Dense FP16/BF16 paged KV attention", pybind11::arg("query"), pybind11::arg("key_cache"), pybind11::arg("value_cache"), pybind11::arg("block_tables"), pybind11::arg("context_lens"), pybind11::arg("softmax_scale"), pybind11::arg("forced_num_splits") = 0);
 }

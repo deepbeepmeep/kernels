@@ -7,6 +7,12 @@ This package exposes the unified GGUF CUDA path used in WanGP:
 - `embedding` for supported GGUF qtypes
 - decode-only paged Q8 KV-cache attention derived from llama.cpp `fattn-vec`, with native FP16/BF16 I/O and FP32 accumulation
 
+Version 1.0.14 reserves the complete maximum MMQ activation tile around exact-sized
+PyTorch Q8 workspaces. This matches the loader's vectorized tail-read contract and
+prevents an asynchronous illegal memory access during CUDA-graph/speculative workloads.
+It also exposes an experimental dense FP16/BF16 paged-attention entry point used for
+direct comparisons without changing the default FlashAttention path.
+
 `q8_paged_attention` consumes INT8 K/V pages with one FP16 Q8_0 scale per 32 values. Its paged traversal and reduction adapt llama.cpp's vector attention structure to Nano-vLLM block tables, while Q8_1 query quantization and Q8_0 x Q8_1 `dp4a` products reuse llama.cpp CUDA primitives directly. It supports grouped-query attention, batched single-token decode, and causal multi-token speculative verification without materializing the full cache. It selects power-of-two split-K partitions with llama.cpp's occupancy and GPU-wave-efficiency heuristic, constrained by cache capacity and capped at 32 after SM89 graph-replay tuning. Temporary storage uses PyTorch and is safe to record and replay in CUDA graphs. Prompt prefill is intentionally outside this API.
 
 ## Build

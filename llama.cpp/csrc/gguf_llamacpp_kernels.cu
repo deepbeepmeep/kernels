@@ -718,8 +718,12 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
     const int64_t padded_row = GGML_PAD(in_features, MATRIX_ROW_PADDING);
     const bool fallback = out_features % 128 != 0;
+    // The MMQ tile loader intentionally performs vectorized reads beyond the
+    // logical final activation row. llama.cpp's CUDA pool supplies allocation
+    // slack; an exact-sized torch allocation does not, so reserve one maximum
+    // J tile explicitly.
     const size_t q8_bytes = static_cast<size_t>(batch_rows * padded_row) * sizeof(block_q8_1_mmq) / QK8_1_MMQ
-        + static_cast<size_t>(ggml_cuda_mmq_get_J_max(type, fallback, cc, batch_rows)) * sizeof(block_q8_1_mmq);
+        + static_cast<size_t>(ggml_cuda_mmq_get_J_max(type, fallback, cc, 128)) * sizeof(block_q8_1_mmq);
     at::Tensor quantized_input = at::zeros({static_cast<int64_t>(q8_bytes)}, input.options().dtype(at::kByte));
     switch (input.scalar_type()) {
         case at::kFloat:

@@ -243,7 +243,7 @@ for target in "${TARGETS[@]}"; do
       build_target \
         "py311-cu130" \
         "py311" \
-        "+torch210cu13py311" \
+        "+torch210cu130py311" \
         "3.11" \
         "2.10.0" \
         "13.0" \
@@ -263,7 +263,7 @@ for target in "${TARGETS[@]}"; do
       build_target \
         "py311-cu130" \
         "py311" \
-        "+torch210cu13py311" \
+        "+torch210cu130py311" \
         "3.11" \
         "2.10.0" \
         "13.0" \
