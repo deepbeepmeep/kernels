@@ -1,0 +1,1699 @@
+{
+  "version": "1.0.21+torch210cu130py311",
+  "package": "/home/marc/gguf-release-1.0.21/validate_linux_py311/package/llamacpp_gguf_cuda/__init__.py",
+  "python": "3.11.9 (main, Apr 19 2024, 16:48:06) [GCC 11.2.0]",
+  "torch": "2.10.0+cu130",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "capability": [
+    12,
+    0
+  ],
+  "linear_cases": [
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.004438239149749279
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005456868093460798
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005273652728646994
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.006310276687145233
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.006859278306365013
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.006421248894184828
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.0070753092877566814
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005440900102257729
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.0053988355211913586
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005850657355040312
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.00729172071442008
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.007130151614546776
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.0067986780777573586
+    },
+    {
+      "qtype": "Q2_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.007112074177712202
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.004842763766646385
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005506735760718584
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.00549549562856555
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.0054866415448486805
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005322591867297888
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.00544041208922863
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005400916561484337
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.006371588446199894
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.004824129864573479
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005596614908427
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005446198862046003
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005510282702744007
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.0055553121492266655
+    },
+    {
+      "qtype": "Q3_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.0055404542945325375
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.002672803122550249
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.004469180013984442
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.008177246898412704
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005775060039013624
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.006969566456973553
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.006179204210639
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005497373640537262
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.004979136399924755
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.006197430659085512
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.006144430488348007
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.0053044650703668594
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.0063949464820325375
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005600468721240759
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.006064818240702152
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.0032700139563530684
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.004517228342592716
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.007744661532342434
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005075941793620586
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005245075095444918
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.0055123367346823215
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005465351510792971
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.006505936849862337
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005640792194753885
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.006298170890659094
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.00510406494140625
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.00630210479721427
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005993036553263664
+    },
+    {
+      "qtype": "Q5_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005737356375902891
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.005192872602492571
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.0051831346936523914
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005308427847921848
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005045990459620953
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005183212459087372
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.00533564668148756
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005267831962555647
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.006064444314688444
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005502605810761452
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005415275227278471
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005710817873477936
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005681745242327452
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.00566347548738122
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005612751469016075
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.00695370277389884
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.011067776009440422
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.011022388935089111
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.010120649822056293
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005206671543419361
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005388103425502777
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005360045004636049
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.010759522207081318
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.012370463460683823
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.010078266263008118
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.008394833654165268
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005668074823915958
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005592621397227049
+    },
+    {
+      "qtype": "Q4_0",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005660715978592634
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.013427702710032463
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.003526996821165085
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005975814536213875
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005452628713101149
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.0036971799563616514
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.004877452272921801
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.0053126136772334576
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.00414310721680522
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.006195074412971735
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.003961322363466024
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.006459040567278862
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.006006395444273949
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005584002006798983
+    },
+    {
+      "qtype": "Q4_1",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005288654938340187
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.013181529007852077
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.010131935589015484
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.0073890239000320435
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.008863038383424282
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005351624451577663
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005370570346713066
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005303543526679277
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005841907113790512
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.008768866769969463
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.012355944141745567
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.0076346625573933125
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005587812513113022
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005744178779423237
+    },
+    {
+      "qtype": "Q5_0",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005565263796597719
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.0018820789409801364
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.00329776993021369
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.002298136707395315
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.004412845242768526
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.0070122224278748035
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005363164469599724
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.004931413568556309
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.01348829921334982
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.003708855714648962
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.003969543147832155
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005986747331917286
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.004941901192069054
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005449564196169376
+    },
+    {
+      "qtype": "Q5_1",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.0050915940664708614
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.005041900556534529
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005502188578248024
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005086531862616539
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.004889423027634621
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005319332238286734
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005330182146281004
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005402995273470879
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.006236355751752853
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005705522373318672
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.0056054857559502125
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.006009038537740707
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005842230748385191
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005570023786276579
+    },
+    {
+      "qtype": "Q8_0",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005566384177654982
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.006053459830582142
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.00587181281298399
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005303670652210712
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005231176037341356
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005472675431519747
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005444921553134918
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005372741259634495
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005117373540997505
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005244110710918903
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005757135804742575
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005216357763856649
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005733686499297619
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005527555011212826
+    },
+    {
+      "qtype": "IQ2_S",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005537582561373711
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.00492900051176548
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005252613220363855
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005242680199444294
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.00534666096791625
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005336808040738106
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005470117554068565
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005370748229324818
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.0054759252816438675
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.0054171038791537285
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005852019414305687
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005594255868345499
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.0055784182623028755
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005510951392352581
+    },
+    {
+      "qtype": "IQ3_S",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005583732854574919
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.008682318963110447
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.007753225043416023
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.009298845194280148
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.009410152211785316
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.009191252291202545
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.008823513984680176
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.008601226843893528
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.006237327121198177
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.006418755277991295
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.0091151287779212
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.008446409367024899
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.00883700791746378
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.008634153753519058
+    },
+    {
+      "qtype": "IQ1_S",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.008397836238145828
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.0062856306321918964
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005527139641344547
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005508174188435078
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005540491547435522
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.0051484983414411545
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005312782246619463
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005326850805431604
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005810152273625135
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005337535869330168
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.00547832204028964
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005280384328216314
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.0054267593659460545
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.00566644873470068
+    },
+    {
+      "qtype": "IQ2_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005637577269226313
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.0056865038350224495
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.004930456634610891
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005302323494106531
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005470616277307272
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005317699629813433
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.00539777847006917
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005390716716647148
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005293074529618025
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.0054502952843904495
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005463561043143272
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005621215794235468
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.00567909749224782
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005676378961652517
+    },
+    {
+      "qtype": "IQ2_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005559143144637346
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.0059426892548799515
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.0052870879881083965
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005294272676110268
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005187567789107561
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005302651319652796
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005285366903990507
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005392402410507202
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.0057330927811563015
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005295833107084036
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005702412221580744
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005656054243445396
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.005538274068385363
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.0056151216849684715
+    },
+    {
+      "qtype": "IQ3_XXS",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.00562107702717185
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.005273954477161169
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005680013447999954
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005225941073149443
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005389598198235035
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005131431855261326
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005445714574307203
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005338277667760849
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.00575605733320117
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005326590966433287
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005592940840870142
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005725877359509468
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.00544153805822134
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005575173068791628
+    },
+    {
+      "qtype": "IQ4_NL",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005492089781910181
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.004999276250600815
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005351187661290169
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.0053558810614049435
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005357027053833008
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005535292439162731
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.005317668430507183
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.005367668811231852
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005426033399999142
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005809381138533354
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005911963060498238
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005319870542734861
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.0055395266972482204
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005650111008435488
+    },
+    {
+      "qtype": "IQ4_XS",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005569027736783028
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.005323417950421572
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.005504107102751732
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.0054723783396184444
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.01638592593371868
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.016793474555015564
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.014246679842472076
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.017313547432422638
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.005390556994825602
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005517029669135809
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.0060066417790949345
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.01662736013531685
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.01610824652016163
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.015688026323914528
+    },
+    {
+      "qtype": "Q4_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.015953492373228073
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 1,
+      "relative_rms": 0.0048187109641730785
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 2,
+      "relative_rms": 0.006103966385126114
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 4,
+      "relative_rms": 0.005040307529270649
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 8,
+      "relative_rms": 0.005627510603517294
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 17,
+      "relative_rms": 0.005156356375664473
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 64,
+      "relative_rms": 0.00538340350612998
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.float16",
+      "rows": 129,
+      "relative_rms": 0.00561925582587719
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 1,
+      "relative_rms": 0.006181065458804369
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 2,
+      "relative_rms": 0.005561016034334898
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 4,
+      "relative_rms": 0.005637516267597675
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 8,
+      "relative_rms": 0.005792506504803896
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 17,
+      "relative_rms": 0.00563507666811347
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 64,
+      "relative_rms": 0.005571127403527498
+    },
+    {
+      "qtype": "Q6_K",
+      "dtype": "torch.bfloat16",
+      "rows": 129,
+      "relative_rms": 0.005586078390479088
+    }
+  ],
+  "attention_cases": 12,
+  "sm120_cases": 20,
+  "padding_cases": 3,
+  "checkpoint": "/mnt/e/ML/wan2gp/ckpts/Qwen3_8_27B_Uncensored/Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+  "passed": true
+}

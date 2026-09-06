@@ -13,22 +13,27 @@ namespace {
 
 constexpr int64_t kQuantBlock = 32;
 constexpr int64_t kTargetTokensPerSplit = 128;
-constexpr int64_t kMaxAutoSplits = 32;
+constexpr int64_t kMaxQ8BlackwellAutoSplits = 64;
+constexpr int64_t kMaxDefaultAutoSplits = 32;
 constexpr int64_t kMaxSplits = 128;
 
-int64_t choose_num_splits(const at::Tensor & query, int64_t cache_capacity) {
+int64_t choose_num_splits(const at::Tensor & query, int64_t cache_capacity, int64_t max_splits) {
     TORCH_CHECK(query.dim() == 3, "query must have shape [batch, query_heads, head_dim]");
     TORCH_CHECK(query.size(0) > 0 && query.size(1) > 0 && query.size(2) > 0, "query dimensions must be nonzero");
     TORCH_CHECK(cache_capacity >= 0, "cache_capacity must be non-negative");
     if (cache_capacity == 0) {
         return 1;
     }
-    const int64_t requested = std::clamp<int64_t>((cache_capacity + kTargetTokensPerSplit - 1) / kTargetTokensPerSplit, 1, kMaxAutoSplits);
+    const int64_t requested = std::clamp<int64_t>((cache_capacity + kTargetTokensPerSplit - 1) / kTargetTokensPerSplit, 1, max_splits);
     int64_t splits = 1;
     while (splits < requested) {
         splits <<= 1;
     }
     return splits;
+}
+
+int64_t q8_max_auto_splits(const at::Tensor & query) {
+    return at::cuda::getDeviceProperties(query.get_device())->major == 12 ? kMaxQ8BlackwellAutoSplits : kMaxDefaultAutoSplits;
 }
 
 void validate_inputs(const at::Tensor & query, const at::Tensor & key_cache, const at::Tensor & value_cache, const at::Tensor & key_scales, const at::Tensor & value_scales, const at::Tensor & block_tables, const at::Tensor & context_lens) {
@@ -62,7 +67,7 @@ at::Tensor q8_paged_attention(at::Tensor query, at::Tensor key_cache, at::Tensor
     TORCH_CHECK(forced_num_splits >= 0, "forced_num_splits must be zero or a power of two in [1, 128]");
     c10::cuda::CUDAGuard device_guard(query.device());
     const int64_t cache_capacity = block_tables.size(1) * key_cache.size(1);
-    const int64_t num_splits = forced_num_splits > 0 ? forced_num_splits : choose_num_splits(query, cache_capacity);
+    const int64_t num_splits = forced_num_splits > 0 ? forced_num_splits : choose_num_splits(query, cache_capacity, q8_max_auto_splits(query));
     TORCH_CHECK(num_splits >= 1 && num_splits <= kMaxSplits && (num_splits & (num_splits - 1)) == 0, "forced_num_splits must be a power of two in [1, 128]");
 
     auto float_options = query.options().dtype(at::kFloat);
@@ -85,7 +90,7 @@ at::Tensor q8_paged_attention(at::Tensor query, at::Tensor key_cache, at::Tensor
 }
 
 int64_t q8_paged_attention_num_splits(const at::Tensor & query, int64_t cache_capacity) {
-    return choose_num_splits(query, cache_capacity);
+    return choose_num_splits(query, cache_capacity, q8_max_auto_splits(query));
 }
 
 at::Tensor dense_paged_attention(at::Tensor query, at::Tensor key_cache, at::Tensor value_cache, at::Tensor block_tables, at::Tensor context_lens, double softmax_scale, int64_t forced_num_splits) {
@@ -98,8 +103,8 @@ at::Tensor dense_paged_attention(at::Tensor query, at::Tensor key_cache, at::Ten
     TORCH_CHECK(query.size(1) % key_cache.size(2) == 0 && query.size(2) == key_cache.size(3) && query.size(2) == 256, "dense paged attention currently supports head_dim=256");
     TORCH_CHECK(query.get_device() == key_cache.get_device() && query.get_device() == value_cache.get_device() && query.get_device() == block_tables.get_device() && query.get_device() == context_lens.get_device(), "all tensors must share one CUDA device");
     c10::cuda::CUDAGuard device_guard(query.device());
-    const int64_t num_splits = forced_num_splits > 0 ? forced_num_splits : choose_num_splits(query, block_tables.size(1) * key_cache.size(1));
-    TORCH_CHECK(num_splits >= 1 && num_splits <= kMaxAutoSplits && (num_splits & (num_splits - 1)) == 0, "forced_num_splits must be a power of two in [1, 32]");
+    const int64_t num_splits = forced_num_splits > 0 ? forced_num_splits : choose_num_splits(query, block_tables.size(1) * key_cache.size(1), kMaxDefaultAutoSplits);
+    TORCH_CHECK(num_splits >= 1 && num_splits <= kMaxDefaultAutoSplits && (num_splits & (num_splits - 1)) == 0, "forced_num_splits must be a power of two in [1, 32]");
     auto float_options = query.options().dtype(at::kFloat);
     auto partial_values = at::empty({query.size(0), query.size(1), num_splits, query.size(2)}, float_options);
     auto partial_maxima = at::empty({query.size(0), query.size(1), num_splits}, float_options);
@@ -114,7 +119,10 @@ at::Tensor dense_paged_attention(at::Tensor query, at::Tensor key_cache, at::Ten
     return output;
 }
 
+void register_sm120_bindings(pybind11::module_ & module);
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, module) {
+    register_sm120_bindings(module);
     module.def("q8_paged_attention", &q8_paged_attention, "Direct Q8_0 paged KV attention with split-K online softmax", pybind11::arg("query"), pybind11::arg("key_cache"), pybind11::arg("value_cache"), pybind11::arg("key_scales"), pybind11::arg("value_scales"), pybind11::arg("block_tables"), pybind11::arg("context_lens"), pybind11::arg("softmax_scale"), pybind11::arg("forced_num_splits") = 0);
     module.def("q8_paged_attention_num_splits", &q8_paged_attention_num_splits, "Return the split count selected for a query/cache capacity", pybind11::arg("query"), pybind11::arg("cache_capacity"));
     module.def("dense_paged_attention", &dense_paged_attention, "Dense FP16/BF16 paged KV attention", pybind11::arg("query"), pybind11::arg("key_cache"), pybind11::arg("value_cache"), pybind11::arg("block_tables"), pybind11::arg("context_lens"), pybind11::arg("softmax_scale"), pybind11::arg("forced_num_splits") = 0);

@@ -1,0 +1,69 @@
+[
+  {
+    "file": "_C.cpython-311-x86_64-linux-gnu.so",
+    "bytes": 169557736,
+    "sass": [
+      "75",
+      "80",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "100",
+      "103",
+      "110",
+      "120",
+      "121"
+    ],
+    "ptx": [
+      "121"
+    ],
+    "sha256": "8177dcbb7525e5ea93729558ebcefc5c785a3286a7a9a8b160dceb62f81c2e8a",
+    "dynamic": [
+      "0x0000000000000001 (NEEDED)             Shared library: [libcublas.so.13]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libc10.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libtorch_cpu.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libtorch_python.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libcudart.so.13]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libc10_cuda.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]",
+      "0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]",
+      "0x000000000000000f (RPATH)              Library rpath: [$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib]"
+    ]
+  },
+  {
+    "file": "_attention.cpython-311-x86_64-linux-gnu.so",
+    "bytes": 57040112,
+    "sass": [
+      "75",
+      "80",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "100",
+      "103",
+      "110",
+      "120",
+      "121"
+    ],
+    "ptx": [
+      "121"
+    ],
+    "sha256": "bd3c76c4291a5af8942a493c1e91978d1964c4a24f5fb17cb2bd2a50e243c619",
+    "dynamic": [
+      "0x0000000000000001 (NEEDED)             Shared library: [libcuda.so.1]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libc10.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libtorch_cpu.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libtorch_python.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libcudart.so.13]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libc10_cuda.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libtorch_cuda.so]",
+      "0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]",
+      "0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]",
+      "0x000000000000000f (RPATH)              Library rpath: [$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib]"
+    ]
+  }
+]

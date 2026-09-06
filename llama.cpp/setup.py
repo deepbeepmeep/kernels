@@ -68,7 +68,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.14"
+BASE_VERSION = "1.0.21"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")
@@ -132,7 +132,7 @@ EXTRA_LIBRARY_DIRS = _env_path_list("LLAMACPP_GGUF_CUDA_LIB_DIRS")
 EXTRA_LINK_ARGS: list[str] = []
 if os.name != "nt":
     EXTRA_LINK_ARGS.extend(["-static-libstdc++", "-static-libgcc"])
-    for library_dir in EXTRA_LIBRARY_DIRS:
+    for library_dir in ("$ORIGIN/../torch/lib", "$ORIGIN/../nvidia/cublas/lib", "$ORIGIN/../nvidia/cuda_runtime/lib", "$ORIGIN/../nvidia/cu13/lib"):
         EXTRA_LINK_ARGS.extend(["-Wl,-rpath," + library_dir])
 
 extra_compile_args = {
@@ -164,19 +164,31 @@ ext_modules = [
     ),
     CUDAExtension(
         name="llamacpp_gguf_cuda._attention",
-        sources=[str(CSRC / "q8_paged_attention_bindings.cpp"), str(CSRC / "q8_paged_attention.cu")],
+        sources=[str(CSRC / "q8_paged_attention_bindings.cpp"), str(CSRC / "sm120_bindings.cpp"), str(CSRC / "q8_paged_attention.cu")],
         extra_compile_args=extra_compile_args,
         extra_link_args=EXTRA_LINK_ARGS,
         library_dirs=EXTRA_LIBRARY_DIRS,
+        libraries=["cuda"],
     ),
 ]
+
+class PortableBuildExtension(BuildExtension):
+    def build_extensions(self):
+        if os.name != "nt":
+            # Conda's Python can inject its absolute prefix into LDSHARED.
+            # Keep only the explicit, package-relative runtime paths below.
+            self.compiler.linker_so = [flag for flag in self.compiler.linker_so if not flag.startswith("-Wl,-rpath,")]
+        super().build_extensions()
+
 
 setup(
     version=PACKAGE_VERSION,
     description=PACKAGE_DESCRIPTION,
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    package_data={"llamacpp_gguf_cuda": ["kernels/*/*.cubin", "kernels/*/manifest.json"]},
     ext_modules=ext_modules,
-    cmdclass={"build_ext": BuildExtension},
+    cmdclass={"build_ext": PortableBuildExtension},
+    license_files=["_vendor/llama.cpp/LICENSE", "_vendor/llama.cpp/ggml/LICENSE"],
     zip_safe=False,
 )

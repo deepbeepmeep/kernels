@@ -664,9 +664,9 @@ static __global__ void mul_mat_vec_q(
         const int kqs = vdr * (tid % (qi/vdr));
 
 #pragma unroll
-        for (int j = 0; j < ncols_dst; ++j) {
+        for (int i = 0; i < rows_per_cuda_block; ++i) {
 #pragma unroll
-            for (int i = 0; i < rows_per_cuda_block; ++i) {
+            for (int j = 0; j < ncols_dst; ++j) {
                 tmp[j][i] += vec_dot_q_cuda(
                     vx, &y[j*stride_col_y + kby], kbx_offset + i*stride_row_x + kbx, kqs);
                 if constexpr (has_fusion) {

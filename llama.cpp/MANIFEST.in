@@ -1,0 +1,8 @@
+include README.md THIRD_PARTY_NOTICES.md pyproject.toml setup.py
+recursive-include csrc *.cpp *.cu *.h *.cuh *.py
+recursive-include src/llamacpp_gguf_cuda/kernels *.cubin *.json *.ptx
+graft _vendor
+recursive-include scripts *.py *.sh
+recursive-include tests *.py
+graft wangp
+global-exclude __pycache__ *.pyc *.pyd *.so *.o *.obj

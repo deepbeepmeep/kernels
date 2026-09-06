@@ -702,6 +702,37 @@ void quantize_mmq_q8_1_typed_cuda(
     }
 }
 
+// Match llama.cpp's Q8_1 quantization arithmetic, loading the original dtype
+// directly instead of materializing an FP32 activation matrix first.
+template <typename src_t>
+__launch_bounds__(CUDA_QUANTIZE_BLOCK_SIZE, 1)
+static __global__ void quantize_mmvq_q8_1_typed(const src_t * x, block_q8_1 * y, int64_t cols, int64_t padded_cols) {
+    ggml_cuda_pdl_lc();
+    const int64_t col = static_cast<int64_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (col >= padded_cols) {
+        return;
+    }
+    const int64_t index = static_cast<int64_t>(blockIdx.y) * padded_cols + col;
+    const int64_t ib = index / QK8_1;
+    const int iqs = index % QK8_1;
+    ggml_cuda_pdl_sync();
+    const float xi = col < cols ? ggml_cuda_cast<float>(x[static_cast<int64_t>(blockIdx.y) * cols + col]) : 0.0f;
+    const float amax = warp_reduce_max<QK8_1>(fabsf(xi));
+    const float sum = warp_reduce_sum<QK8_1>(xi);
+    const float d = amax / 127.0f;
+    y[ib].qs[iqs] = amax == 0.0f ? 0 : roundf(xi / d);
+    if (iqs == 0) {
+        y[ib].ds = make_half2(d, sum);
+    }
+}
+
+template <typename src_t>
+void quantize_mmvq_q8_1_typed_cuda(const src_t * x, void * y, int64_t cols, int64_t padded_cols, int64_t rows, cudaStream_t stream) {
+    const dim3 grid((padded_cols + CUDA_QUANTIZE_BLOCK_SIZE - 1) / CUDA_QUANTIZE_BLOCK_SIZE, rows, 1);
+    const ggml_cuda_kernel_launch_params launch(grid, dim3(CUDA_QUANTIZE_BLOCK_SIZE, 1, 1), 0, stream);
+    ggml_cuda_kernel_launch(quantize_mmvq_q8_1_typed<src_t>, launch, x, static_cast<block_q8_1 *>(y), cols, padded_cols);
+}
+
 at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor input_2d) {
     const int64_t out_features = tensor_shape.at(0);
     const int64_t in_features = tensor_shape.at(1);
@@ -710,13 +741,40 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
 
     at::Tensor input = input_2d.is_contiguous() ? input_2d : input_2d.contiguous();
     const int64_t batch_rows = input.size(0);
-    at::Tensor output = at::zeros({batch_rows, out_features}, input.options().dtype(at::kFloat));
+    at::Tensor output = at::empty({batch_rows, out_features}, input.options().dtype(at::kFloat));
     ggml_tensor src0 = make_quantized_src0(raw_weight, type, out_features, in_features);
     cudaStream_t stream = at::cuda::getCurrentCUDAStream(input.device().index()).stream();
     ggml_backend_cuda_context & ctx = get_backend_ctx(input.device().index(), stream);
 
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
     const int64_t padded_row = GGML_PAD(in_features, MATRIX_ROW_PADDING);
+    if (ggml_cuda_should_use_mmvq(type, cc, batch_rows)) {
+        // Decode and short speculative batches are matrix-vector workloads.
+        // Use llama.cpp's portable, architecture-aware dispatch for these rows.
+        const size_t q8_bytes = batch_rows * padded_row * sizeof(block_q8_1) / QK8_1;
+        at::Tensor quantized_input = at::empty({static_cast<int64_t>(q8_bytes)}, input.options().dtype(at::kByte));
+        switch (input.scalar_type()) {
+            case at::kFloat:
+                quantize_mmvq_q8_1_typed_cuda(input.data_ptr<float>(), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream);
+                break;
+            case at::kHalf:
+                quantize_mmvq_q8_1_typed_cuda(reinterpret_cast<const half *>(input.data_ptr<at::Half>()), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream);
+                break;
+            case at::kBFloat16:
+                quantize_mmvq_q8_1_typed_cuda(reinterpret_cast<const nv_bfloat16 *>(input.data_ptr<at::BFloat16>()), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream);
+                break;
+            default:
+                TORCH_CHECK(false, "Unsupported GGUF CUDA input dtype for linear: ", input.scalar_type());
+        }
+        // The prequantized MMVQ entry point uses only src1's shape, not its data.
+        ggml_tensor src1 = make_quantized_src0(input, GGML_TYPE_F32, batch_rows, in_features);
+        ggml_tensor dst = make_quantized_src0(output, GGML_TYPE_F32, batch_rows, out_features);
+        ggml_cuda_op_mul_mat_vec_q(ctx, &src0, &src1, &dst, static_cast<const char *>(src0.data),
+            nullptr, static_cast<const char *>(quantized_input.data_ptr()), output.data_ptr<float>(),
+            0, out_features, batch_rows, padded_row, stream);
+        CUDA_CHECK(cudaGetLastError());
+        return output;
+    }
     const bool fallback = out_features % 128 != 0;
     // The MMQ tile loader intentionally performs vectorized reads beyond the
     // logical final activation row. llama.cpp's CUDA pool supplies allocation
@@ -724,7 +782,7 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
     // J tile explicitly.
     const size_t q8_bytes = static_cast<size_t>(batch_rows * padded_row) * sizeof(block_q8_1_mmq) / QK8_1_MMQ
         + static_cast<size_t>(ggml_cuda_mmq_get_J_max(type, fallback, cc, 128)) * sizeof(block_q8_1_mmq);
-    at::Tensor quantized_input = at::zeros({static_cast<int64_t>(q8_bytes)}, input.options().dtype(at::kByte));
+    at::Tensor quantized_input = at::empty({static_cast<int64_t>(q8_bytes)}, input.options().dtype(at::kByte));
     switch (input.scalar_type()) {
         case at::kFloat:
             quantize_mmq_q8_1_typed_cuda<float>(input.data_ptr<float>(), nullptr, quantized_input.data_ptr(), type, in_features, in_features, batch_rows * in_features, batch_rows * in_features, padded_row, batch_rows, 1, 1, stream);

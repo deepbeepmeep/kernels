@@ -1,0 +1,300 @@
+{
+  "wangp_base_commit": "1e1dd2757f24923f008593d9d4ec09062234be20",
+  "files": [
+    {
+      "path": "docs/QWEN38_ENGINE_PERFORMANCE.md",
+      "sha256": "b0d1247e97e52e90455c4dc70b13059fd9e252c10a61ca1abb73c033bc89b081",
+      "live_source_sha256": "7222ed83a3b66153436d0848887a3c13d6a5affadd6fa6c22f6302f512c9fc87",
+      "bytes": 192285
+    },
+    {
+      "path": "plugins/configuration/plugin.py",
+      "sha256": "b90e8e18d5557402bcca14692ccc5d66e6f6112b196cd36358f0511530d9eb46",
+      "live_source_sha256": "ece1cb23663216923ce8b8f4e84eea96724d30d003895b8c566e290f67e87221",
+      "bytes": 82239
+    },
+    {
+      "path": "shared/gradio/assistant_chat.py",
+      "sha256": "747d3079c0fcf9b259416ea2379408e3f71ae28b45fe3166049d438f3f6a7c75",
+      "live_source_sha256": "4dd7eafd08af7604c064b0de28e7c96e57a8c468bec9e42c1060da7e1c36ba2f",
+      "bytes": 266670
+    },
+    {
+      "path": "shared/kernels/__init__.py",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "live_source_sha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "bytes": 1
+    },
+    {
+      "path": "shared/kernels/quanto_int8_inject.py",
+      "sha256": "40cfda7ed1b59b2444353c060d54877fe78ab22b216b48c8d4a2541edc3ec249",
+      "live_source_sha256": "85ac52323859db3075dd1707c3a663d44a712909ef61b3c2079a2997a37fe3d0",
+      "bytes": 47151
+    },
+    {
+      "path": "shared/kernels/quanto_int8_triton.py",
+      "sha256": "83914a20343b760a9899fdfda761a505f3c021e3538d181135add9ee08edb799",
+      "live_source_sha256": "694adf6c25dae433c96292b054155b6fc1e6cc69ef55c8950c22c430d9dfd0d7",
+      "bytes": 49722
+    },
+    {
+      "path": "shared/kernels/triton_compilation_log.py",
+      "sha256": "4ffeb6c303ae32d7215e6cccbc354122f5c0cba36bc7c6d5218dd8e7b51f2286",
+      "live_source_sha256": "4ffeb6c303ae32d7215e6cccbc354122f5c0cba36bc7c6d5218dd8e7b51f2286",
+      "bytes": 2488
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/__init__.py",
+      "sha256": "865b3a90dea576c2fc749a842a4d6278edb0200b5fdd218df736bb7ccd053b7a",
+      "live_source_sha256": "a39958cff88f0bb110480f75cf2ed6a39dd79ffa9567b34ca07d8f93dd69c53c",
+      "bytes": 321
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/config.py",
+      "sha256": "9d6eb09ce4117fea2683b9f84673a0f80c40fdc84053b1f7ecb2898a5ee1935c",
+      "live_source_sha256": "2bfba5f38ebdd2f74185fa9dd09593fe308ddf87189ca33e0451c3dd60d3c8bb",
+      "bytes": 1222
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/engine/block_manager.py",
+      "sha256": "e259b8d353f874e4001f571b7dad79ab40813385681d2b6ac514ea759bab92dc",
+      "live_source_sha256": "f5266921066ea7da0333ca53de77f25930dbea5c70fea93e1b2ffc132e640418",
+      "bytes": 8144
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/engine/llm_engine.py",
+      "sha256": "bf9edc16f4857767f8e146530bb2b5c8483f1f83568b2861d65def55a3b32f63",
+      "live_source_sha256": "2144ac82a321dd55f58a3864a46721cf61b9d5da2d9d22c24e3522f9d646cd0c",
+      "bytes": 14862
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/engine/model_runner.py",
+      "sha256": "e492e6a774b685957546a93a9cbf2b6ad581008fdec8b1dffa9eab829789d045",
+      "live_source_sha256": "d7d74e7e4ff3a3d5ce514f5d7576ae55ad7ca89f0740452321e460406c130f98",
+      "bytes": 110077
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/engine/scheduler.py",
+      "sha256": "4529e6c1cb591f94c47120e7fd7cbf6f983da65cab19168f77d7634e99c54620",
+      "live_source_sha256": "6d472bd033f3e0db1b28dc858cbe2e548eddf7c8c29ee15aa650f976e978776a",
+      "bytes": 11686
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/engine/sequence.py",
+      "sha256": "23c85f78cad692bedccd11d550bbcd49e9b51285173bc32b36c795594b4d82ad",
+      "live_source_sha256": "a459c8274d97e8c2bb144b80a2e386d23a73bf59bb48815e8651365a2f1b50f6",
+      "bytes": 4147
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/activation.py",
+      "sha256": "caf64dbeebcd86235d77a1947aa4439b32f56c1ce348848a1de12fcf7c3f9a31",
+      "live_source_sha256": "46a79cbe7c7378f203e24713da10d162e0ae822902148d423a29e59720cd7023",
+      "bytes": 2018
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/attention.py",
+      "sha256": "e6374fa5e2144f8d9280d99fa97ee70dba3c5e6e2716465cf22b7f59f9490c00",
+      "live_source_sha256": "e6374fa5e2144f8d9280d99fa97ee70dba3c5e6e2716465cf22b7f59f9490c00",
+      "bytes": 40010
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/attention_sm120.py",
+      "sha256": "ea764322b5aaaf59bd4902f897b81ad287161b2d772679959d04c0bd7824abaa",
+      "live_source_sha256": "1748355d46cdb6375a5cb6cf9d58447aa5de0283fd7ca8eba3030c9aea68821e",
+      "bytes": 14028
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/embed_head.py",
+      "sha256": "d83cf82969237ecabf9cf4d6047f2bbab9ed2aa00fb3aba1aebfd5b38933a123",
+      "live_source_sha256": "510ee95b246090ad0133968c34605625c7dfd988ed7c7a1eb00793a5453f98ce",
+      "bytes": 2445
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/layernorm.py",
+      "sha256": "c491e116106a461bc48aaa675314bc0776d9775570d8a7e47b150fd0a3382093",
+      "live_source_sha256": "699c2988b861aeca503282bbfb5273f9536224bfd0f34de5d89867d9ffbad408",
+      "bytes": 6024
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/linear.py",
+      "sha256": "d015f3acf00459de1801c54d4dd8df359cef59d9b554f84f99a4346b552179f5",
+      "live_source_sha256": "b3c1d022a31d76e340fd62c8aec08645b284be6b44716e3f69ffa80fdb83a227",
+      "bytes": 1531
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/rotary_embedding.py",
+      "sha256": "907d6092ac8360778c6347fc78ff8cdf23ab587f4a461d719dcce6235ef7253a",
+      "live_source_sha256": "cc4e0aee5c0c07f6e33e39f47ed5480389343510b794a33be4b1130cb9abeecd",
+      "bytes": 1795
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/sampler.py",
+      "sha256": "1c29fc8ff943038dac3a3fb33c9ebf54bbd068f63fd8d808fb34df468567e23c",
+      "live_source_sha256": "017d9837d4318cf081d1d7b05987e3609e6ad44f5413e43d90189d9d4f961eaf",
+      "bytes": 11405
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/layers/speculative_state.py",
+      "sha256": "e36a95d56123094fc3f588cc163db378d8f4461228a53a5b79f12c3bb59711a0",
+      "live_source_sha256": "d960f432de04019b20b606411f7af560f55fc1c06ae870d8c1eb5c8c83f087e2",
+      "bytes": 6036
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/llm.py",
+      "sha256": "a2c884255dba76691cc206ee39f96048a6c04ccd80823d9c7f8f5535193cf30f",
+      "live_source_sha256": "f979081d0e21b1b374de88509bc0cf6804ca4f0b43eabc5253b76f93cdbd7e7e",
+      "bytes": 74
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/models/__init__.py",
+      "sha256": "7055d65793f7e5917a9b462e81161eba6a24e05f6052f33a53303186fda7b95b",
+      "live_source_sha256": "7055d65793f7e5917a9b462e81161eba6a24e05f6052f33a53303186fda7b95b",
+      "bytes": 253
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/models/qwen2_5_vl.py",
+      "sha256": "90d13bf56d2598f6774d73405680da3bec9c193666df5c4bedbd3236b0f0562e",
+      "live_source_sha256": "90d13bf56d2598f6774d73405680da3bec9c193666df5c4bedbd3236b0f0562e",
+      "bytes": 10154
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/models/qwen3.py",
+      "sha256": "9cdc16bd79dad275f9af63107b3b2a03539b9263c8e8d7a667f1dc6453ab5ecb",
+      "live_source_sha256": "ae13ec8194fef7978c05cff47de04063761a66dc4d2d0a17ce3390d1b6b6683c",
+      "bytes": 7192
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/models/qwen3_5.py",
+      "sha256": "9e9efb0b73bc11542c51f9f3168ac0ef606738cbb866513b34a4ad1c991699c1",
+      "live_source_sha256": "d0f39824eddb2307f45b5d32aacad1ab7d5c681e06c7829f81e41a10fd1aeee2",
+      "bytes": 70902
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/sampling_params.py",
+      "sha256": "30796154b8dc841f823f3891bdece8730e8d3e0164605eab4d3f79bd6b1e24ae",
+      "live_source_sha256": "aefda8328fa801116fd9d8fa700ec9174e5849e2a71867b50358119ac1d2f787",
+      "bytes": 2052
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/utils/context.py",
+      "sha256": "860636463341b1e81573cf7482421846ae8b3a7a2ae389ce3ce1e030ed97abfe",
+      "live_source_sha256": "f928c8dea1368836ea13a837a92d783dbffb95de4c0d3883def87475a43f7b6b",
+      "bytes": 998
+    },
+    {
+      "path": "shared/llm_engines/nanovllm/vllm_support.py",
+      "sha256": "08b7d14a95b2ec4d9c39e8efac2f5e65ba8c8be875aa6fb784fb734a3a3c9424",
+      "live_source_sha256": "866b11860df63b606e63daac30906c042e0c2dd60f0de8db50693b1296e0dcd1",
+      "bytes": 23433
+    },
+    {
+      "path": "shared/prompt_enhancer/config.py",
+      "sha256": "20389c6ed367140be4e2d2123689c7717c74bfb5edb21f64374e51953c2b6dd7",
+      "live_source_sha256": "caabb53a5f4c01e2c259a85c448ec4044b8b5466d2e2f91760008c871aafab20",
+      "bytes": 3575
+    },
+    {
+      "path": "shared/prompt_enhancer/loader.py",
+      "sha256": "f86e34a226dae722f1b6ca5944e7e64a2deda457110b126f5470a00d35eec6d3",
+      "live_source_sha256": "db812e1cacc31c68cb59fccb04517e4e3df3f24e0935577c05a8cf414af0a99e",
+      "bytes": 14645
+    },
+    {
+      "path": "shared/prompt_enhancer/qwen35_assistant_runtime.py",
+      "sha256": "2172266e998ad6944bf2e9c710921b12ed40eb18374be66829739be16538019a",
+      "live_source_sha256": "e4e9f8fa22533f8c5ce9d8473dde6b3f9e4c73beac1cebdbf72fd65c109f40d1",
+      "bytes": 104410
+    },
+    {
+      "path": "shared/prompt_enhancer/qwen35_text.py",
+      "sha256": "abf95d7c99fcc2cffc2cb40c3c26e26b5828e8d7d628783ae55f35d4535bfc4f",
+      "live_source_sha256": "2ceb64485d1c0dd82bc945b9099873db046c2a129ef487f712c2c6746989a2b0",
+      "bytes": 55041
+    },
+    {
+      "path": "shared/prompt_enhancer/qwen35_vl.py",
+      "sha256": "5ac10735c4f81399b18b737c58d51b4c68f1b2b39e497f1c7675f2d37db061bd",
+      "live_source_sha256": "37543a02040cce7e3d75a636b985a2fe5a6d8dd77ef3294165e6d61a00d53f72",
+      "bytes": 47294
+    },
+    {
+      "path": "shared/qtypes/gguf.py",
+      "sha256": "8f7bd6de187ac902e5dc809dc1ba9dfc43c9017bc90dbe1b7d900b7533be3afc",
+      "live_source_sha256": "31c5787b7eed4fc3498b17cd85344fe6e1eb526a6180970e5d4aab446d45b168",
+      "bytes": 84273
+    },
+    {
+      "path": "tests/deepy_streaming_protocol.test.js",
+      "sha256": "c556f4a27330258a214c6588ebc498015a00fe1b1d215a11e397cf7beea1d61f",
+      "live_source_sha256": "c556f4a27330258a214c6588ebc498015a00fe1b1d215a11e397cf7beea1d61f",
+      "bytes": 22893
+    },
+    {
+      "path": "tests/test_fused_silu_mul.py",
+      "sha256": "9a9178e1f2dfe5ebe51832bd5a7267f9cfa3af9c5f3d6f3bcdef45058718836b",
+      "live_source_sha256": "9a9178e1f2dfe5ebe51832bd5a7267f9cfa3af9c5f3d6f3bcdef45058718836b",
+      "bytes": 1901
+    },
+    {
+      "path": "tests/test_gguf_torch_fallback.py",
+      "sha256": "fbcdd39f2f00431f820d55fbc004f656445fe994281b64bef3331052202d7b22",
+      "live_source_sha256": "fbcdd39f2f00431f820d55fbc004f656445fe994281b64bef3331052202d7b22",
+      "bytes": 4284
+    },
+    {
+      "path": "tests/test_llm_backend_isolation.py",
+      "sha256": "fe020556105364df9b6e7f2e3b1c3f1668088fc950cc763ed19feb2bf99336e2",
+      "live_source_sha256": "fe020556105364df9b6e7f2e3b1c3f1668088fc950cc763ed19feb2bf99336e2",
+      "bytes": 5311
+    },
+    {
+      "path": "tests/test_nanovllm_speculative_sampling.py",
+      "sha256": "62475dd03dcdf372a60665d350b6b09e218101f0871e107d04d3bb800069908b",
+      "live_source_sha256": "350eac42ed0b42c3b296016108c8c6a10d1dbe4af2c8d5eb3c63b022cf476bb6",
+      "bytes": 20100
+    },
+    {
+      "path": "tests/test_prompt_enhancer_speculative_config.py",
+      "sha256": "d27dda9d0603d5f8191e1f69763bb80befc81a20c5faaefe9e8ffd0c5efe48fd",
+      "live_source_sha256": "d27dda9d0603d5f8191e1f69763bb80befc81a20c5faaefe9e8ffd0c5efe48fd",
+      "bytes": 1649
+    },
+    {
+      "path": "tests/test_q8_paged_attention.py",
+      "sha256": "168cbad15bf3bd976259eb7d7683af4fae5c9258be0e17c60dc853ef56883356",
+      "live_source_sha256": "168cbad15bf3bd976259eb7d7683af4fae5c9258be0e17c60dc853ef56883356",
+      "bytes": 4592
+    },
+    {
+      "path": "tests/test_q8_sm120_attention.py",
+      "sha256": "0feabd9b5999a2b24d6bef927485218c5864bf57c54021b87874e5219e8b0d5d",
+      "live_source_sha256": "0feabd9b5999a2b24d6bef927485218c5864bf57c54021b87874e5219e8b0d5d",
+      "bytes": 7443
+    },
+    {
+      "path": "tests/test_q8_sm120_compiled.py",
+      "sha256": "c01aa40717570f3abbef63b16abeccbf69253da40843f3e2169285fcf689f125",
+      "live_source_sha256": "c01aa40717570f3abbef63b16abeccbf69253da40843f3e2169285fcf689f125",
+      "bytes": 3504
+    },
+    {
+      "path": "tests/test_speculative_state.py",
+      "sha256": "f661d8ac64b8f3aec25f075bbedcf262a804928fd148498fd73da7f78f7c81a5",
+      "live_source_sha256": "d0c995181a6ab3db82e97c262f7f4114fca23bde29c078bc3db870871fda341f",
+      "bytes": 3906
+    },
+    {
+      "path": "tests/test_triton_shape_ranges.py",
+      "sha256": "ef7373c7485c7181eb031263490fcb0d448a0e7e7428ce5a3c6c19fddd12b330",
+      "live_source_sha256": "ef7373c7485c7181eb031263490fcb0d448a0e7e7428ce5a3c6c19fddd12b330",
+      "bytes": 4646
+    },
+    {
+      "path": "tools/benchmark_qwen38_engine.py",
+      "sha256": "754e9a0a857cca955e3547cb47ad3d9fb48b8e645ec1134bbbc455f69d099261",
+      "live_source_sha256": "02d7e970a96811650ced377df121916ed8ce7f4aca2fdd09b5dd46913302f6d3",
+      "bytes": 11022
+    }
+  ],
+  "line_endings": "LF"
+}

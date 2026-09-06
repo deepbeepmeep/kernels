@@ -1,99 +1,80 @@
-# llamacpp-gguf-cuda
+# llamacpp-gguf-cuda 1.0.21
 
-Reusable GGUF CUDA kernels packaged as a wheel.
+GGUF CUDA linear, embedding and paged-attention kernels for WanGP. The source tree contains the complete vendored llama.cpp/GGML implementation and the sources needed to reproduce the wheels.
 
-This package exposes the unified GGUF CUDA path used in WanGP:
-- `linear` with `auto/mmq/cublas` backend selection
-- `embedding` for supported GGUF qtypes
-- decode-only paged Q8 KV-cache attention derived from llama.cpp `fattn-vec`, with native FP16/BF16 I/O and FP32 accumulation
+## What is included
 
-Version 1.0.14 reserves the complete maximum MMQ activation tile around exact-sized
-PyTorch Q8 workspaces. This matches the loader's vectorized tail-read contract and
-prevents an asynchronous illegal memory access during CUDA-graph/speculative workloads.
-It also exposes an experimental dense FP16/BF16 paged-attention entry point used for
-direct comparisons without changing the default FlashAttention path.
+- Packed MMVQ for decoding and short speculative batches, using llama.cpp's architecture-aware selection; packed MMQ for larger batches. Neither requires dense weight materialization.
+- MMVQ row-loop reuse and direct FP16/BF16/FP32 activation quantization, avoiding a temporary FP32 input matrix.
+- Maximum-tile MMQ activation padding for safe CUDA-graph replay. Output and scratch buffers avoid unnecessary zero fills.
+- Native Q8 paged attention and experimental dense FP16/BF16 paged attention. The Q8 vector path selects up to 64 automatic splits on SM120-class devices and 32 on other devices.
+- **Precompiled SM120 asynchronous-copy attention** for Q8 prefill and grouped decode/verification. Four cubins per CUDA major cover FP16/BF16 and prefill/grouped operation. Runtime query counts, heads, pages, context lengths and splits do not compile new variants. These use `cp.async`, not TMA. Native C++ launches the binaries on PyTorch's current CUDA stream, including during graph capture. This path has no runtime Triton dependency.
+- The WanGP overlay in `wangp/` preserves the shared engine/kernel integration and tests. Its dispatch enables the new async path only in the vLLM backend on compute capability 12.0, with head dimension 256. Other GPUs retain the shared implementations; legacy/cg retain their existing native/PyTorch paths.
 
-`q8_paged_attention` consumes INT8 K/V pages with one FP16 Q8_0 scale per 32 values. Its paged traversal and reduction adapt llama.cpp's vector attention structure to Nano-vLLM block tables, while Q8_1 query quantization and Q8_0 x Q8_1 `dp4a` products reuse llama.cpp CUDA primitives directly. It supports grouped-query attention, batched single-token decode, and causal multi-token speculative verification without materializing the full cache. It selects power-of-two split-K partitions with llama.cpp's occupancy and GPU-wave-efficiency heuristic, constrained by cache capacity and capped at 32 after SM89 graph-replay tuning. Temporary storage uses PyTorch and is safe to record and replay in CUDA graphs. Prompt prefill is intentionally outside this API.
+The GPU binaries contain the same high/low tensor-core arithmetic as the validated Gluon source. This release does not change checkpoint quantization or sampling settings. Only an RTX5090 was available for hardware validation; fatbin coverage is not a claim of testing on every GPU.
 
-## Build
+## Release targets
 
-### WSL / Linux
+| Python | PyTorch | Toolkit used | Native SASS architectures |
+|---|---|---|---|
+| 3.10 | 2.7.1+cu128 | CUDA 12.8 | 50, 52, 53, 60, 61, 62, 70, 72, 75, 80, 86, 87, 89, 90, 100, 101, 120 |
+| 3.11 | 2.10.0+cu130 | CUDA 13.1 | 75, 80, 86, 87, 88, 89, 90, 100, 103, 110, 120, 121 |
 
-The repo includes a target-aware WSL build helper:
+Both targets have Windows x86-64 and Linux x86-64 wheels, with PTX for the highest toolkit architecture. CUDA 13 no longer compiles pre-SM75 targets; use the CUDA 12.8 stack for those devices, subject to PyTorch's own GPU support. SM120 async binaries are separately bundled for CUDA 12 and 13 and are never selected on other architectures.
+
+## Reproduce a wheel
+
+Install the matching CUDA-enabled PyTorch, setuptools, wheel and ninja in the target Python environment, plus the indicated CUDA toolkit. Linux needs a compatible C++ compiler and Python development headers. Windows needs MSVC and the Windows SDK; setup configures their paths without calling vcvars64.bat.
+
+Run the helper with the target environment's Python. Build workspaces must be outside the source directory. It records compiler versions, architectures, source hashes, timing and wheel checksums in `build_manifest.json` and compiler output in `build.log`.
+
+```powershell
+# Windows, Python 3.11 / PyTorch 2.10
+python scripts/build_release.py --target py311 --cuda-home "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.1" --work-dir D:\gguf-build\win311 --dist-dir D:\gguf-build\dist
+# Windows, Python 3.10 / PyTorch 2.7 (run with that environment's Python)
+python scripts/build_release.py --target py310 --cuda-home "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8" --work-dir D:\gguf-build\win310 --dist-dir D:\gguf-build\dist
+```
 
 ```bash
-cd /mnt/e/ML/kernels/llama.cpp
-chmod +x scripts/build_wsl_wheels.sh
-./scripts/build_wsl_wheels.sh py310
-./scripts/build_wsl_wheels.sh py311
+# Linux / WSL; use the matching Python for each command
+python scripts/build_release.py --target py310 --cuda-home /usr/local/cuda-12.8 --work-dir /tmp/gguf-build/linux310 --dist-dir /tmp/gguf-build/dist
+python scripts/build_release.py --target py311 --cuda-home /path/to/cuda-13.1 --work-dir /tmp/gguf-build/linux311 --dist-dir /tmp/gguf-build/dist
 ```
 
-Supported Linux targets:
-- `py310`: conda `base`, Python `3.10`, PyTorch `2.7.1+cu128`, Linux CUDA toolkit `12.8`
-- `py311`: conda `py311`, Python `3.11`, PyTorch `2.10.0+cu130`, env-local CUDA toolkit `13.x`
+The release helper intentionally clears `TORCH_CUDA_ARCH_LIST` to include every code reported by `nvcc --list-gpu-code`. Default compilation concurrency is one job with two NVCC threads; increase `--max-jobs` only if sufficient RAM is available. For a private, architecture-limited build, use `TORCH_CUDA_ARCH_LIST` with `python -m pip wheel . --no-build-isolation --no-deps` directly instead.
 
-Set `MAX_JOBS` to control parallel compilation and `TORCH_CUDA_ARCH_LIST` if you want to narrow the generated fatbin.
+### Recompile the SM120 GPU programs
 
-### Windows
+Ordinary wheel builds package the checked-in cubins and do not need Triton. To regenerate them after changing `csrc/sm120_async.py`, use a separate Python environment with Triton 3.6.0 (Gluon), and run both commands before building the wheels:
 
-```powershell
-cd E:\ML\kernels\llama.cpp
-C:\Users\Marc\anaconda3\envs\py311\python.exe -m pip wheel . --no-build-isolation -w dist
+```bash
+python scripts/compile_sm120.py --cuda-major 12 --ptxas /path/to/cuda-12.8/bin/ptxas
+python scripts/compile_sm120.py --cuda-major 13 --ptxas /path/to/cuda-13.1/bin/ptxas
 ```
 
-By default the wheel builds a fatbin for every GPU code reported by the local CUDA toolkit `nvcc --list-gpu-code`.
-Set `TORCH_CUDA_ARCH_LIST` explicitly if you want to override that and build a narrower wheel.
-Set `LLAMACPP_GGUF_CUDA_BUILD_COMPONENTS=attention` to rebuild only the attention extension while repackaging an existing compatible MMQ/cuBLAS `_C` binary.
+On Windows, use the toolkit's `ptxas.exe`. The script writes four cubins, their PTX, signatures, launch metadata and SHA-256 checksums under `src/llamacpp_gguf_cuda/kernels/sm120_cu12` and `sm120_cu13`. The cubins are GPU programs shared by Windows and Linux; the native launcher is built separately for each Python/PyTorch/platform ABI. The emitted programs require no global/profile scratch allocation.
 
-## Install
+## Install and validate
 
-```powershell
-C:\Users\Marc\anaconda3\envs\py311\python.exe -m pip install --force-reinstall --no-deps dist\llamacpp_gguf_cuda-*.whl
+Install the wheel matching the existing environment without replacing PyTorch:
+
+```bash
+python -m pip install --force-reinstall --no-deps /path/to/matching.whl
+python tests/validate_release.py --output validation.json --checkpoint /path/to/Qwen3.8-Q4_K_M.gguf
 ```
 
-The wheel expects an existing CUDA-enabled PyTorch installation in the target environment.
+The checkpoint argument is optional. Tests cover 18 qtypes with nonzero weights, FP16/BF16 inputs, decoding through prefill batch sizes, embeddings, attention and repeated CUDA-graph replays with changed data. On SM120 they also exercise the precompiled path without importing Triton. The WanGP integration tests and real-model benchmark are included in the overlay.
 
-## Runtime
+## Runtime controls
 
-Backend selection is controlled by `WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE`:
-- `auto`
-- `mmq`
-- `cublas`
+`WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE` takes precedence over `WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE`:
 
-For user-facing selection, `WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE` accepts:
-- `fast` (alias `materialized`): use MMQ for small workloads and materialize larger workloads to the requested FP16/BF16 dtype for cuBLAS
-- `low_vram` (alias `mmq`): always multiply directly from packed GGUF weights without a dense weight temporary
+- `fast`, `mmq`, `packed`, `low_vram`: packed MMVQ/MMQ.
+- `materialized`, `dense`, `cublas`: explicitly materialize weights for cuBLAS.
+- With no override, the packed path is selected. The older LINEAR_MODE variable accepts `mmq` or `cublas`; `auto` selects packed operation.
 
-The fast policy follows llama.cpp's existing NVIDIA threshold: MMQ below 64 input rows,
-materialized cuBLAS at 64 rows and above. `mmq` describes the strict no-materialization
-mode; its total runtime VRAM peak can still exceed fast mode when MMQ workspaces dominate.
+The Python wrapper reads these variables at each eager call. Changes affect new graph captures; existing graphs must be rebuilt to change their recorded operations. There is no `refresh_env()` API and no configurable Stream-K environment variable in this implementation.
 
-The new variable takes precedence over `WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE`.
-Materialized BF16 uses BF16 inputs and weights with FP32 accumulation.
-Environment selection is cached at import. After changing one of these variables in
-an existing Python process, call `llamacpp_gguf_cuda.refresh_env()` between generations.
+Packed operations accumulate into an FP32 output and cast to the requested dtype. MMQ keeps a reusable Stream-K workspace, sized from the device's SM count and rounded to 16 MiB; `prepare_runtime_buffers()` allocates it before graph capture, and `release_runtime_buffers()` releases it only when no graph using it remains live. It does not allocate a dense weight cache.
 
-Stream-K is enabled by default. `WGP_GGUF_LLAMACPP_CUDA_STREAM_K=0` disables only
-Stream-K while retaining the packed-weight MMQ path; `1`, `on`, and `auto` enable it.
-`WGP_GGUF_LLAMACPP_CUDA_STREAM_K_BUFFER_MB` sets the persistent per-device fixup
-workspace in MiB and defaults to `16`. A value of `0` also disables Stream-K. The
-workspace is allocated lazily by the first eager MMQ call, retained until module/process
-shutdown, and reused during CUDA graph recording and replay. If a requested MMQ launch
-needs more than the configured workspace, that launch transparently uses conventional
-MMQ tiling. Both variables are cached by the same `refresh_env()` call and are never
-read from the environment in the kernel call path.
-Refreshing changes eager calls and subsequent graph captures; already-recorded CUDA
-graphs must be recreated before they can reflect a new Stream-K setting.
-
-In `auto` mode, BF16 output uses MMQ on supported GPUs. Set
-`WGP_GGUF_LLAMACPP_CUDA_BF16_FP16=1` to restore the legacy behavior that
-computes BF16 requests through the FP16 cuBLAS path. An explicit
-`WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE=mmq` or `cublas` overrides this compatibility setting.
-
-MMQ automatically applies per-row power-of-two scaling when a qtype stores Q8_1
-partial sums in FP16. This prevents finite, high-range activations from overflowing
-those sums without changing the quantized ratios.
-
-FP16 and BF16 MMQ projections write their final values directly from the FP32 accumulator.
-Stream-K keeps only its split-tile fixups in FP32, avoiding a complete temporary
-FP32 output without changing the launch geometry.
+`q8_paged_attention` consumes INT8 K/V pages with one FP16 scale per 32 values, supports grouped-query attention and causal speculative verification. Its original vector path uses Q8_1 query quantization and dp4a products. The separate `sm120` interface supplies async tensor-core prefill and grouped partials; WanGP applies the shared reduction afterward.

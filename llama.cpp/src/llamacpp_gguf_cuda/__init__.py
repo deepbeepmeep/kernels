@@ -30,6 +30,9 @@ try:
 except ImportError:
     _attention = None
 
+if _attention is not None and hasattr(_attention, "load_sm120_kernel"):
+    from . import sm120
+
 
 def _log_once(key: str, message: str) -> None:
     if key not in _LOGGED:
@@ -109,7 +112,7 @@ def supports_linear_qtype_name(qtype_name: str) -> bool:
     mode = _linear_mode()
     _log_once(f"llamacpp_gguf_cuda_mode_{mode}", f"[GGUF][llama.cpp CUDA v1] linear mode={mode}.")
     if mode == "mmq":
-        _log_once("llamacpp_gguf_cuda_packed", "[GGUF][llama.cpp CUDA v1] Blackwell-tuned packed MMQ active (native BF16 input, no dense weight materialization).")
+        _log_once("llamacpp_gguf_cuda_packed", "[GGUF][llama.cpp CUDA v1] Packed MMVQ/MMQ active (architecture-aware dispatch, no dense weight materialization).")
     return bool(_C.supports_linear_qtype_name(qtype_name))
 
 
