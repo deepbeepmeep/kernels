@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONDA_ROOT="${CONDA_ROOT:-$HOME/anaconda3}"
-WORK_ROOT="${WORK_ROOT:-$HOME/gguf-build-1.0.21}"
+WORK_ROOT="${WORK_ROOT:-$HOME/gguf-build-1.0.22}"
 DIST_DIR="${DIST_DIR:-$WORK_ROOT/dist}"
 
 build_target() {

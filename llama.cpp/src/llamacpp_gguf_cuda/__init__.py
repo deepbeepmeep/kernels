@@ -8,8 +8,8 @@ from .version import __version__
 
 _LINEAR_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE"
 _MATMUL_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE"
-_FAST_LINEAR_QTYPES = {"Q2_K", "Q3_K", "Q4_0", "Q4_1", "Q4_K", "Q5_0", "Q5_1", "Q5_K", "Q6_K", "Q8_0", "IQ1_S", "IQ2_S", "IQ2_XS", "IQ2_XXS", "IQ3_S", "IQ3_XXS", "IQ4_NL", "IQ4_XS"}
-_FAST_EMBEDDING_QTYPES = {"Q4_K", "Q6_K"}
+_FAST_LINEAR_QTYPES = {"PTQ1_0", "Q2_K", "Q3_K", "Q4_0", "Q4_1", "Q4_K", "Q5_0", "Q5_1", "Q5_K", "Q6_K", "Q8_0", "IQ1_S", "IQ2_S", "IQ2_XS", "IQ2_XXS", "IQ3_S", "IQ3_XXS", "IQ4_NL", "IQ4_XS"}
+_FAST_EMBEDDING_QTYPES = {"PTQ1_0", "Q4_K", "Q6_K"}
 _LOGGED = set()
 
 
@@ -24,6 +24,11 @@ def _add_dll_dirs() -> None:
 _add_dll_dirs()
 
 from . import _C
+
+try:
+    from . import _prism
+except ImportError:
+    _prism = None
 
 try:
     from . import _attention
@@ -132,7 +137,21 @@ def embedding(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, indices: 
     return _C.embedding(raw_weight, qtype_name, list(tensor_shape), indices, str(output_dtype).replace("torch.", ""))
 
 
+def prism_hadamard(input_tensor, signs, inverse=False, grouped_shape=(0, 0, 0)):
+    return _C.prism_hadamard(input_tensor, signs, inverse, *grouped_shape)
+
+
+def has_prism_decode():
+    return _prism is not None and _linear_mode() == "mmq"
+
+
+def prism_decode(input_tensor, raw_weight, signs, bias, rows, grouped_shape=(0, 0, 0), row_tile=4):
+    return _prism.decode(input_tensor, raw_weight, signs, bias, rows, *grouped_shape, 4, row_tile)
+
+
 __all__ = [
+    "has_prism_decode", "prism_decode",
+    "prism_hadamard",
     "__version__", "embedding", "linear", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
     "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits", "dense_paged_attention",
     "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name",

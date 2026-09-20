@@ -68,7 +68,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.21"
+BASE_VERSION = "1.0.22"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")
@@ -142,9 +142,18 @@ extra_compile_args = {
 
 ext_modules = [
     CUDAExtension(
+        name="llamacpp_gguf_cuda._prism",
+        sources=[str(CSRC / "prism_decode_bindings.cpp"), str(CSRC / "prism_decode.cu")],
+        include_dirs=[str(ROOT / GGML / "include"), str(ROOT / GGML / "src"), str(ROOT / GGML / "src" / "ggml-cuda")],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=EXTRA_LINK_ARGS,
+        library_dirs=EXTRA_LIBRARY_DIRS,
+    ),
+    CUDAExtension(
         name="llamacpp_gguf_cuda._C",
         sources=[
             str(CSRC / "gguf_llamacpp_bindings.cpp"),
+            str(CSRC / "prism_hadamard.cu"),
             str(CSRC / "gguf_llamacpp_kernels.cu"),
             str(GGML / "src" / "ggml-cuda" / "quantize.cu"),
             str(GGML / "src" / "ggml-cuda" / "mmvq.cu"),

@@ -1,0 +1,12 @@
+............                                                             [100%]
+============================== warnings summary ===============================
+C:\Users\Marc\anaconda3\envs\py311\Lib\site-packages\torch\jit\_script.py:362: 14 warnings
+  C:\Users\Marc\anaconda3\envs\py311\Lib\site-packages\torch\jit\_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+C:\Users\Marc\anaconda3\envs\py311\Lib\site-packages\torch\jit\_script.py:1480
+  C:\Users\Marc\anaconda3\envs\py311\Lib\site-packages\torch\jit\_script.py:1480: DeprecationWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+12 passed, 14 deselected, 15 warnings in 26.36s

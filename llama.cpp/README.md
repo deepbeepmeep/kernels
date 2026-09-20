@@ -1,6 +1,18 @@
-# llamacpp-gguf-cuda 1.0.21
+# llamacpp-gguf-cuda 1.0.22
 
 GGUF CUDA linear, embedding and paged-attention kernels for WanGP. The source tree contains the complete vendored llama.cpp/GGML implementation and the sources needed to reproduce the wheels.
+
+## PTQ1_0 additions in 1.0.22
+
+Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 formats retain their kernels, dispatch thresholds, activation quantization, scratch pools and attention implementation. PTQ1_0 adds SIMD base-3 decoding with DP4A, decoded-weight reuse for two/three-column MMVQ, short-batch dispatch through seven tokens, tensor-core MMQ with D4 activation scales and StreamK, and packed embedding lookup. Odd 128-value block counts use bounded MMVQ batches because MMQ consumes 256 input values per iteration.
+
+`prism_hadamard(input, signs, inverse=False, grouped_shape=(0, 0, 0))` applies normalized 1024-wide signed Sylvester transforms with FP32 accumulation. It supports forward/inverse transforms, the Prism GDN head permutation, FP16/BF16/FP32 inputs, PyTorch streams and CUDA graph capture. Signs are caller-owned tensors; the kernel retains no model weights or graph buffers. WanGP also needs its matching Prism GGUF metadata/loader integration: decoding ternary bytes alone does not correctly run a folded checkpoint.
+
+The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.22/README.md` for the final build and validation records.
+
+The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. The current WanGP overlay enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
+
+Validation scripts: `tests/test_quant_compatibility.py` compares saved old-format outputs bit-for-bit; `tests/test_ptq1.py` checks independent base-3 references, shape tails, bias, three dtypes and graph replay; `tests/test_prism_hadamard.py` checks independent signed FWHT references and GDN permutation. `tests/benchmark_quant_compatibility.py` measures unchanged formats before/after in separate processes.
 
 ## What is included
 
@@ -63,7 +75,7 @@ python -m pip install --force-reinstall --no-deps /path/to/matching.whl
 python tests/validate_release.py --output validation.json --checkpoint /path/to/Qwen3.8-Q4_K_M.gguf
 ```
 
-The checkpoint argument is optional. Tests cover 18 qtypes with nonzero weights, FP16/BF16 inputs, decoding through prefill batch sizes, embeddings, attention and repeated CUDA-graph replays with changed data. On SM120 they also exercise the precompiled path without importing Triton. The WanGP integration tests and real-model benchmark are included in the overlay.
+The checkpoint argument is optional. Tests cover 18 qtypes with nonzero weights, FP16/BF16 inputs, decoding through prefill batch sizes, embeddings, attention and repeated CUDA-graph replays with changed data. On SM120 they also exercise the precompiled path without importing Triton. The WanGP integration tests and real-model benchmark are included in the overlay. `scripts/validate_wheel.py` runs old-format bit-exact comparisons, the standard suite, PTQ1, signed FWHT and fused decode checks against an isolated wheel. `scripts/inspect_wheel.py` verifies every native extension's SASS/PTX inventory.
 
 ## Runtime controls
 

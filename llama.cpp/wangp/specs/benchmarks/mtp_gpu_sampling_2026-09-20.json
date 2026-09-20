@@ -1,0 +1,908 @@
+{
+  "date": "2026-09-20",
+  "gpu": "RTX 5090",
+  "production_changed": true,
+  "pytest_passed": 180,
+  "runtime_validation": {
+    "bonsai": {
+      "backend": "gguf_ptq1",
+      "selection": {
+        "method": "mtp",
+        "tokens": 2
+      },
+      "draft_folder": "native MTP",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because chlorophyll, the primary photosynthetic pigment, absorbs red and blue light for energy while reflecting most of the green wavelengths back to the human eye.",
+          "gpu_acceptance_rounds": 16,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because chlorophyll, the primary photosynthetic pigment, absorbs red and blue light for energy while reflecting most of the green wavelengths back to the human eye.",
+          "gpu_acceptance_rounds": 32,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " is the primary source of energy for most life on Earth, producing oxygen as a byproduct and forming the base of most"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The sky appears blue due to a phenomenon known as **Rayleigh scattering**. Here is a step-by-step explanation of how it works:\n\n### 1. Sunlight Contains All Colors\nAlthough sunlight appears white, it is actually a combination"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of a process called **Rayleigh scattering**.\n\nWhen sunlight enters Earth\u2019s atmosphere, it encounters molecules and tiny particles. Sunlight appears white, but it is actually made up of many colors, each with a different wavelength. Shorter wavelengths\u2014like **blue and violet**\u2014scatter much more strongly than longer wavelengths\u2014like red and orange.\n\nAs a result, blue light is scattered in all directions across the sky, making the sky appear blue when we look up.\n\nOne might ask: if violet light scatters even more than blue light, why isn\u2019t the sky violet? There are a few reasons:\n\n1. The Sun emits less violet light than blue light.\n2. Our eyes are more sensitive to blue than violet.\n3. Some violet light is absorbed higher in the atmosphere.\n\nSo the combination of atmospheric scattering and human vision makes the sky appear predominantly blue.<|im_end|>"
+        },
+        {
+          "vision_answer": "The image shows two tabby cats lying on their sides on a bright pink surface, likely a couch or bed. Both cats appear to be sleeping or resting.\n\n- **Left Cat:** A smaller, younger-looking tabby cat (possibly a kitten) with distinct dark stripes. It is lying on its side with its head turned away from the camera. A white remote control is visible near its head.\n- **Right Cat:** A larger, adult tabby cat with a",
+          "restored_after_vision": true
+        }
+      ],
+      "peak_vram_bytes": 9116819456,
+      "vision_on_cpu_outside_inspection": true
+    },
+    "q2": {
+      "backend": "gguf_q2",
+      "selection": {
+        "method": "mtp",
+        "tokens": 2
+      },
+      "draft_folder": "native MTP",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because chlorophyll absorbs red and blue light for photosynthesis while reflecting green wavelengths, which our eyes then perceive.",
+          "gpu_acceptance_rounds": 12,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because chlorophyll absorbs red and blue light for photosynthesis while reflecting green wavelengths, which our eyes then perceive.",
+          "gpu_acceptance_rounds": 24,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " is the primary source of organic matter and oxygen for life on Earth.\n\nHere is a detailed explanation of photosynthesis,"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The reason the sky looks blue is a phenomenon known as **Rayleigh Scattering**. Here is the step-by-step explanation of how this works:\n\n### 1. Sunlight Contains All Colors\nSunlight appears white, but it is"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of **Rayleigh scattering** in Earth\u2019s atmosphere.\n\nSunlight is made of all visible colors, each with a different wavelength. When sunlight enters the atmosphere, it collides with tiny gas molecules like nitrogen and oxygen. Shorter wavelengths\u2014blue and violet\u2014scatter much more strongly than longer wavelengths like red or orange.\n\nSo blue light is spread across the sky in many directions, making the whole sky appear blue. Violet scatters even more, but we perceive the sky as blue rather than violet for two main reasons:\n\n1. **Our eyes are more sensitive to blue** than violet.  \n2. **Some violet is absorbed** by the upper atmosphere and mixed with blue.\n\nAt sunrise and sunset, sunlight travels through more air, so most blue light is scattered away before reaching us, leaving the reds and oranges we see.<|im_end|>"
+        }
+      ],
+      "peak_vram_bytes": 11613957120,
+      "vision_on_cpu_outside_inspection": true
+    },
+    "q3": {
+      "backend": "gguf_q3",
+      "selection": {
+        "method": "mtp",
+        "tokens": 2
+      },
+      "draft_folder": "native MTP",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll in them absorbs red and blue light for photosynthesis while reflecting green light back to our eyes.",
+          "gpu_acceptance_rounds": 12,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll in them absorbs red and blue light for photosynthesis while reflecting green light back to our eyes.",
+          "gpu_acceptance_rounds": 24,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " It is the primary driver of life on Earth, providing both the energy source (food) and the oxygen required for most"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The reason the sky appears blue is due to a physical phenomenon known as **Rayleigh scattering**.\n\nHere is the step-by-step logical deduction of how this process works:\n\n### 1. The Composition of Sunlight\nSunlight appears"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of **Rayleigh scattering**.\n\nSunlight is made up of many colors, each with a different wavelength. When sunlight enters Earth\u2019s atmosphere, it collides with tiny gas molecules like nitrogen and oxygen. Shorter wavelengths\u2014especially **blue and violet**\u2014scatter much more strongly than longer wavelengths like red and orange.\n\nAlthough violet scatters even more than blue, the sky doesn\u2019t look violet because:\n\n- Sunlight contains less violet than blue.\n- Our eyes are more sensitive to blue.\n- Some violet light is absorbed higher in the atmosphere.\n\nSo the scattered light reaching our eyes from all directions is mostly **blue**, making the sky appear that color.<|im_end|>"
+        }
+      ],
+      "peak_vram_bytes": 13857457152,
+      "vision_on_cpu_outside_inspection": true
+    },
+    "q4": {
+      "backend": "gguf",
+      "selection": {
+        "method": "mtp",
+        "tokens": 2
+      },
+      "draft_folder": "native MTP",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll pigment in them absorbs red and blue light for photosynthesis while reflecting green light, which is then detected by our eyes.",
+          "gpu_acceptance_rounds": 14,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll pigment in them absorbs red and blue light for photosynthesis while reflecting green light, which is then detected by our eyes.",
+          "gpu_acceptance_rounds": 28,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " energy. It is the primary source of organic matter and oxygen on Earth, serving as the foundation for most food chains."
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The reason the sky appears blue is due to a physical phenomenon called **Rayleigh scattering**. Here is the step-by-step logical deduction of how this process works.\n\n### 1. The Composition of Sunlight\nSunlight appears white to"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of **Rayleigh scattering**.\n\nSunlight is made of many colors, each with a different wavelength. When sunlight enters Earth\u2019s atmosphere, it collides with tiny gas molecules like nitrogen and oxygen. Shorter wavelengths\u2014especially **blue and violet**\u2014scatter much more strongly than longer wavelengths like red or orange.\n\nSo when you look up, you see scattered blue light coming from all directions in the sky.\n\nYou might wonder why the sky isn\u2019t violet, since violet scatters even more than blue. There are two main reasons:\n\n1. The Sun emits less violet light than blue light.\n2. Human eyes are more sensitive to blue than violet.\n\nThat\u2019s why the sky appears blue rather than violet.<|im_end|>"
+        }
+      ],
+      "peak_vram_bytes": 17819079680,
+      "vision_on_cpu_outside_inspection": true
+    },
+    "dflash_q4": {
+      "backend": "gguf",
+      "selection": {
+        "method": "dflash2",
+        "tokens": 7
+      },
+      "draft_folder": "Qwen3_8_27B_DFlash2",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll pigment in them absorbs red and blue light for photosynthesis while reflecting green light, which then enters our eyes.",
+          "gpu_acceptance_rounds": 12,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll pigment in them absorbs red and blue light for photosynthesis while reflecting green light, which then enters our eyes.",
+          "gpu_acceptance_rounds": 24,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " energy. It is the primary source of organic matter and oxygen on Earth, serving as the foundation for most food chains."
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The reason the sky appears blue is due to a physical phenomenon called **Rayleigh scattering**. Here is the step-by-step logical deduction of how this process works:\n\n### 1. The Composition of Sunlight\nSunlight appears white to"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of **Rayleigh scattering**.\n\nSunlight is made up of many colors, each with a different wavelength. When sunlight enters Earth\u2019s atmosphere, it collides with tiny gas molecules like nitrogen and oxygen. Shorter wavelengths\u2014especially **blue and violet light**\u2014scatter much more strongly than longer wavelengths like red or orange.\n\nBlue light scatters in all directions across the sky, so when you look up, your eyes receive a lot of scattered blue light from every part of the sky.\n\nYou might wonder why the sky isn\u2019t violet, since violet has an even shorter wavelength. There are a few reasons:\n\n1. The Sun emits less violet light than blue light.\n2. Some violet light is absorbed higher in the atmosphere.\n3. Human eyes are more sensitive to blue than to violet.\n\nSo the combination of atmospheric scattering and human vision makes the daytime sky appear blue.<|im_end|>"
+        },
+        {
+          "vision_answer": "Based on the image provided, here is a description of the animals:\n\nThere are two cats in the image.\n\n- **Species and Breed:** Both appear to be domestic shorthair cats with a tabby coat pattern. The pattern consists of dark stripes and swirls on a lighter brown or tan background.\n- **Position:** They are lying down on a bright pink fabric surface, which looks like a couch or bed.\n- The cat on the left is",
+          "restored_after_vision": true
+        }
+      ],
+      "peak_vram_bytes": 24132871168,
+      "vision_on_cpu_outside_inspection": true
+    },
+    "dflash_bonsai": {
+      "backend": "gguf_ptq1",
+      "selection": {
+        "method": "dflash2",
+        "tokens": 5
+      },
+      "draft_folder": "Bonsai_2_27B_DFlash2",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because their chlorophyll pigments absorb red and blue light for photosynthesis while reflecting most green wavelengths, which are then detected by the human eye.",
+          "gpu_acceptance_rounds": 15,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because their chlorophyll pigments absorb red and blue light for photosynthesis while reflecting most green wavelengths, which are then detected by the human eye.",
+          "gpu_acceptance_rounds": 30,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " is the primary source of energy for most life on Earth, providing both the organic molecules (food) and the oxygen that"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The sky appears blue due to a phenomenon known as **Rayleigh scattering**. Here is a step-by-step explanation of how it works:\n\n### 1. Sunlight is White\nSunlight appears white, but it is actually composed of"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of a process called **Rayleigh scattering**.\n\nWhen sunlight enters Earth\u2019s atmosphere, it encounters molecules and tiny particles. Sunlight appears white, but it is actually made up of many colors, each with a different wavelength. Shorter wavelengths\u2014like **blue and violet**\u2014scatter much more strongly than longer wavelengths\u2014like red and orange.\n\nAs a result, blue light is scattered in all directions across the sky, making the sky appear blue when we look up.\n\nOne might ask: if violet light scatters even more than blue light, why isn\u2019t the sky violet? There are a few reasons:\n\n1. **Sunlight contains less violet light** than blue light.\n2. The human eye is **less sensitive to violet** than to blue.\n3. Some violet light is absorbed higher in the atmosphere.\n\nSo the combination of atmospheric scattering and human vision makes the sky appear predominantly blue.<|im_end|>"
+        }
+      ],
+      "peak_vram_bytes": 11224372224,
+      "vision_on_cpu_outside_inspection": true
+    }
+  },
+  "benchmarks": {
+    "ptq1": {
+      "reference": {
+        "metadata": {
+          "python": "3.11.9",
+          "platform": "Windows-10-10.0.26200-SP0",
+          "torch": "2.10.0+cu130",
+          "cuda": "13.0",
+          "gpu": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "multiprocessors": 170,
+          "kernel_package_version": "1.0.22",
+          "kernel_binary": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+          "kernel_sha256": "6bda19d92ea75fbaf2ac8456ad857b38c3c0102499937196fe1799d40f259036",
+          "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+          "variant": "27b",
+          "context_capacity": 32768,
+          "kv_cache": "Q8 with FP16 scales per 32 values",
+          "sampling": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.05,
+            "repetition_penalty": 1.05,
+            "seed": 123
+          },
+          "warmup_context": 2048,
+          "requested_draft_tokens": 2,
+          "speculative_method": "mtp",
+          "prism_projection_fusions": true,
+          "prism_grouped_gdn": true,
+          "prism_gdn_decode_fused": true,
+          "sm120_backend": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\sm120.py",
+          "actual_decoder_engine": "vllm",
+          "gdn_decode_fused": true
+        },
+        "sampling_counters": {
+          "gpu_acceptance": false,
+          "gpu_draft": false,
+          "timing_only": false,
+          "gpu_acceptance_rounds": 0,
+          "exact_fallbacks": 0
+        },
+        "results": [
+          {
+            "context_tokens": 2048,
+            "repeat": 0,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.9644729000065126,
+            "prefill_tps": 2123.4396528779303,
+            "decode_seconds": 2.1190432000003057,
+            "decode_tps": 120.80924069880362,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 203,
+              "accepted": 139,
+              "target_passes": 118,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                116,
+                87
+              ],
+              "accepted_by_position": [
+                88,
+                51
+              ]
+            },
+            "peak_vram_gib": 7.785440444946289,
+            "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+            "stages": [],
+            "alignment": {
+              "drafted": 203,
+              "accepted": 139,
+              "target_passes": 118,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                116,
+                87
+              ],
+              "accepted_by_position": [
+                88,
+                51
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 7.537973880767822,
+            "reserved_vram_gib": 7.736328125,
+            "peak_reserved_vram_gib": 8.11328125
+          },
+          {
+            "context_tokens": 2048,
+            "repeat": 1,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.9641945000039414,
+            "prefill_tps": 2124.05277150163,
+            "decode_seconds": 2.048516999995627,
+            "decode_tps": 124.96845278830807,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 201,
+              "accepted": 136,
+              "target_passes": 121,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                119,
+                82
+              ],
+              "accepted_by_position": [
+                83,
+                53
+              ]
+            },
+            "peak_vram_gib": 7.786733627319336,
+            "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+            "stages": [],
+            "alignment": {
+              "drafted": 201,
+              "accepted": 136,
+              "target_passes": 121,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                119,
+                82
+              ],
+              "accepted_by_position": [
+                83,
+                53
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 7.537973880767822,
+            "reserved_vram_gib": 8.119140625,
+            "peak_reserved_vram_gib": 8.119140625
+          }
+        ],
+        "aggregate_tps": 122.85365427966696,
+        "peak_allocated_gib": 7.786733627319336,
+        "cycle_ms": 17.43749037655202,
+        "tokens_per_target_pass": 2.1422594142259412
+      },
+      "production": {
+        "metadata": {
+          "python": "3.11.9",
+          "platform": "Windows-10-10.0.26200-SP0",
+          "torch": "2.10.0+cu130",
+          "cuda": "13.0",
+          "gpu": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "multiprocessors": 170,
+          "kernel_package_version": "1.0.22",
+          "kernel_binary": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+          "kernel_sha256": "6bda19d92ea75fbaf2ac8456ad857b38c3c0102499937196fe1799d40f259036",
+          "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+          "variant": "27b",
+          "context_capacity": 32768,
+          "kv_cache": "Q8 with FP16 scales per 32 values",
+          "sampling": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.05,
+            "repetition_penalty": 1.05,
+            "seed": 123
+          },
+          "warmup_context": 2048,
+          "requested_draft_tokens": 2,
+          "speculative_method": "mtp",
+          "prism_projection_fusions": true,
+          "prism_grouped_gdn": true,
+          "prism_gdn_decode_fused": true,
+          "sm120_backend": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\sm120.py",
+          "actual_decoder_engine": "vllm",
+          "gdn_decode_fused": true
+        },
+        "sampling_counters": {
+          "gpu_acceptance": true,
+          "gpu_draft": true,
+          "timing_only": false,
+          "gpu_acceptance_rounds": 264,
+          "exact_fallbacks": 1
+        },
+        "results": [
+          {
+            "context_tokens": 2048,
+            "repeat": 0,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.9634483000045293,
+            "prefill_tps": 2125.69787085656,
+            "decode_seconds": 2.0166399000008823,
+            "decode_tps": 126.94383365115804,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 206,
+              "accepted": 128,
+              "target_passes": 129,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                127,
+                79
+              ],
+              "accepted_by_position": [
+                79,
+                49
+              ]
+            },
+            "peak_vram_gib": 7.788951873779297,
+            "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+            "stages": [],
+            "alignment": {
+              "drafted": 206,
+              "accepted": 128,
+              "target_passes": 129,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                127,
+                79
+              ],
+              "accepted_by_position": [
+                79,
+                49
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 7.540192127227783,
+            "reserved_vram_gib": 8.130859375,
+            "peak_reserved_vram_gib": 8.130859375
+          },
+          {
+            "context_tokens": 2048,
+            "repeat": 1,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.9609803999992437,
+            "prefill_tps": 2131.156889361752,
+            "decode_seconds": 1.7844315999973333,
+            "decode_tps": 143.463050082941,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 196,
+              "accepted": 143,
+              "target_passes": 114,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                111,
+                85
+              ],
+              "accepted_by_position": [
+                85,
+                58
+              ]
+            },
+            "peak_vram_gib": 7.788952350616455,
+            "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+            "stages": [],
+            "alignment": {
+              "drafted": 196,
+              "accepted": 143,
+              "target_passes": 114,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                111,
+                85
+              ],
+              "accepted_by_position": [
+                85,
+                58
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 7.541118621826172,
+            "reserved_vram_gib": 7.75,
+            "peak_reserved_vram_gib": 8.130859375
+          }
+        ],
+        "aggregate_tps": 134.69886057135216,
+        "peak_allocated_gib": 7.788952350616455,
+        "cycle_ms": 15.64226954731776,
+        "tokens_per_target_pass": 2.1069958847736627
+      }
+    },
+    "q4": {
+      "reference": {
+        "metadata": {
+          "python": "3.11.9",
+          "platform": "Windows-10-10.0.26200-SP0",
+          "torch": "2.10.0+cu130",
+          "cuda": "13.0",
+          "gpu": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "multiprocessors": 170,
+          "kernel_package_version": "1.0.22",
+          "kernel_binary": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+          "kernel_sha256": "6bda19d92ea75fbaf2ac8456ad857b38c3c0102499937196fe1799d40f259036",
+          "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+          "variant": "27b",
+          "context_capacity": 32768,
+          "kv_cache": "Q8 with FP16 scales per 32 values",
+          "sampling": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.05,
+            "repetition_penalty": 1.05,
+            "seed": 123
+          },
+          "warmup_context": 2048,
+          "requested_draft_tokens": 2,
+          "speculative_method": "mtp",
+          "prism_projection_fusions": false,
+          "prism_grouped_gdn": false,
+          "prism_gdn_decode_fused": false,
+          "sm120_backend": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\sm120.py",
+          "actual_decoder_engine": "vllm",
+          "gdn_decode_fused": true
+        },
+        "sampling_counters": {
+          "gpu_acceptance": false,
+          "gpu_draft": false,
+          "timing_only": false,
+          "gpu_acceptance_rounds": 0,
+          "exact_fallbacks": 0
+        },
+        "results": [
+          {
+            "context_tokens": 2048,
+            "repeat": 0,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.4664411999983713,
+            "prefill_tps": 4390.6927604318635,
+            "decode_seconds": 1.827963899995666,
+            "decode_tps": 140.04652936560015,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 191,
+              "accepted": 148,
+              "target_passes": 109,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                107,
+                84
+              ],
+              "accepted_by_position": [
+                84,
+                64
+              ]
+            },
+            "peak_vram_gib": 17.4838228225708,
+            "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+            "stages": [],
+            "alignment": {
+              "drafted": 191,
+              "accepted": 148,
+              "target_passes": 109,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                107,
+                84
+              ],
+              "accepted_by_position": [
+                84,
+                64
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 17.235430240631104,
+            "reserved_vram_gib": 17.443359375,
+            "peak_reserved_vram_gib": 17.845703125
+          },
+          {
+            "context_tokens": 2048,
+            "repeat": 1,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.4681683999951929,
+            "prefill_tps": 4374.494305939976,
+            "decode_seconds": 1.9784553999998025,
+            "decode_tps": 129.39386958130345,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 199,
+              "accepted": 140,
+              "target_passes": 117,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                114,
+                85
+              ],
+              "accepted_by_position": [
+                85,
+                55
+              ]
+            },
+            "peak_vram_gib": 17.484189987182617,
+            "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+            "stages": [],
+            "alignment": {
+              "drafted": 199,
+              "accepted": 140,
+              "target_passes": 117,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                114,
+                85
+              ],
+              "accepted_by_position": [
+                85,
+                55
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 17.236356258392334,
+            "reserved_vram_gib": 17.4453125,
+            "peak_reserved_vram_gib": 17.84765625
+          }
+        ],
+        "aggregate_tps": 134.50961642628533,
+        "peak_allocated_gib": 17.484189987182617,
+        "cycle_ms": 16.842563274316234,
+        "tokens_per_target_pass": 2.265486725663717
+      },
+      "production": {
+        "metadata": {
+          "python": "3.11.9",
+          "platform": "Windows-10-10.0.26200-SP0",
+          "torch": "2.10.0+cu130",
+          "cuda": "13.0",
+          "gpu": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "multiprocessors": 170,
+          "kernel_package_version": "1.0.22",
+          "kernel_binary": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+          "kernel_sha256": "6bda19d92ea75fbaf2ac8456ad857b38c3c0102499937196fe1799d40f259036",
+          "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+          "variant": "27b",
+          "context_capacity": 32768,
+          "kv_cache": "Q8 with FP16 scales per 32 values",
+          "sampling": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.05,
+            "repetition_penalty": 1.05,
+            "seed": 123
+          },
+          "warmup_context": 2048,
+          "requested_draft_tokens": 2,
+          "speculative_method": "mtp",
+          "prism_projection_fusions": false,
+          "prism_grouped_gdn": false,
+          "prism_gdn_decode_fused": false,
+          "sm120_backend": "C:\\Users\\Marc\\anaconda3\\envs\\py311\\Lib\\site-packages\\llamacpp_gguf_cuda\\sm120.py",
+          "actual_decoder_engine": "vllm",
+          "gdn_decode_fused": true
+        },
+        "sampling_counters": {
+          "gpu_acceptance": true,
+          "gpu_draft": true,
+          "timing_only": false,
+          "gpu_acceptance_rounds": 247,
+          "exact_fallbacks": 2
+        },
+        "results": [
+          {
+            "context_tokens": 2048,
+            "repeat": 0,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.4691284000000451,
+            "prefill_tps": 4365.54256787652,
+            "decode_seconds": 1.8181273000009242,
+            "decode_tps": 140.80422201452555,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 199,
+              "accepted": 139,
+              "target_passes": 118,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                116,
+                83
+              ],
+              "accepted_by_position": [
+                84,
+                55
+              ]
+            },
+            "peak_vram_gib": 17.487448692321777,
+            "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+            "stages": [],
+            "alignment": {
+              "drafted": 199,
+              "accepted": 139,
+              "target_passes": 118,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                116,
+                83
+              ],
+              "accepted_by_position": [
+                84,
+                55
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 17.242854118347168,
+            "reserved_vram_gib": 17.486328125,
+            "peak_reserved_vram_gib": 17.869140625
+          },
+          {
+            "context_tokens": 2048,
+            "repeat": 1,
+            "generated_tokens": 256,
+            "stop_reason": "interrupted",
+            "prefill_seconds": 0.4670971999948961,
+            "prefill_tps": 4384.5263898442945,
+            "decode_seconds": 1.7217751999996835,
+            "decode_tps": 148.68375383734593,
+            "draft": 2,
+            "confidence": 0.3,
+            "greedy": false,
+            "speculative_stats": {
+              "drafted": 194,
+              "accepted": 144,
+              "target_passes": 113,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                111,
+                83
+              ],
+              "accepted_by_position": [
+                84,
+                60
+              ]
+            },
+            "peak_vram_gib": 17.49161434173584,
+            "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+            "stages": [],
+            "alignment": {
+              "drafted": 194,
+              "accepted": 144,
+              "target_passes": 113,
+              "emitted_tokens": 256,
+              "drafted_by_position": [
+                111,
+                83
+              ],
+              "accepted_by_position": [
+                84,
+                60
+              ],
+              "sequence_tokens": 2304,
+              "mtp_cache_tokens": 2303,
+              "sync_delta": 0,
+              "pending": false,
+              "draft": true
+            },
+            "allocated_vram_gib": 17.242854595184326,
+            "reserved_vram_gib": 17.892578125,
+            "peak_reserved_vram_gib": 17.892578125
+          }
+        ],
+        "aggregate_tps": 144.63675200091305,
+        "peak_allocated_gib": 17.49161434173584,
+        "cycle_ms": 15.324253246755877,
+        "tokens_per_target_pass": 2.2164502164502164
+      }
+    }
+  },
+  "summary": {
+    "ptq1": {
+      "reference_tps": 122.85365427966696,
+      "production_tps": 134.69886057135216,
+      "gain_percent": 9.641720762103256,
+      "peak_extra_mib": 2.27197265625
+    },
+    "q4": {
+      "reference_tps": 134.50961642628533,
+      "production_tps": 144.63675200091305,
+      "gain_percent": 7.528930528307343,
+      "peak_extra_mib": 7.6025390625
+    }
+  }
+}

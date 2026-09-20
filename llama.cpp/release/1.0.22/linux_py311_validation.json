@@ -1,0 +1,32 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.22+torch210cu130py311-cp311-cp311-linux_x86_64.whl",
+  "python": "3.11.9 (main, Apr 19 2024, 16:48:06) [GCC 11.2.0]",
+  "checks": [
+    {
+      "name": "old_quant_exact",
+      "exit_code": 0,
+      "seconds": 8.45438079800033
+    },
+    {
+      "name": "standard",
+      "exit_code": 0,
+      "seconds": 25.186968213
+    },
+    {
+      "name": "ptq1",
+      "exit_code": 0,
+      "seconds": 3.1694265569999516
+    },
+    {
+      "name": "hadamard",
+      "exit_code": 0,
+      "seconds": 2.8533701490000567
+    },
+    {
+      "name": "prism_decode",
+      "exit_code": 0,
+      "seconds": 3.1775518299996293
+    }
+  ],
+  "passed": true
+}

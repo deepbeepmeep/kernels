@@ -1,0 +1,1357 @@
+{
+  "release": "gguf-v1.0.22",
+  "hardware": "NVIDIA GeForce RTX 5090 (SM120)",
+  "other_gpus": "Compiled and binary inventory verified; not hardware tested.",
+  "stacks": {
+    "win_py310": {
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 10.014999999999418
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 45.28199999999924
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 11.014999999999418
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 5.188000000001921
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 10.921999999998661
+        }
+      ],
+      "real_models": {
+        "q4": {
+          "metadata": {
+            "python": "3.10.18",
+            "platform": "Windows-10-10.0.26200-SP0",
+            "torch": "2.7.1+cu128",
+            "cuda": "12.8",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch271cu128py310",
+            "kernel_binary": "D:\\ML\\kernel-release-1.0.22\\validation_win_py310\\package\\llamacpp_gguf_cuda\\_C.cp310-win_amd64.pyd",
+            "kernel_sha256": "7ae0b270141a85ea2236841c99532c9baa5558d4b445722824e115b157bd3e97",
+            "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": false,
+            "prism_grouped_gdn": false,
+            "prism_gdn_decode_fused": false,
+            "sm120_backend": "D:\\ML\\kernel-release-1.0.22\\validation_win_py310\\package\\llamacpp_gguf_cuda\\sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 65,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.46589440000389004,
+              "prefill_tps": 4395.845925563604,
+              "decode_seconds": 0.45324089999485295,
+              "decode_tps": 143.4115941450521,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 45,
+                "accepted": 41,
+                "target_passes": 25,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  23,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ]
+              },
+              "peak_vram_gib": 17.487449169158936,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 45,
+                "accepted": 41,
+                "target_passes": 25,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  23,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ],
+                "sequence_tokens": 2113,
+                "mtp_cache_tokens": 2112,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.238689422607422,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 65,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.46396480000112206,
+              "prefill_tps": 4414.127968317956,
+              "decode_seconds": 0.6046242000011262,
+              "decode_tps": 107.50479388664716,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 40,
+                "target_passes": 26,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  24,
+                  23
+                ],
+                "accepted_by_position": [
+                  23,
+                  17
+                ]
+              },
+              "peak_vram_gib": 17.487449645996094,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 40,
+                "target_passes": 26,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  24,
+                  23
+                ],
+                "accepted_by_position": [
+                  23,
+                  17
+                ],
+                "sequence_tokens": 2113,
+                "mtp_cache_tokens": 2112,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.239615440368652,
+              "reserved_vram_gib": 17.4609375,
+              "peak_reserved_vram_gib": 17.86328125
+            }
+          ]
+        },
+        "ptq1": {
+          "metadata": {
+            "python": "3.10.18",
+            "platform": "Windows-10-10.0.26200-SP0",
+            "torch": "2.7.1+cu128",
+            "cuda": "12.8",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch271cu128py310",
+            "kernel_binary": "D:\\ML\\kernel-release-1.0.22\\validation_win_py310\\package\\llamacpp_gguf_cuda\\_C.cp310-win_amd64.pyd",
+            "kernel_sha256": "7ae0b270141a85ea2236841c99532c9baa5558d4b445722824e115b157bd3e97",
+            "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": true,
+            "prism_grouped_gdn": true,
+            "prism_gdn_decode_fused": true,
+            "sm120_backend": "D:\\ML\\kernel-release-1.0.22\\validation_win_py310\\package\\llamacpp_gguf_cuda\\sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9383453999980702,
+              "prefill_tps": 2182.565183358081,
+              "decode_seconds": 0.4375774000000092,
+              "decode_tps": 150.83045879425813,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ]
+              },
+              "peak_vram_gib": 7.788952350616455,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.540192604064941,
+              "reserved_vram_gib": 8.130859375,
+              "peak_reserved_vram_gib": 8.130859375
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9347433000002638,
+              "prefill_tps": 2190.975854011922,
+              "decode_seconds": 0.3872834000067087,
+              "decode_tps": 170.4178387167039,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 46,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ]
+              },
+              "peak_vram_gib": 7.788952827453613,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 46,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.5401930809021,
+              "reserved_vram_gib": 8.130859375,
+              "peak_reserved_vram_gib": 8.130859375
+            }
+          ]
+        }
+      }
+    },
+    "win_py311": {
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 11.093999999997322
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 28.547000000005937
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 11.421999999998661
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.171999999998661
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 3.3280000000013388
+        }
+      ],
+      "real_models": {
+        "q4": {
+          "metadata": {
+            "python": "3.11.9",
+            "platform": "Windows-10-10.0.26200-SP0",
+            "torch": "2.10.0+cu130",
+            "cuda": "13.0",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch210cu130py311",
+            "kernel_binary": "D:\\ML\\kernel-release-1.0.22\\validation_win_py311\\package\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+            "kernel_sha256": "3d5b3823e7b05c796907fbefc4ba42bcf429956ed9435b125b7642aaa37153a6",
+            "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": false,
+            "prism_grouped_gdn": false,
+            "prism_gdn_decode_fused": false,
+            "sm120_backend": "D:\\ML\\kernel-release-1.0.22\\validation_win_py311\\package\\llamacpp_gguf_cuda\\sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 64,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.46658600000228034,
+              "prefill_tps": 4389.3301556197375,
+              "decode_seconds": 0.3433874000038486,
+              "decode_tps": 186.3784169112865,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 43,
+                "accepted": 41,
+                "target_passes": 24,
+                "emitted_tokens": 64,
+                "drafted_by_position": [
+                  22,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  20
+                ]
+              },
+              "peak_vram_gib": 17.487448692321777,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 43,
+                "accepted": 41,
+                "target_passes": 24,
+                "emitted_tokens": 64,
+                "drafted_by_position": [
+                  22,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  20
+                ],
+                "sequence_tokens": 2112,
+                "mtp_cache_tokens": 2111,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.238688945770264,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 65,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.4642420000018319,
+              "prefill_tps": 4411.492282025148,
+              "decode_seconds": 0.38918540000304347,
+              "decode_tps": 167.01551496919384,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 39,
+                "target_passes": 27,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  25,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  17
+                ]
+              },
+              "peak_vram_gib": 17.487449169158936,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 39,
+                "target_passes": 27,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  25,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  17
+                ],
+                "sequence_tokens": 2113,
+                "mtp_cache_tokens": 2112,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.238689422607422,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            }
+          ]
+        },
+        "ptq1": {
+          "metadata": {
+            "python": "3.11.9",
+            "platform": "Windows-10-10.0.26200-SP0",
+            "torch": "2.10.0+cu130",
+            "cuda": "13.0",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch210cu130py311",
+            "kernel_binary": "D:\\ML\\kernel-release-1.0.22\\validation_win_py311\\package\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+            "kernel_sha256": "3d5b3823e7b05c796907fbefc4ba42bcf429956ed9435b125b7642aaa37153a6",
+            "checkpoint": "E:\\ML\\Wan2GP\\ckpts\\Qwen3_8_27B_Uncensored\\Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": true,
+            "prism_grouped_gdn": true,
+            "prism_gdn_decode_fused": true,
+            "sm120_backend": "D:\\ML\\kernel-release-1.0.22\\validation_win_py311\\package\\llamacpp_gguf_cuda\\sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9559016000057454,
+              "prefill_tps": 2142.479937252632,
+              "decode_seconds": 0.4290943000014522,
+              "decode_tps": 153.81234381294888,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ]
+              },
+              "peak_vram_gib": 7.788952350616455,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.540192604064941,
+              "reserved_vram_gib": 8.130859375,
+              "peak_reserved_vram_gib": 8.130859375
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9545529000024544,
+              "prefill_tps": 2145.507074563111,
+              "decode_seconds": 0.38514020000002347,
+              "decode_tps": 171.36616743719813,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  23
+                ],
+                "accepted_by_position": [
+                  23,
+                  18
+                ]
+              },
+              "peak_vram_gib": 7.788952350616455,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  23
+                ],
+                "accepted_by_position": [
+                  23,
+                  18
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.541118621826172,
+              "reserved_vram_gib": 7.75,
+              "peak_reserved_vram_gib": 8.130859375
+            }
+          ]
+        }
+      }
+    },
+    "linux_py310": {
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 8.662633792000179
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 41.30816499799994
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 13.030875697000283
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.445953560999897
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 10.722207142000116
+        }
+      ],
+      "real_models": {
+        "q4": {
+          "metadata": {
+            "python": "3.10.12",
+            "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+            "torch": "2.7.1+cu128",
+            "cuda": "12.8",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch271cu128py310",
+            "kernel_binary": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py310/package/llamacpp_gguf_cuda/_C.cpython-310-x86_64-linux-gnu.so",
+            "kernel_sha256": "b1ee731edb4f8bcd0b6a92002b36af5bde535d674041fb14015af842a8d46fa9",
+            "checkpoint": "/mnt/e/ML/Wan2GP/ckpts/Qwen3_8_27B_Uncensored/Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": false,
+            "prism_grouped_gdn": false,
+            "prism_gdn_decode_fused": false,
+            "sm120_backend": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py310/package/llamacpp_gguf_cuda/sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 65,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.4582001820000414,
+              "prefill_tps": 4469.662126847027,
+              "decode_seconds": 0.4249101239998936,
+              "decode_tps": 152.97352623214098,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 43,
+                "accepted": 42,
+                "target_passes": 24,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  22,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  21
+                ]
+              },
+              "peak_vram_gib": 17.487449169158936,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 43,
+                "accepted": 42,
+                "target_passes": 24,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  22,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  21
+                ],
+                "sequence_tokens": 2113,
+                "mtp_cache_tokens": 2112,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.238689422607422,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 64,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.45266808500002753,
+              "prefill_tps": 4524.286265951078,
+              "decode_seconds": 0.4431450910000194,
+              "decode_tps": 144.42222490962266,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 45,
+                "accepted": 40,
+                "target_passes": 25,
+                "emitted_tokens": 64,
+                "drafted_by_position": [
+                  23,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  18
+                ]
+              },
+              "peak_vram_gib": 17.487449645996094,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 45,
+                "accepted": 40,
+                "target_passes": 25,
+                "emitted_tokens": 64,
+                "drafted_by_position": [
+                  23,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  18
+                ],
+                "sequence_tokens": 2112,
+                "mtp_cache_tokens": 2111,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.23868989944458,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            }
+          ]
+        },
+        "ptq1": {
+          "metadata": {
+            "python": "3.10.12",
+            "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+            "torch": "2.7.1+cu128",
+            "cuda": "12.8",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch271cu128py310",
+            "kernel_binary": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py310/package/llamacpp_gguf_cuda/_C.cpython-310-x86_64-linux-gnu.so",
+            "kernel_sha256": "b1ee731edb4f8bcd0b6a92002b36af5bde535d674041fb14015af842a8d46fa9",
+            "checkpoint": "/mnt/e/ML/Wan2GP/ckpts/Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": true,
+            "prism_grouped_gdn": true,
+            "prism_gdn_decode_fused": true,
+            "sm120_backend": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py310/package/llamacpp_gguf_cuda/sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9163721339999711,
+              "prefill_tps": 2234.899910214931,
+              "decode_seconds": 0.43156172200008314,
+              "decode_tps": 152.9329331946342,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ]
+              },
+              "peak_vram_gib": 7.788952350616455,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.540192604064941,
+              "reserved_vram_gib": 8.130859375,
+              "peak_reserved_vram_gib": 8.130859375
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9189912030000187,
+              "prefill_tps": 2228.53058148366,
+              "decode_seconds": 0.381381074999922,
+              "decode_tps": 173.05525713359924,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 46,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ]
+              },
+              "peak_vram_gib": 7.788952827453613,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 46,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.5401930809021,
+              "reserved_vram_gib": 8.130859375,
+              "peak_reserved_vram_gib": 8.130859375
+            }
+          ]
+        }
+      }
+    },
+    "linux_py311": {
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 8.45438079800033
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 25.186968213
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 3.1694265569999516
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 2.8533701490000567
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 3.1775518299996293
+        }
+      ],
+      "real_models": {
+        "q4": {
+          "metadata": {
+            "python": "3.11.9",
+            "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+            "torch": "2.10.0+cu130",
+            "cuda": "13.0",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch210cu130py311",
+            "kernel_binary": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py311/package/llamacpp_gguf_cuda/_C.cpython-311-x86_64-linux-gnu.so",
+            "kernel_sha256": "8f01b64aab04798d4fcd36e44b55e10a6cf586a0c0a18bb0dd99731051295754",
+            "checkpoint": "/mnt/e/ML/Wan2GP/ckpts/Qwen3_8_27B_Uncensored/Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": false,
+            "prism_grouped_gdn": false,
+            "prism_gdn_decode_fused": false,
+            "sm120_backend": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py311/package/llamacpp_gguf_cuda/sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 65,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.46493480000000886,
+              "prefill_tps": 4404.918711182645,
+              "decode_seconds": 0.34280261199998563,
+              "decode_tps": 189.6134910430692,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 43,
+                "accepted": 42,
+                "target_passes": 24,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  22,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  21
+                ]
+              },
+              "peak_vram_gib": 17.487448692321777,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 43,
+                "accepted": 42,
+                "target_passes": 24,
+                "emitted_tokens": 65,
+                "drafted_by_position": [
+                  22,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  21
+                ],
+                "sequence_tokens": 2113,
+                "mtp_cache_tokens": 2112,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.238688945770264,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 64,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.45945252300001016,
+              "prefill_tps": 4457.479059267142,
+              "decode_seconds": 0.3566250989999844,
+              "decode_tps": 179.46016749651935,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 44,
+                "accepted": 40,
+                "target_passes": 25,
+                "emitted_tokens": 64,
+                "drafted_by_position": [
+                  23,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  19
+                ]
+              },
+              "peak_vram_gib": 17.487449169158936,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 44,
+                "accepted": 40,
+                "target_passes": 25,
+                "emitted_tokens": 64,
+                "drafted_by_position": [
+                  23,
+                  21
+                ],
+                "accepted_by_position": [
+                  21,
+                  19
+                ],
+                "sequence_tokens": 2112,
+                "mtp_cache_tokens": 2111,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 17.238689422607422,
+              "reserved_vram_gib": 17.86328125,
+              "peak_reserved_vram_gib": 17.86328125
+            }
+          ]
+        },
+        "ptq1": {
+          "metadata": {
+            "python": "3.11.9",
+            "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+            "torch": "2.10.0+cu130",
+            "cuda": "13.0",
+            "gpu": "NVIDIA GeForce RTX 5090",
+            "compute_capability": [
+              12,
+              0
+            ],
+            "multiprocessors": 170,
+            "kernel_package_version": "1.0.22+torch210cu130py311",
+            "kernel_binary": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py311/package/llamacpp_gguf_cuda/_C.cpython-311-x86_64-linux-gnu.so",
+            "kernel_sha256": "8f01b64aab04798d4fcd36e44b55e10a6cf586a0c0a18bb0dd99731051295754",
+            "checkpoint": "/mnt/e/ML/Wan2GP/ckpts/Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+            "variant": "27b",
+            "context_capacity": 32768,
+            "kv_cache": "Q8 with FP16 scales per 32 values",
+            "sampling": {
+              "temperature": 0.6,
+              "top_p": 0.95,
+              "top_k": 20,
+              "min_p": 0.05,
+              "repetition_penalty": 1.05,
+              "seed": 123
+            },
+            "warmup_context": 2048,
+            "requested_draft_tokens": 2,
+            "speculative_method": "mtp",
+            "prism_projection_fusions": true,
+            "prism_grouped_gdn": true,
+            "prism_gdn_decode_fused": true,
+            "sm120_backend": "/mnt/d/ML/kernel-release-1.0.22/validation_linux_py311/package/llamacpp_gguf_cuda/sm120.py",
+            "actual_decoder_engine": "vllm",
+            "gdn_decode_fused": true
+          },
+          "results": [
+            {
+              "context_tokens": 2048,
+              "repeat": 0,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9237919360000433,
+              "prefill_tps": 2216.9494235549423,
+              "decode_seconds": 0.41505421299996215,
+              "decode_tps": 159.01537180639585,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ]
+              },
+              "peak_vram_gib": 7.788952350616455,
+              "prompt_sha256": "37a760ded9887df1da7c3a8b8cf30fec88df1c4bb93173ef44dd57624622c178",
+              "stages": [],
+              "alignment": {
+                "drafted": 47,
+                "accepted": 38,
+                "target_passes": 29,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  27,
+                  20
+                ],
+                "accepted_by_position": [
+                  20,
+                  18
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.540192604064941,
+              "reserved_vram_gib": 8.130859375,
+              "peak_reserved_vram_gib": 8.130859375
+            },
+            {
+              "context_tokens": 2048,
+              "repeat": 1,
+              "generated_tokens": 66,
+              "stop_reason": "interrupted",
+              "prefill_seconds": 0.9212528310000039,
+              "prefill_tps": 2223.0596542937424,
+              "decode_seconds": 0.3717307609999807,
+              "decode_tps": 177.54785700934613,
+              "draft": 2,
+              "confidence": 0.3,
+              "greedy": false,
+              "speculative_stats": {
+                "drafted": 46,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ]
+              },
+              "peak_vram_gib": 7.788952350616455,
+              "prompt_sha256": "5a35b626d1169a687bc04497a3444714c4ee157dc6ba9ab02f37309ac96936cf",
+              "stages": [],
+              "alignment": {
+                "drafted": 46,
+                "accepted": 41,
+                "target_passes": 26,
+                "emitted_tokens": 66,
+                "drafted_by_position": [
+                  24,
+                  22
+                ],
+                "accepted_by_position": [
+                  22,
+                  19
+                ],
+                "sequence_tokens": 2114,
+                "mtp_cache_tokens": 2113,
+                "sync_delta": 0,
+                "pending": false,
+                "draft": true
+              },
+              "allocated_vram_gib": 7.541118621826172,
+              "reserved_vram_gib": 7.75,
+              "peak_reserved_vram_gib": 8.130859375
+            }
+          ]
+        }
+      }
+    }
+  }
+}

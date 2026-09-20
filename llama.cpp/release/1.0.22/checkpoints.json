@@ -1,0 +1,117 @@
+{
+  "repository": "DeepBeepMeep/Wan2.1",
+  "commit": "45aaad562bd1944267db209b704c0be6d64c5313",
+  "url": "https://huggingface.co/DeepBeepMeep/Wan2.1/commit/45aaad562bd1944267db209b704c0be6d64c5313",
+  "verified_files": [
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.gguf",
+      "bytes": 5946648928,
+      "sha256": "94dd53cbad55db5a515f245887c9f0317484502a451ccc0424c7d7788b52900a"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.provenance.json",
+      "bytes": 315,
+      "sha256": "91ef4e22fb54fc39207a078e4456af3439429796d45e07aea55ea57bb68e3846"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.README.md",
+      "bytes": 8276,
+      "sha256": "f9bf495b3b18ec779d4ba1c6b7de12b4ec2bfd7bbdca2b5d048ed6eb31b42fb1"
+    },
+    {
+      "path": "Qwen3_8_27B_DSpark/Qwen3_8_27B_DSpark_bf16.safetensors",
+      "bytes": 3714723322,
+      "sha256": "2aff025f45823b40ebe726b9dfa40302f3512bd9a11c3a7347de32a567acd9a7"
+    },
+    {
+      "path": "Qwen3_8_27B_DSpark/config.json",
+      "bytes": 2448,
+      "sha256": "dd65fb1b01c2adea69512ff2990a79d58eb7fe2c7ea97375aa66f657a29a5bfd"
+    },
+    {
+      "path": "Qwen3_8_27B_DSpark/provenance.json",
+      "bytes": 418,
+      "sha256": "2e7ed659f268646beed0166e169dceff8f3210eae5fb41a03133af3a2f9249ed"
+    },
+    {
+      "path": "Qwen3_8_27B_DSpark/UPSTREAM_README.md",
+      "bytes": 6677,
+      "sha256": "9eea58fb8e2a51a46d03ea7502417d0398d9714226700e6d818782d7ae347d2b"
+    },
+    {
+      "path": "Bonsai_2_27B_DFlash2/Bonsai_2_27B_DFlash2_bf16.safetensors",
+      "bytes": 3848817896,
+      "sha256": "c6f94f2e8d9b4111645d5bd78845289dbc77b0215f7a139f8bfe55f28cc2a0b9"
+    },
+    {
+      "path": "Bonsai_2_27B_DFlash2/config.json",
+      "bytes": 1238,
+      "sha256": "c5d8a5f9fc457f239199cfd0270ab44502033a1dc443cd373372c0edb049fef8"
+    },
+    {
+      "path": "Bonsai_2_27B_DFlash2/provenance.json",
+      "bytes": 434,
+      "sha256": "270937cae9f05b87d48ca8159d743e786a3f54529c88ed7ae774b0fda083b388"
+    },
+    {
+      "path": "Bonsai_2_27B_DFlash2/UPSTREAM_README.md",
+      "bytes": 5270,
+      "sha256": "4bf87a5790f99a368213c632be3d35fdb2ee076bc68e6506056fbb88639b773d"
+    },
+    {
+      "path": "Bonsai_2_27B_DFlash2/LICENSE",
+      "bytes": 10174,
+      "sha256": "69849221bfb90053de2134ef5e6d540287b4b98062326492f1f96f5da685524b"
+    },
+    {
+      "path": "Bonsai_2_27B_DFlash2/NOTICE",
+      "bytes": 446,
+      "sha256": "48da4ef105620c8a5ed6d94853efc4588d914bbd436072ec3117aad7d7729db3"
+    },
+    {
+      "path": "Qwen3_8_27B_DFlash2/Qwen3_8_27B_DFlash2_bf16.safetensors",
+      "bytes": 3848817896,
+      "sha256": "67fc76d68dc5a9415511a4f394ef744d67510cd20e93b37cc2cc7d28e4bab65c"
+    },
+    {
+      "path": "Qwen3_8_27B_DFlash2/config.json",
+      "bytes": 1239,
+      "sha256": "873e3556509b0da06e29654ba00d4944888d4b5e8a33afde25f7eb27d321e980"
+    },
+    {
+      "path": "Qwen3_8_27B_DFlash2/provenance.json",
+      "bytes": 414,
+      "sha256": "68010082ddfc8836b13bf336b19dcc4a5fa6021cd71f6b21956dd21ea0570140"
+    },
+    {
+      "path": "Qwen3_8_27B_DFlash2/UPSTREAM_README.md",
+      "bytes": 5399,
+      "sha256": "be141ff737af8779959cb5ecaefb458ac3c214a5020aa40f69d4d1dc6f42494a"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-MTP-Q8_0.gguf",
+      "bytes": 451321056,
+      "sha256": "fe412712ca637b87df4746b0837d469e98c55b0c2b739f9e2625387ef748bc37"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-MTP-Q8_0.provenance.json",
+      "bytes": 417,
+      "sha256": "1fb0ae921a4f2731ad6f0c7b0dc1aad974c050a12830ad1d36df0d7b1c1194c4"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-MTP.LICENSE.txt",
+      "bytes": 10174,
+      "sha256": "69849221bfb90053de2134ef5e6d540287b4b98062326492f1f96f5da685524b"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-MTP.NOTICE.txt",
+      "bytes": 664,
+      "sha256": "402b54aea23964d0e7ca5fc981913af51b91f80c1f2521c3ca1eb1372f7d4fd4"
+    },
+    {
+      "path": "Qwen3_8_27B_Uncensored/Ternary-Bonsai-2-27B-Abliterated-PTQ1_0.LICENSE.txt",
+      "bytes": 10174,
+      "sha256": "69849221bfb90053de2134ef5e6d540287b4b98062326492f1f96f5da685524b"
+    }
+  ]
+}

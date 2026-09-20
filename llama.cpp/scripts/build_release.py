@@ -1,5 +1,6 @@
 """Build a complete, toolkit-wide wheel using the current Python environment."""
 import argparse
+import atexit
 import hashlib
 import json
 import os
@@ -22,6 +23,7 @@ parser.add_argument('--nvcc-threads', type=int, default=2)
 args = parser.parse_args()
 
 import torch
+from filelock import FileLock
 
 expected = {'py310': ((3, 10), '2.7.1', '12.8', '+torch271cu128py310'), 'py311': ((3, 11), '2.10.0', '13.0', '+torch210cu130py311')}[args.target]
 if sys.version_info[:2] != expected[0] or torch.__version__.split('+')[0] != expected[1] or torch.version.cuda != expected[2]:
@@ -38,10 +40,20 @@ if work == ROOT or ROOT in work.parents or work in ROOT.parents:
     raise SystemExit('Use a separate build directory outside the source tree.')
 work.mkdir(parents=True, exist_ok=True)
 dist.mkdir(parents=True, exist_ok=True)
+# Release jobs may reuse an incremental workspace. Never copy sources or run
+# Ninja concurrently in the same tree; a later invocation can reuse its objects.
+workspace_lock = FileLock(str(work / '.build.lock'))
+workspace_lock.acquire()
+atexit.register(workspace_lock.release)
+previous_manifest = work / 'build_manifest.json'
+if previous_manifest.exists() and 'exit_code' in json.loads(previous_manifest.read_text(encoding='utf-8')):
+    history = work / 'history'
+    history.mkdir(exist_ok=True)
+    shutil.copy2(previous_manifest, history / f'build-{previous_manifest.stat().st_mtime_ns}.json')
 source = work / 'source'
 source.mkdir(exist_ok=True)
 changed_sources = [p.relative_to(ROOT) for directory in ('csrc', '_vendor') for p in (ROOT / directory).rglob('*') if p.is_file() and (source / p.relative_to(ROOT)).is_file() and p.read_bytes() != (source / p.relative_to(ROOT)).read_bytes()]
-for name in ('setup.py', 'pyproject.toml', 'MANIFEST.in', 'README.md', 'THIRD_PARTY_NOTICES.md'):
+for name in ('setup.py', 'pyproject.toml', 'MANIFEST.in', 'README.md', 'THIRD_PARTY_NOTICES.md', 'PRISM_PTQ1_PORT.md'):
     shutil.copy2(ROOT / name, source / name)
 for name in ('csrc', '_vendor', 'src', 'scripts', 'tests', 'wangp'):
     shutil.copytree(ROOT / name, source / name, dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '*.pyd', '*.so', '*.egg-info', '.git'))

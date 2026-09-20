@@ -1,0 +1,1927 @@
+{
+  "passed": true,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "version": "1.0.22+torch271cu128py310",
+  "cases": [
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0064839329570531845
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005123993381857872
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.004793139640241861
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005014152731746435
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0054574571549892426
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005368945188820362
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005369245540350676
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005359983071684837
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.000837155559565872
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007490491261705756
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008816142217256129
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008203015895560384
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008453059126622975
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008460094686597586
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008446585270576179
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008479952812194824
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005661179777234793
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0068154893815517426
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005895966663956642
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0057674311101436615
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.00580848241224885
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005794452503323555
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005777671001851559
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005779274273663759
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0026564986910670996
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002533028367906809
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0023469687439501286
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002330864779651165
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024593628477305174
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025327280163764954
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002470806473866105
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025177320931106806
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005484807770699263
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005136770661920309
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005130102392286062
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005191891919821501
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005142846144735813
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.0050871968269348145
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005263074301183224
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005352442618459463
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008056455408222973
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008221400203183293
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007927312981337309
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008514471701346338
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008559804409742355
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008208712679333985
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008573291706852615
+    },
+    {
+      "rows": 128,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008558957488276064
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0051925769075751305
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.004329570569097996
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.00570670934394002
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0050621675327420235
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005697107873857021
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005301195662468672
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005378489848226309
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005388882476836443
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008723641512915492
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0009099366143345833
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008348383707925677
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.000836904626339674
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008612880483269691
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0005842381506226957
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.00085088872583583
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008642523316666484
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0064698695205152035
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005893744062632322
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005444447509944439
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.006180771626532078
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005964342970401049
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005612223409116268
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0058937231078743935
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005823316052556038
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025001794565469027
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002174046589061618
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002377256518229842
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002487948164343834
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002506962278857827
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025128477718681097
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002492431551218033
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025776270776987076
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005714120343327522
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.00442706560716033
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005170503165572882
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.00518862484022975
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005326807498931885
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005147960502654314
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.0053437515161931515
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005265511106699705
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0009742527618072927
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008627951610833406
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0009132653358392417
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008792928420007229
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008572724182158709
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0005929244798608124
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0008761872886680067
+    },
+    {
+      "rows": 130,
+      "columns": 512,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.000864121422637254
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005160178057849407
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005156092345714569
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005560475401580334
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0055364519357681274
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005396553315222263
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005285622086375952
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005356770008802414
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005342614836990833
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0027490793727338314
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.000957847514655441
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0010068622650578618
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.000981532852165401
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0009328554151579738
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0009353758650831878
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0009920112788677216
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0013590678572654724
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.00567235192283988
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.006328454241156578
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005614922847598791
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.006001646630465984
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005840033292770386
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005698659922927618
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005762825254350901
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005857354961335659
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.003206671681255102
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002516004955396056
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024638993199914694
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002507426543161273
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025183630641549826
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024549257941544056
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002528659999370575
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0027253301814198494
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005639591254293919
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.0050260103307664394
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005341734737157822
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005238054785877466
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005215907469391823
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005409319419413805
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005298959091305733
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005353083368390799
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0026778411120176315
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.000956687203142792
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0009526825160719454
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0009271986782550812
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.000950946006923914
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0009349799947813153
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.001004676683805883
+    },
+    {
+      "rows": 256,
+      "columns": 5120,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0013512083096429706
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.006319067440927029
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0057334452867507935
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0059294928796589375
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.004871703218668699
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0048812017776072025
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005047382786870003
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.00529448501765728
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005323002114892006
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0005140661960467696
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0005300039192661643
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0004938897909596562
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0004653897776734084
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0004810899554286152
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0004376780998427421
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.00043528704554773867
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.00048735769814811647
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.006500875111669302
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005239127203822136
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.00599560234695673
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0055037373676896095
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005607760511338711
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0058227949775755405
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005519581027328968
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005721450783312321
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0022653937339782715
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024712726008147
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025899733882397413
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025782983284443617
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0022432601545006037
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024176794104278088
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0023849739227443933
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024047461338341236
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005238511599600315
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005109657999128103
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005252974107861519
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005018280353397131
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.004887745250016451
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005508576985448599
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005052422173321247
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005200072657316923
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0004470820422284305
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.00047852593706920743
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0005295596201904118
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0004647563910111785
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0004568455333355814
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.00043452417594380677
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0004326871130615473
+    },
+    {
+      "rows": 130,
+      "columns": 128,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.00046919379383325577
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005928596016019583
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005255783908069134
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0052324808202683926
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005283307284116745
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005298685748130083
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005159101914614439
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.0052789077162742615
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "mmq",
+      "relative_rms": 0.005316429305821657
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 1,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0008761212229728699
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 2,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.000629054382443428
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 3,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007700995192863047
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 7,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007503601955249906
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 8,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007632183842360973
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 17,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007402875926345587
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 64,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007626950973644853
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 129,
+      "dtype": "torch.float16",
+      "mode": "cublas",
+      "relative_rms": 0.0007508309790864587
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005535236559808254
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005746650975197554
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.006225918419659138
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005957947112619877
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.00586383230984211
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0057051111944019794
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.0056570423766970634
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "mmq",
+      "relative_rms": 0.005883465521037579
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 1,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0025129278656095266
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 2,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002425973303616047
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 3,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002413450973108411
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 7,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024764533154666424
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 8,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024794982746243477
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 17,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0023673572577536106
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 64,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.0024756579659879208
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 129,
+      "dtype": "torch.bfloat16",
+      "mode": "cublas",
+      "relative_rms": 0.002489172387868166
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.004330517258495092
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.004818829707801342
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.004931791685521603
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005324691534042358
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005156299564987421
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005229843780398369
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.0051230257377028465
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "mmq",
+      "relative_rms": 0.005310223437845707
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 1,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007654206128790975
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 2,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0006852172082290053
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 3,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007175865466706455
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 7,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007972063031047583
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 8,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007424025679938495
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 17,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007647367310710251
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 64,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007525736000388861
+    },
+    {
+      "rows": 128,
+      "columns": 384,
+      "batch": 129,
+      "dtype": "torch.float32",
+      "mode": "cublas",
+      "relative_rms": 0.0007485244423151016
+    }
+  ]
+}

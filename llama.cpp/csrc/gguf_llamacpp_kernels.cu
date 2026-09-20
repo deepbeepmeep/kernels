@@ -23,6 +23,7 @@
 
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/common.cuh"
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/convert.cuh"
+#include "_vendor/llama.cpp/ggml/src/ggml-cuda/dequantize.cuh"
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/mmq.cuh"
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/mmvq.cuh"
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/quantize.cuh"
@@ -77,6 +78,8 @@ size_t gguf_type_size_local(enum ggml_type type) {
             return sizeof(block_iq4_xs);
         case GGML_TYPE_Q8_1:
             return sizeof(block_q8_1);
+        case GGML_TYPE_PTQ1_0:
+            return sizeof(block_ptq1_0);
         default:
             throw std::runtime_error("Unsupported ggml type in local size helper");
     }
@@ -115,6 +118,8 @@ int64_t gguf_blck_size_local(enum ggml_type type) {
             return QK_K;
         case GGML_TYPE_Q8_1:
             return QK8_1;
+        case GGML_TYPE_PTQ1_0:
+            return QK_PTQ1_0;
         default:
             throw std::runtime_error("Unsupported ggml type in local block-size helper");
     }
@@ -200,6 +205,7 @@ ggml_backend_cuda_context & get_backend_ctx(int device, cudaStream_t stream) {
 }
 
 ggml_type ggml_type_from_qtype_name(const std::string & qtype_name) {
+    if (qtype_name == "PTQ1_0") { return GGML_TYPE_PTQ1_0; }
     if (qtype_name == "Q4_0") {
         return GGML_TYPE_Q4_0;
     }
@@ -302,6 +308,7 @@ ggml_tensor make_quantized_src0(const at::Tensor & raw_weight, ggml_type type, i
 }
 
 bool gguf_cuda_should_use_mmq_local(ggml_type type, int cc, int64_t batch_rows) {
+    if (type == GGML_TYPE_PTQ1_0) { return turing_mma_available(cc); }
 #ifdef GGML_CUDA_FORCE_CUBLAS
     return false;
 #endif
@@ -526,6 +533,9 @@ __global__ void gguf_dequantize_rows_q6_k_kernel(
 
 void gguf_cuda_mul_mat_q_switch_type(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream) {
     switch (args.type_x) {
+        case GGML_TYPE_PTQ1_0:
+            mul_mat_q_case<GGML_TYPE_PTQ1_0>(ctx, args, stream);
+            break;
         case GGML_TYPE_Q2_K:
             mul_mat_q_case<GGML_TYPE_Q2_K>(ctx, args, stream);
             break;
@@ -748,6 +758,17 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
 
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
     const int64_t padded_row = GGML_PAD(in_features, MATRIX_ROW_PADDING);
+    // PTQ1 MMQ consumes two 128-value blocks per K iteration. Odd block
+    // counts use bounded MMVQ batches, avoiding reads into the next row.
+    const int64_t ptq_step = turing_mma_available(cc) ? 7 : 1;
+    if (type == GGML_TYPE_PTQ1_0 && in_features % MMQ_ITER_K != 0 && batch_rows > ptq_step) {
+        const int64_t step = ptq_step;
+        for (int64_t start = 0; start < batch_rows; start += step) {
+            const int64_t count = std::min(step, batch_rows - start);
+            output.narrow(0, start, count).copy_(run_linear_cuda(raw_weight, type, tensor_shape, input.narrow(0, start, count)));
+        }
+        return output;
+    }
     if (ggml_cuda_should_use_mmvq(type, cc, batch_rows)) {
         // Decode and short speculative batches are matrix-vector workloads.
         // Use llama.cpp's portable, architecture-aware dispatch for these rows.
@@ -902,6 +923,21 @@ at::Tensor run_linear_cuda_cublas(const at::Tensor & raw_weight, ggml_type type,
     return output_f32.to(output_dtype);
 }
 
+// Prism get-rows indexing and pair dequantization, adapted to the torch API.
+static __global__ void gguf_dequantize_rows_ptq1_0_kernel(
+        const block_ptq1_0 * weights, const int32_t * indices, float * output,
+        int64_t columns, int64_t num_embeddings) {
+    const int64_t lookup = indices[blockIdx.x];
+    const int64_t col = 2 * (int64_t(blockIdx.y) * blockDim.x + threadIdx.x);
+    if (col >= columns) { return; }
+    float2 value = make_float2(0.0f, 0.0f);
+    if (lookup >= 0 && lookup < num_embeddings) {
+        dequantize_ptq1_0(weights + lookup * (columns / QK_PTQ1_0), col / QK_PTQ1_0, col % QK_PTQ1_0, value);
+    }
+    output[int64_t(blockIdx.x) * columns + col] = value.x;
+    output[int64_t(blockIdx.x) * columns + col + 1] = value.y;
+}
+
 at::Tensor run_embedding_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor indices) {
     const int64_t num_embeddings = tensor_shape.at(0);
     const int64_t embedding_dim = tensor_shape.at(1);
@@ -918,7 +954,13 @@ at::Tensor run_embedding_cuda(at::Tensor raw_weight, ggml_type type, std::vector
     const dim3 grid(flat_indices.numel(), (embedding_dim + block.x - 1) / block.x);
     cudaStream_t stream = at::cuda::getCurrentCUDAStream(raw_weight.device().index()).stream();
 
-    if (type == GGML_TYPE_Q4_K) {
+    if (type == GGML_TYPE_PTQ1_0) {
+        if (flat_indices.numel() == 0) { return output; }
+        const dim3 ptq_grid(flat_indices.numel(), (embedding_dim + 2 * block.x - 1) / (2 * block.x));
+        gguf_dequantize_rows_ptq1_0_kernel<<<ptq_grid, block, 0, stream>>>(
+            reinterpret_cast<const block_ptq1_0 *>(raw_weight.data_ptr()), flat_indices.data_ptr<int32_t>(),
+            output.data_ptr<float>(), embedding_dim, num_embeddings);
+    } else if (type == GGML_TYPE_Q4_K) {
         gguf_dequantize_rows_q4_k_kernel<float><<<grid, block, 0, stream>>>(
             reinterpret_cast<const block_q4_K *>(raw_weight.data_ptr()),
             flat_indices.data_ptr<int32_t>(),
@@ -1143,6 +1185,7 @@ std::unique_ptr<ggml_cuda_pool> ggml_backend_cuda_context::new_pool_for_device(i
     return std::make_unique<gguf_cuda_pool_simple>(device);
 }
 
+template void mul_mat_q_case<GGML_TYPE_PTQ1_0>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
 template void mul_mat_q_case<GGML_TYPE_Q2_K>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
 template void mul_mat_q_case<GGML_TYPE_Q3_K>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
 template void mul_mat_q_case<GGML_TYPE_Q4_0>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
@@ -1163,11 +1206,11 @@ template void mul_mat_q_case<GGML_TYPE_IQ4_NL>(ggml_backend_cuda_context & ctx, 
 template void mul_mat_q_case<GGML_TYPE_IQ4_XS>(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);
 
 bool gguf_cuda_supports_linear_qtype_name(const std::string & qtype_name) {
-    return qtype_name == "Q2_K" || qtype_name == "Q3_K" || qtype_name == "Q4_0" || qtype_name == "Q4_1" || qtype_name == "Q4_K" || qtype_name == "Q5_0" || qtype_name == "Q5_1" || qtype_name == "Q5_K" || qtype_name == "Q6_K" || qtype_name == "Q8_0" || qtype_name == "IQ1_S" || qtype_name == "IQ2_S" || qtype_name == "IQ2_XS" || qtype_name == "IQ2_XXS" || qtype_name == "IQ3_S" || qtype_name == "IQ3_XXS" || qtype_name == "IQ4_NL" || qtype_name == "IQ4_XS";
+    return qtype_name == "PTQ1_0" || qtype_name == "Q2_K" || qtype_name == "Q3_K" || qtype_name == "Q4_0" || qtype_name == "Q4_1" || qtype_name == "Q4_K" || qtype_name == "Q5_0" || qtype_name == "Q5_1" || qtype_name == "Q5_K" || qtype_name == "Q6_K" || qtype_name == "Q8_0" || qtype_name == "IQ1_S" || qtype_name == "IQ2_S" || qtype_name == "IQ2_XS" || qtype_name == "IQ2_XXS" || qtype_name == "IQ3_S" || qtype_name == "IQ3_XXS" || qtype_name == "IQ4_NL" || qtype_name == "IQ4_XS";
 }
 
 bool gguf_cuda_supports_embedding_qtype_name(const std::string & qtype_name) {
-    return qtype_name == "Q4_K" || qtype_name == "Q6_K";
+    return qtype_name == "PTQ1_0" || qtype_name == "Q4_K" || qtype_name == "Q6_K";
 }
 
 bool gguf_cuda_supports_qtype_name(const std::string & qtype_name) {
@@ -1203,6 +1246,13 @@ at::Tensor gguf_cuda_linear(
 
     const at::cuda::CUDAGuard guard(input.device());
     const ggml_type type = ggml_type_from_qtype_name(qtype_name);
+    if (type == GGML_TYPE_PTQ1_0) {
+        TORCH_CHECK(raw_weight.scalar_type() == at::kByte, "PTQ1_0 weights must be packed uint8");
+        TORCH_CHECK(tensor_shape[0] > 0 && tensor_shape[1] > 0 && tensor_shape[1] % QK_PTQ1_0 == 0,
+            "PTQ1_0 requires positive dimensions and a width divisible by 128");
+        TORCH_CHECK(raw_weight.numel() == tensor_shape[0] * (tensor_shape[1] / QK_PTQ1_0) * sizeof(block_ptq1_0),
+            "PTQ1_0 packed size does not match tensor shape");
+    }
     const at::ScalarType output_dtype = scalar_type_from_name(output_dtype_name);
     at::Tensor input_2d = input.reshape({-1, input.size(-1)});
     if (!input_2d.is_contiguous()) {
@@ -1235,6 +1285,13 @@ at::Tensor gguf_cuda_embedding(
 
     const at::cuda::CUDAGuard guard(raw_weight.device());
     const ggml_type type = ggml_type_from_qtype_name(qtype_name);
+    if (type == GGML_TYPE_PTQ1_0) {
+        TORCH_CHECK(raw_weight.scalar_type() == at::kByte, "PTQ1_0 weights must be packed uint8");
+        TORCH_CHECK(tensor_shape[0] > 0 && tensor_shape[1] > 0 && tensor_shape[1] % QK_PTQ1_0 == 0,
+            "PTQ1_0 requires positive dimensions and a width divisible by 128");
+        TORCH_CHECK(raw_weight.numel() == tensor_shape[0] * (tensor_shape[1] / QK_PTQ1_0) * sizeof(block_ptq1_0),
+            "PTQ1_0 packed size does not match tensor shape");
+    }
     at::Tensor output = run_embedding_cuda(raw_weight, type, tensor_shape, indices);
     const at::ScalarType output_dtype = scalar_type_from_name(output_dtype_name);
     if (output.scalar_type() != output_dtype) {

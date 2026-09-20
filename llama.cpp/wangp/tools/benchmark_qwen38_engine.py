@@ -26,6 +26,7 @@ STORY = "Write a 10 chapters long story about a man who survived a murder attemp
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--assets", type=Path, required=True)
+    parser.add_argument("--checkpoints-root", type=Path, action="append", default=[], help="Additional checkpoint roots for draft assets.")
     parser.add_argument("--variant", choices=["4b", "9b", "27b"], default="27b")
     parser.add_argument("--checkpoint", default="Qwen3.8-27B-Uncensored-Q4_K_M.gguf")
     parser.add_argument("--corpus", type=Path, required=True)
@@ -35,14 +36,34 @@ def main():
     parser.add_argument("--contexts", type=int, nargs="+", default=[2048, 20000])
     parser.add_argument("--tokens", type=int, default=512)
     parser.add_argument("--repeats", type=int, default=2)
-    parser.add_argument("--draft", type=int, choices=range(9), default=2)
+    parser.add_argument("--draft", type=int, choices=range(9))
+    parser.add_argument("--method", choices=("mtp", "dspark", "dflash2"), default="mtp")
     parser.add_argument("--confidence", type=float, default=0.30)
     parser.add_argument("--greedy", action="store_true")
     parser.add_argument("--profile", choices=["decode", "prefill"])
+    parser.add_argument("--no-stage-profile", action="store_true", help="Measure ordinary decode throughput without per-stage profiling events.")
     parser.add_argument("--kernel-library", type=Path)
     parser.add_argument("--reference-attention", type=Path)
+    parser.add_argument("--unfused-prism", action="store_true", help="Benchmark the original Bonsai projection schedule.")
+    parser.add_argument("--prism-tiled-gdn", action="store_true", help="Benchmark decode-time GDN head permutations instead of load-time preparation.")
+    parser.add_argument("--prism-reference-gdn", "--reference-gdn", action="store_true", help="Benchmark the original convolution launch and unfused GDN preparation.")
     args = parser.parse_args()
+    files_locator.set_checkpoints_paths([str(args.assets.parent), *map(str, args.checkpoints_root), "ckpts", "."])
+    if args.draft is None:
+        args.draft = {"mtp": 2, "dspark": 7, "dflash2": 5}[args.method]
+    if args.method != "mtp" and args.draft > {"dspark": 7, "dflash2": 7}[args.method]:
+        parser.error("Draft count exceeds the checkpoint's proposal block.")
     args.output.mkdir(parents=True, exist_ok=True)
+    if args.unfused_prism:
+        from shared.prompt_enhancer import qwen35_text
+        original_fusions = qwen35_text._apply_qwen35_projection_fusions
+        qwen35_text._apply_qwen35_projection_fusions = lambda model, **kwargs: original_fusions(model, optimize_prism=False, **kwargs)
+    if args.prism_tiled_gdn:
+        from shared.qtypes import prism
+        prism.prepare_prism_gdn_layout = lambda model, metadata: None
+    if args.prism_reference_gdn or args.prism_tiled_gdn or args.unfused_prism:
+        from shared.kernels import qwen_gdn
+        qwen_gdn.install_gdn_decode = lambda model: None
     if args.reference_attention:
         from shared.llm_engines.nanovllm.layers import attention
         spec = importlib.util.spec_from_file_location("shared.llm_engines.nanovllm.layers.attention_reference", args.reference_attention)
@@ -64,15 +85,21 @@ def main():
                     kernel_package_version=llamacpp_gguf_cuda.__version__, kernel_binary=str(binary), kernel_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
                     checkpoint=str(args.assets / args.checkpoint), variant=args.variant, context_capacity=32768, kv_cache="Q8 with FP16 scales per 32 values",
                     sampling=dict(temperature=.6, top_p=.95, top_k=20, min_p=.05, repetition_penalty=1.05, seed=123),
-                    warmup_context=max(args.contexts), requested_draft_tokens=args.draft,
+                    warmup_context=max(args.contexts), requested_draft_tokens=args.draft, speculative_method=args.method, prism_projection_fusions=not args.unfused_prism,
+                    prism_grouped_gdn=not (args.unfused_prism or args.prism_tiled_gdn),
+                    prism_gdn_decode_fused=not (args.unfused_prism or args.prism_tiled_gdn or args.prism_reference_gdn),
                     sm120_backend=getattr(attention._SM120_Q8, "__file__", None))
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-    files_locator._checkpoints_paths = [str(args.assets.parent), "ckpts", "."]
     checkpoint = args.assets / args.checkpoint
     dtype = get_gguf_compute_dtype()
     started = time.perf_counter()
-    model = load_qwen35_text_prompt_enhancer(model_path=str(checkpoint), assets_dir=str(args.assets), default_dtype=dtype, backend="gguf", requested_lm_engine="vllm", variant=args.variant, speculative_decoding=args.draft > 0, kv_cache_int8=True)
+    speculation = args.method if args.method != "mtp" and args.draft else args.draft > 0
+    model = load_qwen35_text_prompt_enhancer(model_path=str(checkpoint), assets_dir=str(args.assets), default_dtype=dtype, backend="gguf", requested_lm_engine="vllm", variant=args.variant, speculative_decoding=speculation, kv_cache_int8=True)
     metadata["actual_decoder_engine"] = model._prompt_enhancer_engine_name
+    metadata["gdn_decode_fused"] = any(getattr(block, "_gdn_prepare_decode", None) is not None for block in model.blk)
+    metadata["prism_projection_fusions"] = any(getattr(block, "attn_qkv_gate", None) is not None for block in model.blk)
+    metadata["prism_grouped_gdn"] = any(getattr(block, "_prism_gdn_grouped", False) for block in model.blk)
+    metadata["prism_gdn_decode_fused"] = metadata["gdn_decode_fused"] and metadata["prism_grouped_gdn"]
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     model._prompt_enhancer_min_model_len_hint = 32768
     model._prompt_enhancer_speculative_tokens = args.draft
@@ -117,7 +144,7 @@ def main():
                     torch.cuda.synchronize()
                     prefill = time.perf_counter() - start
                     runner = runtime._get_live_llm().model_runner
-                    runner.set_mtp_stage_profile_enabled(True)
+                    runner.set_mtp_stage_profile_enabled(not args.no_stage_profile)
                     start = time.perf_counter()
                     result = decode(args.tokens)
                     torch.cuda.synchronize()

@@ -1,0 +1,125 @@
+[
+  {
+    "file": "_C.cpython-310-x86_64-linux-gnu.so",
+    "bytes": 280611008,
+    "sha256": "b1ee731edb4f8bcd0b6a92002b36af5bde535d674041fb14015af842a8d46fa9",
+    "sass": [
+      "50",
+      "52",
+      "53",
+      "60",
+      "61",
+      "62",
+      "70",
+      "72",
+      "75",
+      "80",
+      "86",
+      "87",
+      "89",
+      "90",
+      "100",
+      "101",
+      "120"
+    ],
+    "ptx": [
+      "120"
+    ],
+    "needed": [
+      "libcublas.so.12",
+      "libc10.so",
+      "libtorch.so",
+      "libtorch_cpu.so",
+      "libtorch_python.so",
+      "libcudart.so.12",
+      "libc10_cuda.so",
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "runtime_search_paths": [
+      "$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib"
+    ]
+  },
+  {
+    "file": "_attention.cpython-310-x86_64-linux-gnu.so",
+    "bytes": 72084536,
+    "sha256": "8846c672cd87deeeeec7a2ac38c7211fa4fd4e20ecad4350e7c90f5de863d2d2",
+    "sass": [
+      "50",
+      "52",
+      "53",
+      "60",
+      "61",
+      "62",
+      "70",
+      "72",
+      "75",
+      "80",
+      "86",
+      "87",
+      "89",
+      "90",
+      "100",
+      "101",
+      "120"
+    ],
+    "ptx": [
+      "120"
+    ],
+    "needed": [
+      "libcuda.so.1",
+      "libc10.so",
+      "libtorch.so",
+      "libtorch_cpu.so",
+      "libtorch_python.so",
+      "libcudart.so.12",
+      "libc10_cuda.so",
+      "libtorch_cuda.so",
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "runtime_search_paths": [
+      "$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib"
+    ]
+  },
+  {
+    "file": "_prism.cpython-310-x86_64-linux-gnu.so",
+    "bytes": 38637856,
+    "sha256": "c038209ddd20de9b32d74199e0c5bafb2123e65a270648ba5eaa136fdd9f0b2b",
+    "sass": [
+      "50",
+      "52",
+      "53",
+      "60",
+      "61",
+      "62",
+      "70",
+      "72",
+      "75",
+      "80",
+      "86",
+      "87",
+      "89",
+      "90",
+      "100",
+      "101",
+      "120"
+    ],
+    "ptx": [
+      "120"
+    ],
+    "needed": [
+      "libc10.so",
+      "libtorch.so",
+      "libtorch_cpu.so",
+      "libtorch_python.so",
+      "libcudart.so.12",
+      "libc10_cuda.so",
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "runtime_search_paths": [
+      "$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib"
+    ]
+  }
+]

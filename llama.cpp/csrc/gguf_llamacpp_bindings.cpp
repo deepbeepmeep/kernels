@@ -4,7 +4,10 @@
 
 #include <pybind11/stl.h>
 
+at::Tensor prism_hadamard(at::Tensor, at::Tensor, bool, int64_t, int64_t, int64_t);
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+    m.def("prism_hadamard", &prism_hadamard, "Prism signed block Hadamard transform.");
     m.def("supports_linear_qtype_name", &gguf_cuda_supports_linear_qtype_name, "Return whether the CUDA GGUF linear fast path supports the qtype.");
     m.def("supports_embedding_qtype_name", &gguf_cuda_supports_embedding_qtype_name, "Return whether the CUDA GGUF embedding fast path supports the qtype.");
     m.def("supports_qtype_name", &gguf_cuda_supports_qtype_name, "Return whether the CUDA GGUF fast path supports the qtype.");

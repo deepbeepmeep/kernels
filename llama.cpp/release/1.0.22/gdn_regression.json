@@ -1,0 +1,18 @@
+[
+  {
+    "stack": "win_py310",
+    "exit_code": 0
+  },
+  {
+    "stack": "win_py311",
+    "exit_code": 0
+  },
+  {
+    "stack": "linux_py311",
+    "exit_code": 0
+  },
+  {
+    "stack": "linux_py310",
+    "exit_code": 0
+  }
+]

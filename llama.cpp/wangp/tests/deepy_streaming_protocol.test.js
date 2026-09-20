@@ -5,7 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 function productionFunction(name) {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'shared', 'gradio', 'assistant_chat.py'), 'utf8');
+  const source = ['chat.js', 'gradio_transport.js', 'chat.css'].map(name => fs.readFileSync(path.join(__dirname, '..', 'shared', 'deepy', 'web', name), 'utf8')).join('\n');
   const marker = `${name} = function`;
   const start = source.indexOf(marker);
   assert.notEqual(start, -1, `missing ${name}`);
@@ -42,6 +42,7 @@ function streamingMarkdownHarness() {
       this.children = [];
       this.parentNode = null;
       this.className = '';
+      this.style = {};
       this._text = text;
     }
     appendChild(child) {
@@ -62,6 +63,8 @@ function streamingMarkdownHarness() {
     get lastElementChild() {
       return [...this.children].reverse().find((child) => child.nodeType === 1) || null;
     }
+    get lastChild() { return this.children.at(-1) || null; }
+    appendData(text) { this._text += text; }
     get textContent() {
       return this.nodeType === 3 ? this._text : this.children.map((child) => child.textContent).join('');
     }
@@ -78,7 +81,7 @@ function streamingMarkdownHarness() {
   const WAC = {};
   const context = { WAC, document, URL };
   vm.createContext(context);
-  for (const name of ['safeStreamingMarkdownUrl', 'streamingMarkdownDelimiterFlags', 'findStreamingMarkdownCloser', 'appendStreamingInlineMarkdown', 'resetStreamingMarkdown', 'appendStreamingListItem', 'renderStreamingMarkdownLine', 'renderStreamingMarkdown']) {
+  for (const name of ['safeStreamingMarkdownUrl', 'streamingMarkdownDelimiterFlags', 'findStreamingMarkdownCloser', 'appendStreamingInlineMarkdown', 'resetStreamingMarkdown', 'appendStreamingListItem', 'splitStreamingTableRow', 'appendStreamingTableRow', 'renderStreamingMarkdownLine', 'appendStreamingMarkdown', 'renderStreamingMarkdown']) {
     vm.runInContext(`WAC.${name} = ${productionFunction(`WAC.${name}`)};`, context);
   }
   return { WAC, root: new FakeNode('div') };
@@ -109,6 +112,32 @@ function consumer() {
 function envelope(id, event) {
   return JSON.stringify({ event_id: id, instance_id: 'server', event: { chat_session_id: 'session', revision: event.revision ?? 1, ...event } });
 }
+
+test('streamed thoughts and statements use Python code-point offsets after emoji', () => {
+  for (const type of ['reasoning', 'markdown']) {
+    const known = { text: '🎬', finalized: false };
+    const live = { __wangpStreamingMarkdown: {} };
+    const reveals = [];
+    const WAC = {
+      blockNode() { return {}; }, liveTextNode() { return live; },
+      currentBlockText() { return known.text; },
+      incrementalMessageState() { return { blocks: { b: known } }; },
+      captureAutoscrollState() {}, applyAutoscrollState() {},
+      markSyncRequired() { assert.fail('valid Unicode delta requested recovery'); },
+      streamingReveals: new Map(),
+      queueStreamingReveal(_live, text) { reveals.push(text); },
+    };
+    const context = vm.createContext({ WAC });
+    vm.runInContext(`WAC.appendBlockText = ${productionFunction('WAC.appendBlockText')};`, context);
+    for (const [text, start, end] of [[' ', 1, 2], ['Hello 🌍', 2, 9], ['!', 9, 10]]) {
+      WAC.appendBlockText({ message_id: 'm', block_id: 'b', block_type: type, text, text_start: start, text_end: end });
+    }
+    assert.deepEqual(reveals, ['🎬 ', '🎬 Hello 🌍', '🎬 Hello 🌍!']);
+    assert.equal(known.text, '🎬 Hello 🌍!');
+    WAC.appendBlockText({ message_id: 'm', block_id: 'b', text: '!', text_start: 9, text_end: 10 });
+    assert.equal(reveals.length, 3);
+  }
+});
 
 test('production consumer recovers a missing text delta before the thought finishes', () => {
   const context = consumer();
@@ -147,6 +176,28 @@ test('production consumer requests recovery for a replacement after a sequence g
   assert.deepEqual(calls.filter(([kind]) => kind === 'gap'), [['gap', 'replace_block_text']]);
   assert.deepEqual(calls.filter(([kind]) => kind === 'replace'), []);
   assert.equal(WAC.chatSequence, 1);
+});
+
+test('self-contained blocks stay live while recovery repairs a lost earlier block', () => {
+  for (const type of ['upsert_block', 'finalize_block']) {
+    const { WAC, calls } = consumer();
+    WAC.consumePayload(envelope('sync-1', { type: 'sync', sequence: 1, messages: [] }));
+    WAC.consumePayload(envelope('thought-2', { type: 'upsert_block', sequence: 2, block_id: 'thought', message_id: 'm' }));
+    // Sequence 3 contains the preceding thought's final text, not this tool's state.
+    WAC.consumePayload(envelope('tool-4', { type, sequence: 4, block_type: 'tool', block_id: 'tool', message_id: 'm' }));
+    assert.deepEqual(calls.filter(([kind]) => kind === 'gap'), [['gap', type]]);
+    assert.equal(WAC.chatSequence, 4);
+    assert.deepEqual(calls.at(-1), [type === 'upsert_block' ? 'upsert' : 'finalize', 'tool']);
+    // Recovery may be delayed; unrelated new blocks and their deltas still display.
+    WAC.consumePayload(envelope('next-5', { type: 'upsert_block', sequence: 5, block_id: 'next', message_id: 'm' }));
+    WAC.consumePayload(envelope('next-6', { type: 'append_block_text', sequence: 6, block_id: 'next', message_id: 'm', text: 'live' }));
+    assert.deepEqual(calls.at(-1), ['append', 'live']);
+    assert.equal(WAC.syncRequired, true);
+    WAC.consumePayload(envelope('recovery-7', { type: 'sync', sequence: 7, messages: [] }));
+    assert.equal(WAC.syncRequired, false);
+    assert.equal(WAC.chatSequence, 7);
+    assert.deepEqual(calls.at(-1), ['sync']);
+  }
 });
 
 test('production consumer still requests a canonical sync for a missing destructive event', () => {
@@ -372,6 +423,107 @@ test('a separate numbered list preserves its starting number', () => {
   assert.equal(lists[1].start, 9);
 });
 
+test('a table appears as soon as its separator is complete, before its newline, then streams rows', () => {
+  const { WAC, root } = streamingMarkdownHarness();
+  let text = 'Results:\n| File | Duration |\n|:---|---:|';
+  WAC.renderStreamingMarkdown(root, text);
+  assert.equal(root.children.filter((node) => node.tagName === 'TABLE').length, 1);
+  WAC.renderStreamingMarkdown(root, text += '\n');
+  const table = root.children.find((node) => node.tagName === 'TABLE');
+  assert.ok(table);
+  const [head, body] = table.children;
+  assert.deepEqual(head.children[0].children.map((node) => node.textContent), ['File', 'Duration']);
+  assert.deepEqual(head.children[0].children.map((node) => node.style.textAlign), ['left', 'right']);
+  assert.equal(body.children.length, 0);
+  for (const chunk of ['| clip', '.mp4 | ', '**10**', ' s |']) {
+    WAC.renderStreamingMarkdown(root, text += chunk);
+    assert.equal(body.children.length, 1);
+    assert.equal(root.children.find((node) => node.tagName === 'TABLE'), table);
+  }
+  assert.deepEqual(body.children[0].children.map((node) => node.textContent), ['clip.mp4', '10 s']);
+  WAC.renderStreamingMarkdown(root, text += '\n');
+  const firstRow = body.children[0];
+  for (const chunk of ['| voice', '.wav | 5', ' s |\n']) WAC.renderStreamingMarkdown(root, text += chunk);
+  assert.equal(body.children.length, 2);
+  assert.equal(body.children[0], firstRow);
+  WAC.renderStreamingMarkdown(root, text += '\nAfter the table.');
+  assert.equal(body.children.length, 2);
+  assert.ok(root.textContent.endsWith('After the table.'));
+});
+
+test('table recognition is independent of chunk boundaries and supports consecutive tables', () => {
+  const source = '| Name | Value |\n|---|:---:|\n| a | 1 |\n\nNext\n| One |\n|---|\n| b |\n';
+  for (const width of [1, 2, 7, source.length]) {
+    const { WAC, root } = streamingMarkdownHarness();
+    for (let end = width; end < source.length; end += width) WAC.renderStreamingMarkdown(root, source.slice(0, end));
+    WAC.renderStreamingMarkdown(root, source);
+    const tables = root.children.filter((node) => node.tagName === 'TABLE');
+    assert.equal(tables.length, 2);
+    assert.equal(tables[0].children[1].children[0].textContent, 'a1');
+    assert.equal(tables[1].children[1].children[0].textContent, 'b');
+  }
+});
+
+test('a visible two-line table previews without a newline and rolls back an unfinished separator', () => {
+  for (const header of ['| A | B |\n', 'A | B\n']) {
+    const { WAC, root } = streamingMarkdownHarness();
+    let text = header;
+    for (const char of '--- | ---') {
+      text += char;
+      WAC.renderStreamingMarkdown(root, text);
+    }
+    assert.ok(root.children.some((node) => node.tagName === 'TABLE'));
+    WAC.renderStreamingMarkdown(root, text);
+    assert.equal(root.children.filter((node) => node.tagName === 'TABLE').length, 1);
+    WAC.renderStreamingMarkdown(root, text + ' unfinished');
+    assert.ok(!root.children.some((node) => node.tagName === 'TABLE'));
+    WAC.renderStreamingMarkdown(root, text + '\n| x | y |');
+    const table = root.children.find((node) => node.tagName === 'TABLE');
+    assert.equal(table.children[1].children[0].textContent, 'xy');
+  }
+});
+
+test('table cells preserve escaped pipes, code, links and literal HTML during streaming', () => {
+  const { WAC, root } = streamingMarkdownHarness();
+  const source = '| File | Note |\n|---|---|\n| [clip](https://example.com) | a\\|b and `x|y` <script>bad()</script> |\n';
+  for (let end = 1; end <= source.length; end += 1) WAC.renderStreamingMarkdown(root, source.slice(0, end));
+  const row = root.children.find((node) => node.tagName === 'TABLE').children[1].children[0];
+  assert.equal(row.children.length, 2);
+  assert.equal(row.children[0].children[0].tagName, 'A');
+  assert.equal(row.children[0].children[0].rel, 'noopener noreferrer');
+  assert.equal(row.children[1].textContent, 'a|b and x|y <script>bad()</script>');
+  assert.ok(row.children[1].children.some((node) => node.tagName === 'CODE'));
+  assert.ok(!row.children[1].children.some((node) => node.tagName === 'SCRIPT'));
+});
+
+test('fenced code, indented code and invalid separators do not start live tables', () => {
+  const table = '| A | B |\n|---|---|\n| x | y |\n';
+  for (const source of ['```text\n' + table, '~~~\n' + table, '````\n```\n' + table, '    ' + table.replaceAll('\n', '\n    '), '| A | B |\n|--|\n', '| A | B |\n|word|---|\n', '|\n|\n']) {
+    const { WAC, root } = streamingMarkdownHarness();
+    WAC.renderStreamingMarkdown(root, source);
+    assert.ok(!root.children.some((node) => node.tagName === 'TABLE'), source);
+  }
+  for (const fence of ['```', '~~~', '````']) {
+    const { WAC, root } = streamingMarkdownHarness();
+    WAC.renderStreamingMarkdown(root, fence + '\n' + table + fence + '\n' + table);
+    assert.equal(root.children.filter((node) => node.tagName === 'TABLE').length, 1);
+  }
+});
+
+test('a streaming rewrite or replay rebuilds table state without duplicate rows', () => {
+  const { WAC, root } = streamingMarkdownHarness();
+  const source = '| File | Time |\n|---|---|\n| a | 1 |\n';
+  WAC.renderStreamingMarkdown(root, source);
+  WAC.renderStreamingMarkdown(root, source);
+  WAC.renderStreamingMarkdown(root, source.replace('| a | 1 |', '| b | 2 |'));
+  const tables = root.children.filter((node) => node.tagName === 'TABLE');
+  assert.equal(tables.length, 1);
+  assert.equal(tables[0].children[1].children.length, 1);
+  assert.equal(tables[0].children[1].children[0].textContent, 'b2');
+  WAC.renderStreamingMarkdown(root, 'Revised plain text.');
+  assert.ok(!root.children.some((node) => node.tagName === 'TABLE'));
+});
+
 test('event source value writes publish immediately without polling', () => {
   const calls = [];
   const WAC = { consumePayload(value) { calls.push(value); } };
@@ -398,6 +550,7 @@ test('canonical split requests keep following the submitted request to the last 
   const WAC = {
     followSubmissionId: 'optimistic_batch',
     blockState: { old: true },
+    clearStreamingReveals() {},
     ensureShell() {}, captureDisclosureState() {}, captureAutoscrollState() { return { atBottom: false, top: 120 }; },
     syncAcknowledgesFollowedSubmission: null,
     replaceState() {}, reconcileOptimisticSubmits() {},
