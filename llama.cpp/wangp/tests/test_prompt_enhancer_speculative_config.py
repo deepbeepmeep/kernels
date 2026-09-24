@@ -14,7 +14,7 @@ from shared.prompt_enhancer.config import (
 @pytest.mark.parametrize("mode", [0, 1, 2, 3, 4, "dspark", "dflash2"])
 def test_saved_speculative_modes_round_trip(mode):
     assert normalize_prompt_enhancer_speculative_decoding(mode) == mode
-    assert mode in [value for _label, value in PROMPT_ENHANCER_SPECULATIVE_DECODING_CHOICES]
+    assert (mode in [value for _label, value in PROMPT_ENHANCER_SPECULATIVE_DECODING_CHOICES]) == (mode not in ("dspark", "dflash2"))
     assert validate_prompt_enhancer_speculative_decoding(5, mode) == mode
     if mode != 2:
         assert resolve_prompt_enhancer_speculative_decoding(5, mode, total_vram_gb=32) == (mode, "")
@@ -85,7 +85,8 @@ def test_counts_are_bounded_and_reach_runtime(method, maximum, runtime_mode):
         assert resolve_prompt_enhancer_speculative_decoding(5, saved, 32) == (saved, "")
         assert speculative_decoding_runtime(saved) == (runtime_mode, count)
         _, selected, choices, tokens = speculative_decoding_ui_state(5, "gguf", "vllm", saved)
-        assert (selected, choices, tokens) == (method, list(range(1, maximum + 1)), count)
+        expected = (method, list(range(1, maximum + 1)), count)
+        assert (selected, choices, tokens) == expected
     with pytest.raises(ValueError, match="supports 1 to"):
         speculative_decoding_config(method, maximum + 1)
 
@@ -93,7 +94,7 @@ def test_counts_are_bounded_and_reach_runtime(method, maximum, runtime_mode):
 def test_model_and_method_switches_reset_or_clamp():
     assert speculative_decoding_ui_state(4, "int8", "vllm", "dspark", 7)[1:] == ("auto", [], None)
     assert speculative_decoding_ui_state(5, "gguf", "cg", "dflash2", 5)[1:] == ("auto", [], None)
-    assert speculative_decoding_ui_state(5, "gguf_ptq1", "vllm", "dflash2", 8)[-1] == 5
+    assert speculative_decoding_ui_state(5, "gguf_ptq1", "vllm", "dflash2", 8)[1:] == ("dflash2", [1, 2, 3, 4, 5], 5)
     assert speculative_decoding_ui_state(5, "gguf_ptq1", "vllm", "disabled", 8)[1:] == ("disabled", [], None)
 
 
@@ -109,5 +110,24 @@ def test_dflash_checkpoint_and_token_limits_follow_target(backend, folder, maxim
     ensure_block_draft_assets(lambda **kwargs: downloads.append(kwargs), "dflash2", "27b", backend)
     assert downloads[0]["sourceFolderList"] == [folder]
     assert block_draft_spec("dflash2", bonsai=backend == "gguf_ptq1")["drafts"] == maximum
-    assert speculative_decoding_ui_state(5, backend, "vllm", "dflash2")[2:] == (list(range(1, maximum + 1)), maximum)
-    assert speculative_decoding_ui_state(5, backend, "vllm", "dflash2", 7)[-1] == maximum
+    assert speculative_decoding_ui_state(5, backend, "vllm", "dflash2")[1:] == ("dflash2", list(range(1, maximum + 1)), 5)
+    assert speculative_decoding_ui_state(5, backend, "vllm", "dflash2", 7)[1:] == ("dflash2", list(range(1, maximum + 1)), maximum)
+
+
+@pytest.mark.parametrize("vram,enabled", [(0, False), (8, False), (9.99, False), (10, False), (10.01, True), (12, True), (32, True)])
+@pytest.mark.parametrize("value", [2, "auto", {"method": "auto", "tokens": None}])
+def test_ptq1_auto_uses_strict_vram_boundary_and_two_tokens(vram, enabled, value):
+    resolved, message = resolve_prompt_enhancer_speculative_decoding(5, value, vram, qwen_backend="gguf_ptq1")
+    assert speculative_decoding_runtime(resolved) == ((1, 2) if enabled else (0, None))
+    assert "Bonsai PTQ1" in message
+
+
+@pytest.mark.parametrize("backend", ["gguf", "gguf_q2", "gguf_q3", "quanto_int8"])
+def test_other_27b_quantizations_retain_auto_threshold(backend):
+    assert resolve_prompt_enhancer_speculative_decoding(5, "auto", 12, qwen_backend=backend)[0] == 0
+    assert resolve_prompt_enhancer_speculative_decoding(5, "auto", 24, qwen_backend=backend)[0] == 1
+
+
+@pytest.mark.parametrize("value", [0, 1, {"method": "mtp", "tokens": 4}])
+def test_ptq1_explicit_selection_is_not_overridden(value):
+    assert resolve_prompt_enhancer_speculative_decoding(5, value, 8, qwen_backend="gguf_ptq1") == (value, "")

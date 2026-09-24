@@ -774,7 +774,6 @@ static __device__ __forceinline__ float vec_dot_q2_0_q8_1(
     return d2 * d8 * sumi;
 }
 
-#if !defined(GGML_USE_HIP)
 template <int ncols_dst>
 static __device__ __forceinline__ void vec_dot_ptq1_0_q8_1_multi(const void * __restrict__ vbq,
                                                                  const block_q8_1 * __restrict__ bq8_1,
@@ -859,67 +858,15 @@ static __device__ __forceinline__ void vec_dot_ptq1_0_q8_1_multi(const void * __
         result[j] = d * acc;
     }
 }
-#endif
 
 // PTQ1_0 x Q8_1. One call consumes the full 128-weight block.
 static __device__ __forceinline__ float vec_dot_ptq1_0_q8_1(const void * __restrict__ vbq,
                                                             const block_q8_1 * __restrict__ bq8_1,
                                                             const int & kbx,
                                                             const int & iqs) {
-#if defined(GGML_USE_HIP)
-    const block_ptq1_0 * bq      = (const block_ptq1_0 *) vbq + kbx;
-    int                  sumi[4] = { 0, 0, 0, 0 };
-
-#    pragma unroll
-    for (int m = 0; m < 16; ++m) {
-        uint32_t v = bq->qs[m];
-#    pragma unroll
-        for (int t = 0; t < 5; ++t) {
-            const uint32_t w = v * 3;
-            const int      q = (int) (w >> 8) - 1;
-            v                = w & 0xFF;
-            const int e      = t * 16 + m;
-            sumi[e >> 5] += q * (int) bq8_1[iqs + (e >> 5)].qs[e & 31];
-        }
-    }
-
-#    pragma unroll
-    for (int m = 0; m < 8; ++m) {
-        uint32_t v = bq->qs[16 + m];
-#    pragma unroll
-        for (int t = 0; t < 5; ++t) {
-            const uint32_t w = v * 3;
-            const int      q = (int) (w >> 8) - 1;
-            v                = w & 0xFF;
-            const int e      = 80 + t * 8 + m;
-            sumi[e >> 5] += q * (int) bq8_1[iqs + (e >> 5)].qs[e & 31];
-        }
-    }
-
-#    pragma unroll
-    for (int h = 0; h < 2; ++h) {
-        uint32_t v = bq->qh[h];
-#    pragma unroll
-        for (int t = 0; t < 4; ++t) {
-            const uint32_t w = v * 3;
-            const int      q = (int) (w >> 8) - 1;
-            v                = w & 0xFF;
-            const int e      = 120 + t * 2 + h;
-            sumi[e >> 5] += q * (int) bq8_1[iqs + (e >> 5)].qs[e & 31];
-        }
-    }
-
-    float acc = 0.0f;
-#    pragma unroll
-    for (int k = 0; k < 4; ++k) {
-        acc += __low2float(bq8_1[iqs + k].ds) * (float) sumi[k];
-    }
-    return (float) bq->d * acc;
-#else
     float result;
     vec_dot_ptq1_0_q8_1_multi<1>(vbq, bq8_1, kbx, iqs, 0, &result);
     return result;
-#endif
 }
 
 static __device__ __forceinline__ float vec_dot_q4_0_q8_1(

@@ -19,6 +19,13 @@ def main():
     parser.add_argument('--draft', type=int, choices=(0, 2), default=0)
     parser.add_argument('--engine', choices=('legacy', 'cg', 'vllm'), default='vllm')
     args = parser.parse_args()
+    if args.engine != 'vllm':
+        import triton
+        from shared.qtypes import gguf
+        def forbidden_kernel(*args, **kwargs):
+            raise AssertionError('Legacy/cg entered a Triton or new GGUF fusion kernel')
+        triton.runtime.JITFunction.run = forbidden_kernel
+        gguf.linear_fused = forbidden_kernel
     files_locator._checkpoints_paths = [str(args.checkpoint.parent.parent), 'ckpts', '.']
     torch.set_default_device('cpu')
     model = load_qwen35_text_prompt_enhancer(
@@ -28,12 +35,25 @@ def main():
     model._prompt_enhancer_speculative_tokens = args.draft
     model._prompt_enhancer_speculative_sampling_tokens = args.draft
     blocks = [b for b in model.blk if b.layer_type == 'linear_attention']
-    enabled = args.engine == 'vllm' and torch.cuda.get_device_capability(0) == (12, 0)
+    capability = torch.cuda.get_device_capability(0)
+    enabled = args.engine == 'vllm' and torch.version.hip is None and capability[0] >= 8
+    tuned_launches = enabled and capability == (12, 0)
     assert len(blocks) == 48
     assert all((b._gdn_prepare_decode is not None) == enabled for b in blocks)
     assert all((b._gdn_recurrent_raw is not None) == enabled for b in blocks)
-    assert all(b.attn_norm._small_batch_num_warps == (16 if enabled else 4) for b in blocks)
-    assert all(isinstance(b.ssm_conv1d, GDNShortConvolution) == enabled for b in blocks)
+    assert all(b.attn_norm._small_batch_num_warps == (16 if tuned_launches else 4) for b in blocks)
+    assert all(isinstance(b.ssm_conv1d, GDNShortConvolution) == tuned_launches for b in blocks)
+    if args.engine != 'vllm':
+        for block in model.blk:
+            assert not block.mlp_act_fn.use_triton
+            if block.layer_type == 'full_attention':
+                assert not block.attn.use_triton_kv_cache
+                assert block.attn.flash_attn_varlen_func is None
+                assert block.attn.flash_attn_with_kvcache is None
+    from shared.qtypes.gguf import GGUFWeightTensor
+    projections = [m for m in model.modules() if isinstance(getattr(m, 'weight', None), GGUFWeightTensor)]
+    assert all(bool(getattr(m, '_use_optimized_kernels', False)) == (args.engine == 'vllm' and torch.version.hip is None)
+        for m in projections if hasattr(m, '_use_optimized_kernels'))
     manager = offload.profile({'llm': model}, profile_no=1, budgets={'llm': 0},
         pinnedMemory=False, quantizeTransformer=False, convertWeightsFloatTo=torch.bfloat16, verboseLevel=1)
     records = []

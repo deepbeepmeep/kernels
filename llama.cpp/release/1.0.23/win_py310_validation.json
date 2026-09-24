@@ -1,0 +1,37 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.23+torch271cu128py310-cp310-cp310-win_amd64.whl",
+  "python": "3.10.18 | packaged by conda-forge | (main, Jun  4 2025, 14:42:04) [MSC v.1943 64 bit (AMD64)]",
+  "checks": [
+    {
+      "name": "old_quant_exact",
+      "exit_code": 0,
+      "seconds": 16.328000000008615
+    },
+    {
+      "name": "standard",
+      "exit_code": 0,
+      "seconds": 26.578999999997905
+    },
+    {
+      "name": "ptq1",
+      "exit_code": 0,
+      "seconds": 23.530999999988126
+    },
+    {
+      "name": "hadamard",
+      "exit_code": 0,
+      "seconds": 5.89000000001397
+    },
+    {
+      "name": "prism_decode",
+      "exit_code": 0,
+      "seconds": 26.75
+    },
+    {
+      "name": "linear_fusions",
+      "exit_code": 0,
+      "seconds": 17.546999999991385
+    }
+  ],
+  "passed": true
+}

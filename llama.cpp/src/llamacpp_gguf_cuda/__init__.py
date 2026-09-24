@@ -4,6 +4,14 @@ from pathlib import Path
 import torch
 
 from .version import __version__
+from . import version as _build_version
+
+_required_torch = getattr(_build_version, '__torch_version__', None)
+if _required_torch is not None and torch.__version__ != _required_torch:
+    raise ImportError(
+        f'This HIP wheel requires PyTorch {_required_torch}; installed {torch.__version__}. '
+        'Install the matching ROCm PyTorch build or a matching GGUF wheel.'
+    )
 
 
 _LINEAR_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE"
@@ -11,6 +19,7 @@ _MATMUL_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE"
 _FAST_LINEAR_QTYPES = {"PTQ1_0", "Q2_K", "Q3_K", "Q4_0", "Q4_1", "Q4_K", "Q5_0", "Q5_1", "Q5_K", "Q6_K", "Q8_0", "IQ1_S", "IQ2_S", "IQ2_XS", "IQ2_XXS", "IQ3_S", "IQ3_XXS", "IQ4_NL", "IQ4_XS"}
 _FAST_EMBEDDING_QTYPES = {"PTQ1_0", "Q4_K", "Q6_K"}
 _LOGGED = set()
+_BACKEND = "HIP" if torch.version.hip is not None else "CUDA"
 
 
 def _add_dll_dirs() -> None:
@@ -35,7 +44,7 @@ try:
 except ImportError:
     _attention = None
 
-if _attention is not None and hasattr(_attention, "load_sm120_kernel"):
+if torch.version.hip is None and _attention is not None and hasattr(_attention, "load_sm120_kernel"):
     from . import sm120
 
 
@@ -115,9 +124,9 @@ def supports_linear_qtype_name(qtype_name: str) -> bool:
     if qtype_name not in _FAST_LINEAR_QTYPES:
         return False
     mode = _linear_mode()
-    _log_once(f"llamacpp_gguf_cuda_mode_{mode}", f"[GGUF][llama.cpp CUDA v1] linear mode={mode}.")
+    _log_once(f"llamacpp_gguf_cuda_mode_{mode}", f"[GGUF][llama.cpp {_BACKEND} v1] linear mode={mode}.")
     if mode == "mmq":
-        _log_once("llamacpp_gguf_cuda_packed", "[GGUF][llama.cpp CUDA v1] Packed MMVQ/MMQ active (architecture-aware dispatch, no dense weight materialization).")
+        _log_once("llamacpp_gguf_cuda_packed", f"[GGUF][llama.cpp {_BACKEND} v1] Packed MMVQ/MMQ active (architecture-aware dispatch, no dense weight materialization).")
     return bool(_C.supports_linear_qtype_name(qtype_name))
 
 
@@ -129,7 +138,15 @@ def supports_qtype_name(qtype_name: str) -> bool:
     return supports_linear_qtype_name(qtype_name)
 
 
-def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype):
+def supports_linear_fusions(qtype_name, tokens, device):
+    return (torch.version.hip is None and _linear_mode() == "mmq"
+            and hasattr(_C, "supports_linear_fusions")
+            and bool(_C.supports_linear_fusions(qtype_name, tokens, device)))
+
+
+def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype, *, fused_output=False, silu_mul=False):
+    if fused_output or silu_mul:
+        return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), _linear_mode(), fused_output, silu_mul)
     return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), _linear_mode())
 
 
@@ -154,5 +171,5 @@ __all__ = [
     "prism_hadamard",
     "__version__", "embedding", "linear", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
     "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits", "dense_paged_attention",
-    "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name",
+    "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name", "supports_linear_fusions",
 ]

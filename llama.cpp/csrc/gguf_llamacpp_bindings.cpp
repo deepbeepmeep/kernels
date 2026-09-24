@@ -7,6 +7,7 @@
 at::Tensor prism_hadamard(at::Tensor, at::Tensor, bool, int64_t, int64_t, int64_t);
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+    m.def("supports_linear_fusions", &gguf_cuda_supports_linear_fusions);
     m.def("prism_hadamard", &prism_hadamard, "Prism signed block Hadamard transform.");
     m.def("supports_linear_qtype_name", &gguf_cuda_supports_linear_qtype_name, "Return whether the CUDA GGUF linear fast path supports the qtype.");
     m.def("supports_embedding_qtype_name", &gguf_cuda_supports_embedding_qtype_name, "Return whether the CUDA GGUF embedding fast path supports the qtype.");
@@ -23,7 +24,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         pybind11::arg("input"),
         pybind11::arg("bias"),
         pybind11::arg("output_dtype_name"),
-        pybind11::arg("linear_mode_name") = "auto"
+        pybind11::arg("linear_mode_name") = "auto",
+        pybind11::arg("fused_output") = false,
+        pybind11::arg("silu_mul") = false
     );
     m.def("embedding", &gguf_cuda_embedding, "GGUF embedding lookup using CUDA row dequantization.");
 }

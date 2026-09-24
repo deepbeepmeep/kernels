@@ -88,8 +88,10 @@ def main():
             dense_attention.run_case(dtype, queries)
     for rows in (1, 2, 3):
         padding.run_case(rows)
-    import test_sm120_compiled
-    sm120_cases = test_sm120_compiled.run_cases() if torch.cuda.get_device_capability() == (12, 0) else 0
+    sm120_cases = 0
+    if torch.version.hip is None and torch.cuda.get_device_capability() == (12, 0):
+        import test_sm120_compiled
+        sm120_cases = test_sm120_compiled.run_cases()
     torch.cuda.synchronize()
     report = {'version': kernels.__version__, 'package': kernels.__file__, 'python': sys.version, 'torch': torch.__version__, 'cuda': torch.version.cuda, 'gpu': torch.cuda.get_device_name(), 'capability': torch.cuda.get_device_capability(), 'linear_cases': cases, 'attention_cases': 12, 'sm120_cases': sm120_cases, 'padding_cases': 3, 'checkpoint': str(args.checkpoint) if args.checkpoint else None, 'passed': True}
     args.output.parent.mkdir(parents=True, exist_ok=True)

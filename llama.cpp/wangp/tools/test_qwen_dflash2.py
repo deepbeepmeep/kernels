@@ -1,4 +1,4 @@
-"""Real shared-loader DFlash2 checks for Qwen Q2/Q3/Q4 and Bonsai."""
+"""Real shared-loader block-draft checks for Qwen Q2/Q3/Q4 and Bonsai."""
 import argparse
 import json
 import sys
@@ -14,7 +14,7 @@ from shared.utils import files_locator
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--method", choices=("dflash2", "mtp"), default="dflash2")
+    parser.add_argument("--method", choices=("dflash2", "dspark", "mtp"), default="dflash2")
     parser.add_argument('--backend', choices=('gguf', 'gguf_q3', 'gguf_q2', 'gguf_ptq1'), required=True)
     parser.add_argument('--config', type=Path, default=Path('wgp_config.json'))
     parser.add_argument('--output', type=Path, required=True)
@@ -37,15 +37,16 @@ def main():
                 files_locator.locate_file(f'{folder}/{name}' if folder else name)
 
     bonsai = args.backend == 'gguf_ptq1'
-    tokens = 2 if args.method == "mtp" else (5 if bonsai else 7)
+    tokens = 2 if args.method == "mtp" else (5 if bonsai and args.method == "dflash2" else 7)
     selection = {'method': args.method, 'tokens': tokens}
     loaded = load_prompt_enhancer_runtime(require_assets, 5, lm_decoder_engine='vllm', qwen_backend=args.backend,
                                          speculative_decoding=selection, deepy_kv_cache_quantization='int8')
     model = loaded.llm_model
     if args.vision:
         model._prompt_enhancer_min_model_len_hint = 32768
-    expected_folder = 'Bonsai_2_27B_DFlash2' if bonsai else 'Qwen3_8_27B_DFlash2'
-    if args.method == 'dflash2':
+    if args.method in ('dflash2', 'dspark'):
+        from shared.prompt_enhancer.block_draft import block_draft_spec
+        expected_folder = block_draft_spec(args.method, bonsai=bonsai)['folder']
         assert model._block_draft_asset_folder == expected_folder
     else:
         expected_folder = 'native MTP'
@@ -79,7 +80,7 @@ def main():
                                                    max_new_tokens=70, do_sample=True, temperature=0.7, top_p=0.9, top_k=20, seed=42, thinking_enabled=False)[0]
                 assert 'chlorophyll' in sampled.lower(), sampled
                 runner = model._prompt_enhancer_vllm_engine._llm.model_runner
-                counter_prefix = "_mtp" if args.method == "mtp" else "_dflash"
+                counter_prefix = "_dflash" if args.method == "dflash2" else "_" + args.method
                 rounds = getattr(runner, counter_prefix + "_gpu_acceptance_rounds", 0)
                 assert rounds > 0
                 records.append(dict(default_device=device, cancelled=True, greedy=text, sampled=sampled,
@@ -106,7 +107,9 @@ def main():
                 def compare_continuation(disabled):
                     runtime.prime_context(prompt, seed=47)
                     runner = model._prompt_enhancer_vllm_engine._llm.model_runner
-                    setattr(runner, "_disable_mtp_gpu_acceptance" if args.method == "mtp" else "_disable_dflash_gpu_acceptance", disabled)
+                    setattr(runner, "_disable" + counter_prefix + "_gpu_acceptance", disabled)
+                    if args.method == "dspark":
+                        runner._disable_dspark_gpu_draft = disabled
                     result = runtime.generate_segment(max_new_tokens=48, seed=47, do_sample=False, thinking_enabled=thinking,
                         max_thinking_tokens=5 if thinking else None, temperature=None, top_p=None, top_k=None)
                     return result.raw_text

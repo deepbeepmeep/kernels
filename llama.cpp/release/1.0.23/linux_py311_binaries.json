@@ -1,0 +1,107 @@
+[
+  {
+    "file": "_C.cpython-311-x86_64-linux-gnu.so",
+    "bytes": 154450216,
+    "sha256": "332151df78dd2aa6ae68b19aab5a9e0d175832f97b55a6c71fca69664da51fa6",
+    "sass": [
+      "75",
+      "80",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "100",
+      "103",
+      "110",
+      "120",
+      "121"
+    ],
+    "ptx": [
+      "121"
+    ],
+    "needed": [
+      "libcublas.so.13",
+      "libc10.so",
+      "libtorch_cpu.so",
+      "libtorch_python.so",
+      "libcudart.so.13",
+      "libc10_cuda.so",
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "runtime_search_paths": [
+      "$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib"
+    ]
+  },
+  {
+    "file": "_attention.cpython-311-x86_64-linux-gnu.so",
+    "bytes": 57040112,
+    "sha256": "38f8507309d4ac1a786a0cc9296522c8329804697dd5cf5126607fabe286855f",
+    "sass": [
+      "75",
+      "80",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "100",
+      "103",
+      "110",
+      "120",
+      "121"
+    ],
+    "ptx": [
+      "121"
+    ],
+    "needed": [
+      "libcuda.so.1",
+      "libc10.so",
+      "libtorch_cpu.so",
+      "libtorch_python.so",
+      "libcudart.so.13",
+      "libc10_cuda.so",
+      "libtorch_cuda.so",
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "runtime_search_paths": [
+      "$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib"
+    ]
+  },
+  {
+    "file": "_prism.cpython-311-x86_64-linux-gnu.so",
+    "bytes": 27661736,
+    "sha256": "1757ccebfa1b8d0707d44d820f1390ecbeadcc64518e58c63f3d664d58f22a1b",
+    "sass": [
+      "75",
+      "80",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "100",
+      "103",
+      "110",
+      "120",
+      "121"
+    ],
+    "ptx": [
+      "121"
+    ],
+    "needed": [
+      "libc10.so",
+      "libtorch_cpu.so",
+      "libtorch_python.so",
+      "libcudart.so.13",
+      "libc10_cuda.so",
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "runtime_search_paths": [
+      "$ORIGIN/../torch/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cu13/lib"
+    ]
+  }
+]

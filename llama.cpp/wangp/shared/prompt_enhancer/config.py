@@ -17,8 +17,6 @@ PROMPT_ENHANCER_SPECULATIVE_DECODING_CHOICES = [
     ("Auto (MTP)", PROMPT_ENHANCER_SPECULATIVE_DECODING_AUTO),
     ("Disabled", 0),
     *[(f"MTP with {count} draft tokens", 1 if count == 2 else count) for count in PROMPT_ENHANCER_SPECULATIVE_DRAFT_COUNTS],
-    ("DSpark (up to 7 draft tokens)", "dspark"),
-    ("DFlash2 (up to 7 draft tokens)", "dflash2"),
 ]
 
 
@@ -76,9 +74,8 @@ def speculative_decoding_ui_state(enhancer_enabled, quantization, engine, value,
     methods = ["auto", "disabled"]
     if prompt_enhancer_supports_speculative_decoding(enhancer_enabled):
         methods.append("mtp")
-    if int(enhancer_enabled or 0) == 5 and engine in ("", "vllm"):
-        methods.append("dspark")
-        methods.append("dflash2")
+    if int(enhancer_enabled or 0) == 5 and quantization in ("gguf", "gguf_q3", "gguf_q2", "gguf_ptq1") and engine in ("", "vllm"):
+        methods.extend(BLOCK_DRAFT_METHODS)
     if isinstance(value, str) and value in SPECULATIVE_METHOD_LABELS:
         method, count = value, tokens
     else:
@@ -86,11 +83,9 @@ def speculative_decoding_ui_state(enhancer_enabled, quantization, engine, value,
     if method not in methods:
         method = "auto"
     maximum = SPECULATIVE_MAX_TOKENS.get(method, 0)
-    if method == "dflash2":
+    if method in BLOCK_DRAFT_METHODS:
         from .block_draft import block_draft_spec
-        maximum = block_draft_spec(method, bonsai=quantization == "gguf_ptq1")["drafts"]
-        if count is None:
-            count = maximum
+        maximum = min(maximum, block_draft_spec(method, bonsai=quantization == "gguf_ptq1")["drafts"])
     count = min(maximum, max(1, int(count or SPECULATIVE_DEFAULT_TOKENS[method]))) if maximum else None
     # Additional residency near 32K context, including draft weights/cache/state.
     # These are approximate ranges, not a capacity check (see BONSAI_VRAM.md).
@@ -123,7 +118,7 @@ def validate_prompt_enhancer_speculative_decoding(enhancer_enabled: Any, value: 
     return enabled
 
 
-def resolve_prompt_enhancer_speculative_decoding(enhancer_enabled: Any, value: Any, total_vram_gb: float | None = None) -> tuple[int | str | dict, str]:
+def resolve_prompt_enhancer_speculative_decoding(enhancer_enabled: Any, value: Any, total_vram_gb: float | None = None, *, qwen_backend: str = "") -> tuple[int | str | dict, str]:
     mode = validate_prompt_enhancer_speculative_decoding(enhancer_enabled, value)
     if speculative_decoding_runtime(mode)[0] != PROMPT_ENHANCER_SPECULATIVE_DECODING_AUTO:
         return mode, ""
@@ -141,6 +136,11 @@ def resolve_prompt_enhancer_speculative_decoding(enhancer_enabled: Any, value: A
             total_vram_gb = torch.cuda.get_device_properties(torch.cuda.current_device()).total_memory / (1024 ** 3)
         except Exception:
             total_vram_gb = 0
+    if enhancer_no == 5 and qwen_backend == "gguf_ptq1":
+        detected_vram = max(0.0, float(total_vram_gb))
+        if detected_vram > 10:
+            return speculative_decoding_config("mtp", 2), f"Speculative Decoding enabled automatically for Bonsai PTQ1: {detected_vram:.2f} GiB VRAM detected (more than 10 GiB; 2 MTP tokens)."
+        return 0, f"Speculative Decoding disabled automatically for Bonsai PTQ1: {detected_vram:.2f} GiB VRAM detected (10 GiB or less)."
     detected_vram_gb = max(0, int(float(total_vram_gb) + 0.5))
     model_label = "Qwen3.5-9B" if enhancer_no == 4 else "Qwen3.8-27B"
     if detected_vram_gb >= required_vram_gb:

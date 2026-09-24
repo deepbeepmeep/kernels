@@ -1,11 +1,16 @@
 {
-  "wangp_base_commit": "38d4a64d7089b5fe8bb9ca0d2c03593278e12972",
-  "release": "1.0.22",
+  "wangp_base_commit": "0528cefb6dd4661a6af3f70c3c845f5b76749efe",
+  "release": "1.0.23",
   "files": [
     {
+      "path": "README.md",
+      "sha256": "f745c3f62bded6e6c2580df10e3310eca7392b239b360dc365daa1b1ea293f0c",
+      "bytes": 900
+    },
+    {
       "path": "docs/BONSAI_PTQ1.md",
-      "sha256": "6d49bc925a190ab9ea86d67b0bf51020dbb1da30061de106051582969657012a",
-      "bytes": 13252
+      "sha256": "1f653460efbb7f3ec2bd1de543ef3cf73765a12948a444bba92de882e1ef1c7e",
+      "bytes": 13496
     },
     {
       "path": "docs/QWEN38_ENGINE_PERFORMANCE.md",
@@ -39,13 +44,13 @@
     },
     {
       "path": "shared/kernels/convrot_int8_triton.py",
-      "sha256": "93df266ed4474c144268ff468239eb9191e9d77204eb3ea5c297ac8e16df9fa8",
+      "sha256": "bf938470ff9dae80ccbb4faed0b927d4f796b4e7793aacaba0f150a032cc56a1",
       "bytes": 2917
     },
     {
       "path": "shared/kernels/int8_backend.py",
-      "sha256": "ed9d78c09a33e1df1408f712e248fe57c62b9a877e9f6c30eb55ab1a36061af2",
-      "bytes": 13722
+      "sha256": "378502031bbeb86f0ce0ce8450e434fa54d89feb55d3d20ec553284f9cd3dab2",
+      "bytes": 17257
     },
     {
       "path": "shared/kernels/kernel_policy.py",
@@ -54,8 +59,8 @@
     },
     {
       "path": "shared/kernels/prism_decode.py",
-      "sha256": "1cdc2e2ea3387129d8e7e3aa9eb54a5141b8cfe70cd5872034906af4889b05b7",
-      "bytes": 2904
+      "sha256": "5f45abc80d8a2385436e74f296c2bb6f0f6c5a01627dcce321dd57294aad7d6e",
+      "bytes": 3811
     },
     {
       "path": "shared/kernels/prism_gdn.py",
@@ -69,13 +74,18 @@
     },
     {
       "path": "shared/kernels/quanto_int8_triton.py",
-      "sha256": "b302ae21c8e293fc22c53e7eed6de3e09b04e2814ed2da4c89a679ec2abb5dc5",
-      "bytes": 53608
+      "sha256": "17ce0b6609763bfa20867849915088444074c07b57a358b2d2a9835ec1c748b1",
+      "bytes": 53777
     },
     {
       "path": "shared/kernels/qwen_gdn.py",
-      "sha256": "a8678d50fe63b2ee180cdf19c397bfe251925d74901692e3ded04769def0a2a8",
-      "bytes": 7585
+      "sha256": "b9359823b5f5282d9cc537eea630d72ea7f10b9042d7ad0c45fc5876970d78b6",
+      "bytes": 15133
+    },
+    {
+      "path": "shared/kernels/qwen_rope_cache.py",
+      "sha256": "3cc5dadb2723bb593e28b7c48b43effbac5b284568148b04dc5270b12b43a63b",
+      "bytes": 4555
     },
     {
       "path": "shared/kernels/triton_compilation_log.py",
@@ -94,8 +104,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/block_draft_runner.py",
-      "sha256": "25752538fb0089a567d33d7f7018d14b83a640560067a393d4a9e6bf426788cc",
-      "bytes": 13455
+      "sha256": "56f70da4036a0314af35dd692815add05d53dc5d97f1b03b53bab4b7d3cca094",
+      "bytes": 17436
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/block_manager.py",
@@ -129,18 +139,18 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/speculative_sampling.py",
-      "sha256": "66b22cc1bb24451a4e8e44ce359ce54261fe62a5606a8e456535d16d1fc6e85f",
-      "bytes": 7795
+      "sha256": "6d8339fcecc76070fadd9cec5ea15b884f85a88df3d3f2f5c6194260333ef782",
+      "bytes": 8053
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/activation.py",
-      "sha256": "caf64dbeebcd86235d77a1947aa4439b32f56c1ce348848a1de12fcf7c3f9a31",
-      "bytes": 2018
+      "sha256": "86f7dbcdfafdc42319b31f4e8a29ff5d4275323f635e27c93d3c2617e8288b5c",
+      "bytes": 2056
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/attention.py",
-      "sha256": "17d63439d50f6b2da990b9b1c13c5166c88cbfb59e4dfe0e47a855219e6e6c63",
-      "bytes": 39317
+      "sha256": "e874b18cfecf1b68a4877d8c5bfb0d85e2848e3b0fc92873d409a46f075f1e7f",
+      "bytes": 40142
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/attention_sm120.py",
@@ -209,8 +219,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/models/qwen3_5.py",
-      "sha256": "debc0c1e4815483d49bb40e301a02e19001c7fc0285e82e3545c8801f4a1cf6f",
-      "bytes": 74142
+      "sha256": "490d786679610a401b8879896b3fc1adb3014ac50e01f8ac83a9e8e11a460cce",
+      "bytes": 75473
     },
     {
       "path": "shared/llm_engines/nanovllm/sampling_params.py",
@@ -244,8 +254,8 @@
     },
     {
       "path": "shared/prompt_enhancer/block_draft.py",
-      "sha256": "03eb3544515060092d02a3e3efd7af7992962315d1e3a1933c612482bb4baebf",
-      "bytes": 2899
+      "sha256": "4493ff89ce47bfc364ad2a1a146b14b30d292ceaf767efa555089811ecc20db3",
+      "bytes": 3462
     },
     {
       "path": "shared/prompt_enhancer/chaining.py",
@@ -254,8 +264,8 @@
     },
     {
       "path": "shared/prompt_enhancer/config.py",
-      "sha256": "2a990cc9ab88b7cfd2907ed23539230b2fc3faec690e2715a96d05c1db228733",
-      "bytes": 7226
+      "sha256": "b41bf9fa02339397f812e5eebd65132dc951c9d99f9e5fe8ddbdabe1b0c84bcf",
+      "bytes": 7638
     },
     {
       "path": "shared/prompt_enhancer/florence2/__init__.py",
@@ -314,8 +324,8 @@
     },
     {
       "path": "shared/prompt_enhancer/qwen35_text.py",
-      "sha256": "46bf0b705ebce842f4fa0067f43aaa6218dac10ff7c589cc039323e0a3e1dc11",
-      "bytes": 60430
+      "sha256": "0d80bfab6aa86fe0f5b022f0311f9f5f499c3b655200a49c0c46a1749919ce04",
+      "bytes": 60856
     },
     {
       "path": "shared/prompt_enhancer/qwen35_vl.py",
@@ -369,8 +379,8 @@
     },
     {
       "path": "shared/qtypes/gguf.py",
-      "sha256": "fa5d4e73dfde373ecd71050d2e61310c3641833a96026f8fd002f5dc3a56d0a7",
-      "bytes": 85906
+      "sha256": "2da8d3941f00d70299ea8ac709f55778a7bb4a6fdfb9e741dc408268c9efe974",
+      "bytes": 87804
     },
     {
       "path": "shared/qtypes/int8_convrot.py",
@@ -394,8 +404,8 @@
     },
     {
       "path": "shared/qtypes/prism.py",
-      "sha256": "007e023d4108f71f0168d428f3aeea5d2a5bd66bba8331171626a3259add01b8",
-      "bytes": 14774
+      "sha256": "018126733c790050cbafa8c0611f79cc6c7837251a2c864bbc268ebb0d46b273",
+      "bytes": 14960
     },
     {
       "path": "shared/qtypes/scaled_fp8.py",
@@ -404,13 +414,18 @@
     },
     {
       "path": "specs/DFLASH2_GPU_ACCEPTANCE.md",
-      "sha256": "70467b0a67ff26bd73214a74de81324600e3fc7cd2e32059aa1cd6595967f930",
-      "bytes": 5579
+      "sha256": "03827dffd9f7f0a9154c2efcd8d81cc1f45a2895baa18479e9b75ad12c6a600c",
+      "bytes": 5760
+    },
+    {
+      "path": "specs/DFLASH2_ROPE_AND_DRAFT_COUNTS.md",
+      "sha256": "16c77df75f4cfa11bc8d36d7723b78914b63e34c5d02a082c1b3cdee0816540e",
+      "bytes": 18939
     },
     {
       "path": "specs/DFLASH2_UPSTREAM_AUDIT.md",
-      "sha256": "b74fe29cecb7deef02f67af025f4c42c9d4ced065122d95b0a1a1f545ae21ed3",
-      "bytes": 10674
+      "sha256": "4eae610beaec403b23cfa901b23db98ee776dc4ff616be3f2c5ea0baad35d50b",
+      "bytes": 10866
     },
     {
       "path": "specs/MTP_GPU_SAMPLING.md",
@@ -423,9 +438,34 @@
       "bytes": 6582
     },
     {
+      "path": "specs/QWEN_CUDA_FUSIONS.md",
+      "sha256": "ecf33cb4008734af24eaeae5da3514ff0b2ff89cc2b0688fc4d776300e41da49",
+      "bytes": 22974
+    },
+    {
+      "path": "specs/QWEN_DFLASH2.md",
+      "sha256": "25a94f75d2edd52719266c55e929f25bc1239b6c93a62806a48662fd5f84411a",
+      "bytes": 4158
+    },
+    {
+      "path": "specs/QWEN_MTP_COMPACT_ROLLBACK.md",
+      "sha256": "6a1eebcf279bfff5a0711be3d1e2a580b6ee8a99c0d3d1866d1d7c76227ead08",
+      "bytes": 20365
+    },
+    {
+      "path": "specs/benchmarks/dflash2_dspark_2026-09-22.json",
+      "sha256": "21ea4a4983fca36962b196465984d4f2291dac1940bc0f5bf7734892a0cdb776",
+      "bytes": 4833274
+    },
+    {
       "path": "specs/benchmarks/mtp_gpu_sampling_2026-09-20.json",
       "sha256": "cd8d5292781d012914933a54f8ae52078694450a9cb33c78cf6173c942bc2f2c",
       "bytes": 38497
+    },
+    {
+      "path": "specs/benchmarks/published_cuda_compatibility_2026-09-22.json",
+      "sha256": "31d77997f4adec06d557c6f7ca36bd59a89fcc40923f96f9ef30d8c5eb462306",
+      "bytes": 7877
     },
     {
       "path": "tests/deepy_streaming_protocol.test.js",
@@ -438,14 +478,29 @@
       "bytes": 10351
     },
     {
+      "path": "tests/test_block_draft_rope_config.py",
+      "sha256": "e47cdf1bf9764247af33a354d456e1633147c63327a37506677c0b3a03f5c0ce",
+      "bytes": 2228
+    },
+    {
       "path": "tests/test_configuration_hidden_options.py",
-      "sha256": "0eb96d35c6d1c7e0183cc500a3d54e6903fc4b6932205456db1f05209fd9f8e7",
-      "bytes": 12077
+      "sha256": "6cf9c057e39ea351283169047352556ebac67f97a781b2d6887861b0fcdddd33",
+      "bytes": 12144
+    },
+    {
+      "path": "tests/test_cuda_portable_decode.py",
+      "sha256": "7fc35627647394707af9d4939c1ff8507e24d22ab9ba4a33030a7236cdc5ff72",
+      "bytes": 7888
     },
     {
       "path": "tests/test_dflash_gpu_acceptance.py",
-      "sha256": "8255ff04a0cb9b09d3d6edbc9273cf362647e14b60989ee903301618e370be5f",
-      "bytes": 11111
+      "sha256": "102642f7b3fb1c4f6db099afc1339a37e53993540b9c18a817f9601c621ec8e1",
+      "bytes": 12858
+    },
+    {
+      "path": "tests/test_dspark_gpu_chain.py",
+      "sha256": "288a58f137c9253910405b38b83f48b4ebaa6cefdfc72a082c7ab5ee58e446a5",
+      "bytes": 4843
     },
     {
       "path": "tests/test_fused_silu_mul.py",
@@ -458,6 +513,16 @@
       "bytes": 4284
     },
     {
+      "path": "tests/test_hip_paged_attention_dispatch.py",
+      "sha256": "437c9582e02c82a72308f486d1a16dcac045d8c084b3b81b12c2a13bccb3cd9f",
+      "bytes": 4847
+    },
+    {
+      "path": "tests/test_int8_autotune_safety.py",
+      "sha256": "f8d5c93a07e45209417a44cde6dde51546d4c39fc3fc8588e9383da5c5d44174",
+      "bytes": 7371
+    },
+    {
       "path": "tests/test_llm_backend_isolation.py",
       "sha256": "fe020556105364df9b6e7f2e3b1c3f1668088fc950cc763ed19feb2bf99336e2",
       "bytes": 5311
@@ -468,9 +533,14 @@
       "bytes": 20100
     },
     {
+      "path": "tests/test_prism_decode.py",
+      "sha256": "f003834721bde5d56c8dba4b4a1c5a392271394febe95558894c3c2e782013c3",
+      "bytes": 3005
+    },
+    {
       "path": "tests/test_prism_gdn.py",
-      "sha256": "c7c50f89cb52a44b1a0626533465194fe620f8734b294d12160e329def0bb876",
-      "bytes": 9925
+      "sha256": "3532577cb0d8ca0a4fd1d4cb132c5a89b5894f47e69edb81e5cbe7cc7b833515",
+      "bytes": 9961
     },
     {
       "path": "tests/test_prism_gguf.py",
@@ -479,8 +549,8 @@
     },
     {
       "path": "tests/test_prompt_enhancer_speculative_config.py",
-      "sha256": "3d659d5e159ad5425ec2077474f52656677ba77c669e1b8a19062866eb592772",
-      "bytes": 6035
+      "sha256": "969ce5d388fc0974e3a3ca1c700e1ebee84ebb3c68896cdb24f793d72ae2e58f",
+      "bytes": 7315
     },
     {
       "path": "tests/test_q8_paged_attention.py",
@@ -498,6 +568,11 @@
       "bytes": 3504
     },
     {
+      "path": "tests/test_qwen_cuda_fusion_modes.py",
+      "sha256": "234349e45fba1f4e4032be6ce0635b23a4001f4ff964b60d1a298df2459f50df",
+      "bytes": 9707
+    },
+    {
       "path": "tests/test_speculative_state.py",
       "sha256": "f661d8ac64b8f3aec25f075bbedcf262a804928fd148498fd73da7f78f7c81a5",
       "bytes": 3906
@@ -506,6 +581,11 @@
       "path": "tests/test_triton_shape_ranges.py",
       "sha256": "ef7373c7485c7181eb031263490fcb0d448a0e7e7428ce5a3c6c19fddd12b330",
       "bytes": 4646
+    },
+    {
+      "path": "tools/audit_dflash2_reference.py",
+      "sha256": "59ece4a1d82306f6192c30cafcb8ae19f1c0705731363bfa14356a225c887ba8",
+      "bytes": 7560
     },
     {
       "path": "tools/audit_dflash2_runtime.py",
@@ -519,8 +599,83 @@
     },
     {
       "path": "tools/benchmark_qwen38_engine.py",
-      "sha256": "0df5ce096fa031da3485b509e5fd82e59462b549bf0c439e1e840b6c95d70a94",
-      "bytes": 13585
+      "sha256": "35c0e03b7fe31e824adc99ad3d1c14bd22e5d666aaf0f73682fac65e6f26b7fc",
+      "bytes": 15396
+    },
+    {
+      "path": "tools/benchmark_qwen_block_prediction.py",
+      "sha256": "98236932f7d97349d606d7392feb4968be93550743f465bb4fd38f248dbcdf2d",
+      "bytes": 14540
+    },
+    {
+      "path": "tools/benchmark_qwen_fusion_graph.py",
+      "sha256": "d2542598b8cb272dc5769d7f32484a67692c8529b349bd7fc1a9c04b06919dfe",
+      "bytes": 25547
+    },
+    {
+      "path": "tools/benchmark_qwen_mtp_confidence.py",
+      "sha256": "64a3ebd1915eeb975e0b016b0abd2c3f2704f7f42eb7f4f447d7538e3cab4105",
+      "bytes": 10273
+    },
+    {
+      "path": "tools/benchmark_qwen_mtp_depth.py",
+      "sha256": "dbe5608e7f3c43e3494e03c6780aee9c48f8bce796644887d1a12bb3db26e12a",
+      "bytes": 8488
+    },
+    {
+      "path": "tools/check_deepy_hip_compile.py",
+      "sha256": "466460ad8e49e2c1bfa2a3f64919696c0c6a9e9a4a72e0170c1d3f61c1643396",
+      "bytes": 4866
+    },
+    {
+      "path": "tools/experiments/analyze_qwen_speed_proof.py",
+      "sha256": "c3c721e8ae9ea9b0ed5463cc49c280f0c2fa8197e6f74fff3404e2487058888a",
+      "bytes": 30024
+    },
+    {
+      "path": "tools/experiments/benchmark_bonsai_repack.py",
+      "sha256": "7122839adadeb2ee1ed277711936bed518fee0c3b2e799ee8b89e4f1699272c2",
+      "bytes": 5000
+    },
+    {
+      "path": "tools/experiments/benchmark_bonsai_verify_dispatch.py",
+      "sha256": "f57711db7f959afcd609f65e0ead2621b5fbfd30a82e4a6ca30ff4cc4c82cb99",
+      "bytes": 3752
+    },
+    {
+      "path": "tools/experiments/native_mmvq_probe.LICENSE",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "bytes": 1078
+    },
+    {
+      "path": "tools/experiments/native_mmvq_probe.cu",
+      "sha256": "98ef53b601b37fa6e3e289c9835805c66daebb1a7bac9feeb5a4eb982ba53b52",
+      "bytes": 7658
+    },
+    {
+      "path": "tools/experiments/native_mmvq_probe.py",
+      "sha256": "50ceacb9e745b2905e5673adc6bcdcb49fbbc3ba6e22c277c2b432674d7a63d0",
+      "bytes": 14342
+    },
+    {
+      "path": "tools/experiments/qwen_frozen_gdn_reference.py",
+      "sha256": "442888da3848450e77a400272cc6c183e3f4a4a1102fff36a5a9753326a38848",
+      "bytes": 4311
+    },
+    {
+      "path": "tools/experiments/qwen_mtp_compact_rollback.py",
+      "sha256": "32280993b942d29eeec4348bf59124eab18793bf0ac52c62c04e581f53873b52",
+      "bytes": 16818
+    },
+    {
+      "path": "tools/experiments/qwen_mtp_device_confidence.py",
+      "sha256": "9470bc84fcde6a3178343de769438cc3328a573064b72f8e157d2e7234775e1c",
+      "bytes": 10551
+    },
+    {
+      "path": "tools/experiments/validate_qwen_mtp_compact_rollback.py",
+      "sha256": "c95e8f9e5b959385e0a5f86478081bf707a0bc89c1fc3ce39434e242e5616851",
+      "bytes": 20805
     },
     {
       "path": "tools/prepare_bonsai_mtp.py",
@@ -533,9 +688,14 @@
       "bytes": 4020
     },
     {
+      "path": "tools/test_qwen_cuda_fusions.py",
+      "sha256": "987a41ac58eb492ae1b4fe90423f6b3a1822b596ef07fc301cec8c4301013e15",
+      "bytes": 13533
+    },
+    {
       "path": "tools/test_qwen_dflash2.py",
-      "sha256": "e7fd1dccebc8d8d0ee9145dc4fadcdb12c465e210f07a54c4024745e1432019a",
-      "bytes": 9461
+      "sha256": "a1663976a8780059af1ae2411e2a85480ad3b5d4f15571d5046faaca018db918",
+      "bytes": 9674
     },
     {
       "path": "tools/test_qwen_enhancer_stages.py",
@@ -544,8 +704,13 @@
     },
     {
       "path": "tools/test_qwen_gdn.py",
-      "sha256": "b3c41207d28153ae891e6f182d363be56dede4069ce1c83938e3070deeaaf90f",
-      "bytes": 3916
+      "sha256": "b1bc82c27111dd86fb22f0b9e4feced6d2b093a52f4698d31ae1b2f87be62789",
+      "bytes": 5076
+    },
+    {
+      "path": "tools/test_qwen_gdn_layout.py",
+      "sha256": "e11b7fbaff19be675c198361682f3f2614119b4e13e88b714494f9225a0ea29f",
+      "bytes": 11346
     }
   ]
 }

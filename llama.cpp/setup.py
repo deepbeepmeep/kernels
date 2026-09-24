@@ -4,6 +4,12 @@ import subprocess
 import sys
 
 from setuptools import find_packages, setup
+import torch
+
+if torch.version.hip is not None:
+    from hip_build import build_hip
+    build_hip()
+    raise SystemExit(0)
 
 
 def _vc_tools_dir() -> str:
@@ -68,7 +74,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.22"
+BASE_VERSION = "1.0.23"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")

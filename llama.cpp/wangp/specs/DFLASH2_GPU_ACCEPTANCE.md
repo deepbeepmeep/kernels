@@ -1,5 +1,8 @@
 # DFlash2 GPU acceptance — 2026-09-20
 
+Follow-up 2026-09-22: [draft RoPE was corrected and both block predictors were remeasured](DFLASH2_ROPE_AND_DRAFT_COUNTS.md).
+The timing comparison below predates that correction.
+
 The common CUDA DFlash2 path now performs block acceptance on the GPU. Draft
 length stays on the device through target verification, and the host receives
 one completed block for scheduling, streaming and recurrent-state commit.

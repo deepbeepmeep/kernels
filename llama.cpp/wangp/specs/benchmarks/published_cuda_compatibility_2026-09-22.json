@@ -1,0 +1,122 @@
+{
+  "date": "2026-09-22",
+  "published_wheel": {
+    "release": "https://github.com/deepbeepmeep/kernels/releases/tag/gguf-v1.0.22",
+    "wheel": "D:\\AMD\\published-cuda-compat-20260922\\llamacpp_gguf_cuda-1.0.22+torch210cu130py311-cp311-cp311-win_amd64.whl",
+    "wheel_sha256": "a8bfc4e1655be2b7f95215d2f76c5679a1407f4f506ce6964c0811ab83af4434",
+    "runtime": "D:\\AMD\\published-cuda-compat-20260922\\runtime"
+  },
+  "capabilities": {
+    "version": "1.0.22+torch210cu130py311",
+    "torch": "2.10.0+cu130",
+    "package": "D:\\AMD\\published-cuda-compat-20260922\\runtime\\llamacpp_gguf_cuda\\__init__.py",
+    "binary": "D:\\AMD\\published-cuda-compat-20260922\\runtime\\llamacpp_gguf_cuda\\_C.cp311-win_amd64.pyd",
+    "binary_sha256": "3d5b3823e7b05c796907fbefc4ba42bcf429956ed9435b125b7642aaa37153a6",
+    "supports_linear_fusions": false,
+    "linear_signature": "(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype)",
+    "prism_decode": true
+  },
+  "gpu": "RTX 5090",
+  "compatibility_tests": {
+    "passed": 59,
+    "log_sha256": "1c4a998d44775b38e239710f86e99e4ce52d0bbaf8ae2554ea78fc595e089020"
+  },
+  "runtime_checks": [
+    {
+      "backend": "gguf",
+      "selection": {
+        "method": "dspark",
+        "tokens": 7
+      },
+      "draft_folder": "Qwen3_8_27B_DSpark",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll pigments within them absorb red and blue light for photosynthesis while reflecting green light, which is then perceived by our eyes.",
+          "gpu_acceptance_rounds": 3,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because the chlorophyll pigments within them absorb red and blue light for photosynthesis while reflecting green light, which is then perceived by our eyes.",
+          "gpu_acceptance_rounds": 6,
+          "exact_sampler_fallbacks": 0
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " energy. It is the primary source of organic matter and oxygen on Earth, serving as the foundation for most food chains."
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The reason the sky appears blue is due to a physical phenomenon called **Rayleigh scattering**. Here is the step-by-step logical deduction of how this process works.\n\n### 1. The Composition of Sunlight\nSunlight appears white to"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of **Rayleigh scattering**.\n\nSunlight is made up of many colors, each with a different wavelength. When sunlight enters Earth\u2019s atmosphere, it collides with tiny gas molecules like nitrogen and oxygen. Shorter wavelengths\u2014especially **blue and violet light**\u2014scatter much more strongly than longer wavelengths like red or orange.\n\nSo when you look up, you see scattered blue light coming from all directions in the sky.\n\nYou might wonder why the sky isn\u2019t violet, since violet scatters even more than blue. There are two main reasons:\n\n1. The Sun emits less violet light than blue light.\n2. Human eyes are more sensitive to blue than violet, and some violet light is absorbed higher in the atmosphere.\n\nThat\u2019s why the daytime sky appears blue.<|im_end|>"
+        }
+      ],
+      "peak_vram_bytes": 21846756352,
+      "vision_on_cpu_outside_inspection": true
+    },
+    {
+      "backend": "gguf_ptq1",
+      "selection": {
+        "method": "dflash2",
+        "tokens": 5
+      },
+      "draft_folder": "Bonsai_2_27B_DFlash2",
+      "records": [
+        {
+          "default_device": "cpu",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because their chlorophyll pigments absorb light primarily in the blue and red wavelengths while reflecting most of the green wavelengths back to our eyes.",
+          "gpu_acceptance_rounds": 15,
+          "exact_sampler_fallbacks": 1
+        },
+        {
+          "default_device": "cuda",
+          "cancelled": true,
+          "greedy": "Paris",
+          "sampled": "Leaves appear green because their chlorophyll pigments absorb light primarily in the blue and red wavelengths while reflecting most of the green wavelengths back to our eyes.",
+          "gpu_acceptance_rounds": 30,
+          "exact_sampler_fallbacks": 2
+        },
+        {
+          "snapshot_and_rewind": true,
+          "continuation": " is the primary source of energy for most life on Earth, producing oxygen as a byproduct and forming the base of most"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": false,
+          "continuation": "The sky appears blue due to a phenomenon known as **Rayleigh scattering**. Here is a step-by-step explanation of how it works:\n\n### 1. Sunlight is White\nSunlight appears white, but it is actually composed of"
+        },
+        {
+          "gpu_acceptance_greedy_parity": true,
+          "thinking": true,
+          "continuation": "We need answer user:</think>\n\nThe sky looks blue because of a process called **Rayleigh scattering**.\n\nWhen sunlight enters Earth\u2019s atmosphere, it encounters molecules and tiny particles. Sunlight appears white, but it is actually made up of many colors, each with a different wavelength. Shorter wavelengths\u2014like **blue and violet**\u2014scatter much more strongly than longer wavelengths\u2014like red and orange.\n\nAs a result, blue light is scattered in all directions across the sky, making the sky appear blue when we look up.\n\nOne common follow-up question is: *If violet light scatters even more than blue light, why isn\u2019t the sky violet?*  \nThere are a few reasons:\n\n1. The Sun emits less violet light than blue light.\n2. Our eyes are more sensitive to blue than violet.\n3. Some violet light is absorbed higher in the atmosphere.\n\nSo the combination of atmospheric scattering and human vision makes the sky appear blue rather than violet.<|im_end|>"
+        }
+      ],
+      "peak_vram_bytes": 11232891904,
+      "vision_on_cpu_outside_inspection": true
+    }
+  ],
+  "conclusion": "Current WanGP Python/Triton changes are compatible with the published wheel. New native linear fusions are absent and remain disabled through capability detection.",
+  "limits": "This verifies correctness/compatibility on Windows, PyTorch 2.10, RTX 5090. No throughput gain with the published wheel is inferred from experimental-binary benchmarks; no installed package was changed.",
+  "source_sha256": {
+    "shared/qtypes/gguf.py": "eaa0cd0ad02f34ce8dc5e9893f7fa60b6c9b824101d7fbd790f7a2e64eb027e5",
+    "shared/qtypes/prism.py": "018126733c790050cbafa8c0611f79cc6c7837251a2c864bbc268ebb0d46b273",
+    "shared/kernels/qwen_gdn.py": "b9359823b5f5282d9cc537eea630d72ea7f10b9042d7ad0c45fc5876970d78b6",
+    "shared/kernels/qwen_rope_cache.py": "88e30a3985f802ab1d1e7a739977db57a50410737f0b497ec95db140ff06188c",
+    "shared/llm_engines/nanovllm/engine/block_draft_runner.py": "4bb5ac1bbbf3b481d3eaf1315799d42ded99035ca8e79f8382db91ebb33296b0",
+    "shared/llm_engines/nanovllm/engine/speculative_sampling.py": "e93934e14d91387f0760484fef18be6391d2d7131c6e733f41f389ae3815b93a",
+    "shared/llm_engines/nanovllm/models/qwen3_5.py": "cc16c583f85ba6aa1739dd9393fed6feffdb11abb7883dc1ddcfc7b7d25ddbff",
+    "shared/prompt_enhancer/block_draft.py": "4493ff89ce47bfc364ad2a1a146b14b30d292ceaf767efa555089811ecc20db3"
+  }
+}

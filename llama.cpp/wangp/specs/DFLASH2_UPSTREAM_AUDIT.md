@@ -1,5 +1,8 @@
 # DFlash2 upstream audit — 2026-09-20
 
+Follow-up 2026-09-22: [a draft RoPE configuration error was found and corrected](DFLASH2_ROPE_AND_DRAFT_COUNTS.md).
+The performance and acceptance measurements below predate that correction.
+
 Follow-up: [GPU block acceptance implemented and validated](DFLASH2_GPU_ACCEPTANCE.md).
 
 The local implementation runs DFlash2's selector, but does not reproduce upstream's optimized execution pipeline. Two problems matter: low useful output per verification and expensive verification/drafting. Moving acceptance to the GPU is worthwhile, but cannot alone turn this workload into a 3x speedup.

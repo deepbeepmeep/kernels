@@ -1,3 +1,4 @@
+#include "gpu_compat.h"
 #include "gguf_llamacpp_ops.h"
 
 #ifdef small
@@ -14,6 +15,8 @@
 #include <c10/cuda/CUDAGuard.h>
 
 #include <cstdarg>
+#include <algorithm>
+#include <cstdlib>
 #include <cstdio>
 #include <memory>
 #include <mutex>
@@ -149,7 +152,7 @@ struct gguf_cuda_pool_simple : public ggml_cuda_pool {
             int multiprocessor_count = 0;
             CUDA_CHECK(cudaDeviceGetAttribute(&multiprocessor_count, cudaDevAttrMultiProcessorCount, device));
             const size_t device_max_size = static_cast<size_t>(multiprocessor_count) * max_stream_k_tile_bytes;
-            const size_t reserve_size = std::max({size, device_max_size, g_runtime_buffer_sizes[device]});
+            const size_t reserve_size = std::max<size_t>({size, device_max_size, g_runtime_buffer_sizes[device]});
             buffer = at::empty({static_cast<int64_t>(reserve_size)}, at::TensorOptions().device(at::Device(at::kCUDA, device)).dtype(at::kByte));
             capacity = reserve_size;
         }
@@ -638,7 +641,7 @@ static __global__ void quantize_mmq_q8_1_typed(
 
 #pragma unroll
     for (int offset = vals_per_scale / 8; offset > 0; offset >>= 1) {
-        amax = fmaxf(amax, __shfl_xor_sync(0xFFFFFFFF, amax, offset, WARP_SIZE));
+        amax = fmaxf(amax, __shfl_xor_sync(WGP_WARP_MASK, amax, offset, WARP_SIZE));
     }
 
     float sum = 0.0f;
@@ -646,7 +649,7 @@ static __global__ void quantize_mmq_q8_1_typed(
         sum = xi.x + xi.y + xi.z + xi.w;
 #pragma unroll
         for (int offset = vals_per_sum / 8; offset > 0; offset >>= 1) {
-            sum += __shfl_xor_sync(0xFFFFFFFF, sum, offset, WARP_SIZE);
+            sum += __shfl_xor_sync(WGP_WARP_MASK, sum, offset, WARP_SIZE);
         }
     }
 
@@ -714,7 +717,7 @@ void quantize_mmq_q8_1_typed_cuda(
 
 // Match llama.cpp's Q8_1 quantization arithmetic, loading the original dtype
 // directly instead of materializing an FP32 activation matrix first.
-template <typename src_t>
+template <typename src_t, bool SILU_MUL = false>
 __launch_bounds__(CUDA_QUANTIZE_BLOCK_SIZE, 1)
 static __global__ void quantize_mmvq_q8_1_typed(const src_t * x, block_q8_1 * y, int64_t cols, int64_t padded_cols) {
     ggml_cuda_pdl_lc();
@@ -726,7 +729,19 @@ static __global__ void quantize_mmvq_q8_1_typed(const src_t * x, block_q8_1 * y,
     const int64_t ib = index / QK8_1;
     const int iqs = index % QK8_1;
     ggml_cuda_pdl_sync();
-    const float xi = col < cols ? ggml_cuda_cast<float>(x[static_cast<int64_t>(blockIdx.y) * cols + col]) : 0.0f;
+    float xi = 0.0f;
+    if (col < cols) {
+        if constexpr (SILU_MUL) {
+            const int64_t source = static_cast<int64_t>(blockIdx.y) * (2 * cols) + col;
+            const float gate = ggml_cuda_cast<float>(x[source]);
+            const float value = ggml_cuda_cast<float>(x[source + cols]);
+            // Match SiluAndMul: round SiLU, then round its product before Q8.
+            const float activated = ggml_cuda_cast<float>(ggml_cuda_cast<src_t>(__fdiv_rn(gate, 1.0f + expf(-gate))));
+            xi = ggml_cuda_cast<float>(ggml_cuda_cast<src_t>(activated * value));
+        } else {
+            xi = ggml_cuda_cast<float>(x[static_cast<int64_t>(blockIdx.y) * cols + col]);
+        }
+    }
     const float amax = warp_reduce_max<QK8_1>(fabsf(xi));
     const float sum = warp_reduce_sum<QK8_1>(xi);
     const float d = amax / 127.0f;
@@ -737,21 +752,25 @@ static __global__ void quantize_mmvq_q8_1_typed(const src_t * x, block_q8_1 * y,
 }
 
 template <typename src_t>
-void quantize_mmvq_q8_1_typed_cuda(const src_t * x, void * y, int64_t cols, int64_t padded_cols, int64_t rows, cudaStream_t stream) {
+void quantize_mmvq_q8_1_typed_cuda(const src_t * x, void * y, int64_t cols, int64_t padded_cols, int64_t rows, cudaStream_t stream, bool silu_mul = false) {
     const dim3 grid((padded_cols + CUDA_QUANTIZE_BLOCK_SIZE - 1) / CUDA_QUANTIZE_BLOCK_SIZE, rows, 1);
     const ggml_cuda_kernel_launch_params launch(grid, dim3(CUDA_QUANTIZE_BLOCK_SIZE, 1, 1), 0, stream);
-    ggml_cuda_kernel_launch(quantize_mmvq_q8_1_typed<src_t>, launch, x, static_cast<block_q8_1 *>(y), cols, padded_cols);
+    if (silu_mul) {
+        ggml_cuda_kernel_launch(quantize_mmvq_q8_1_typed<src_t, true>, launch, x, static_cast<block_q8_1 *>(y), cols, padded_cols);
+    } else {
+        ggml_cuda_kernel_launch(quantize_mmvq_q8_1_typed<src_t>, launch, x, static_cast<block_q8_1 *>(y), cols, padded_cols);
+    }
 }
 
-at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor input_2d) {
+at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor input_2d, at::ScalarType output_dtype = at::kFloat, bool silu_mul = false) {
     const int64_t out_features = tensor_shape.at(0);
     const int64_t in_features = tensor_shape.at(1);
     TORCH_CHECK(input_2d.dim() == 2, "Expected 2D input matrix");
-    TORCH_CHECK(input_2d.size(1) == in_features, "Input width does not match GGUF tensor shape");
+    TORCH_CHECK(input_2d.size(1) == in_features * (silu_mul ? 2 : 1), "Input width does not match GGUF tensor shape");
 
     at::Tensor input = input_2d.is_contiguous() ? input_2d : input_2d.contiguous();
     const int64_t batch_rows = input.size(0);
-    at::Tensor output = at::empty({batch_rows, out_features}, input.options().dtype(at::kFloat));
+    at::Tensor output = at::empty({batch_rows, out_features}, input.options().dtype(output_dtype));
     ggml_tensor src0 = make_quantized_src0(raw_weight, type, out_features, in_features);
     cudaStream_t stream = at::cuda::getCurrentCUDAStream(input.device().index()).stream();
     ggml_backend_cuda_context & ctx = get_backend_ctx(input.device().index(), stream);
@@ -764,8 +783,8 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
     if (type == GGML_TYPE_PTQ1_0 && in_features % MMQ_ITER_K != 0 && batch_rows > ptq_step) {
         const int64_t step = ptq_step;
         for (int64_t start = 0; start < batch_rows; start += step) {
-            const int64_t count = std::min(step, batch_rows - start);
-            output.narrow(0, start, count).copy_(run_linear_cuda(raw_weight, type, tensor_shape, input.narrow(0, start, count)));
+            const int64_t count = std::min<int64_t>(step, batch_rows - start);
+            output.narrow(0, start, count).copy_(run_linear_cuda(raw_weight, type, tensor_shape, input.narrow(0, start, count), output_dtype, silu_mul));
         }
         return output;
     }
@@ -776,27 +795,35 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
         at::Tensor quantized_input = at::empty({static_cast<int64_t>(q8_bytes)}, input.options().dtype(at::kByte));
         switch (input.scalar_type()) {
             case at::kFloat:
-                quantize_mmvq_q8_1_typed_cuda(input.data_ptr<float>(), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream);
+                quantize_mmvq_q8_1_typed_cuda(input.data_ptr<float>(), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream, silu_mul);
                 break;
             case at::kHalf:
-                quantize_mmvq_q8_1_typed_cuda(reinterpret_cast<const half *>(input.data_ptr<at::Half>()), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream);
+                quantize_mmvq_q8_1_typed_cuda(reinterpret_cast<const half *>(input.data_ptr<at::Half>()), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream, silu_mul);
                 break;
             case at::kBFloat16:
-                quantize_mmvq_q8_1_typed_cuda(reinterpret_cast<const nv_bfloat16 *>(input.data_ptr<at::BFloat16>()), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream);
+                quantize_mmvq_q8_1_typed_cuda(reinterpret_cast<const nv_bfloat16 *>(input.data_ptr<at::BFloat16>()), quantized_input.data_ptr(), in_features, padded_row, batch_rows, stream, silu_mul);
                 break;
             default:
                 TORCH_CHECK(false, "Unsupported GGUF CUDA input dtype for linear: ", input.scalar_type());
         }
-        // The prequantized MMVQ entry point uses only src1's shape, not its data.
-        ggml_tensor src1 = make_quantized_src0(input, GGML_TYPE_F32, batch_rows, in_features);
-        ggml_tensor dst = make_quantized_src0(output, GGML_TYPE_F32, batch_rows, out_features);
-        ggml_cuda_op_mul_mat_vec_q(ctx, &src0, &src1, &dst, static_cast<const char *>(src0.data),
-            nullptr, static_cast<const char *>(quantized_input.data_ptr()), output.data_ptr<float>(),
-            0, out_features, batch_rows, padded_row, stream);
+        if (output_dtype == at::kFloat) {
+            // The prequantized MMVQ entry point uses only src1's shape, not its data.
+            ggml_tensor src1 = make_quantized_src0(input, GGML_TYPE_F32, batch_rows, in_features);
+            ggml_tensor dst = make_quantized_src0(output, GGML_TYPE_F32, batch_rows, out_features);
+            ggml_cuda_op_mul_mat_vec_q(ctx, &src0, &src1, &dst, static_cast<const char *>(src0.data),
+                nullptr, static_cast<const char *>(quantized_input.data_ptr()), output.data_ptr<float>(),
+                0, out_features, batch_rows, padded_row, stream);
+        } else {
+            ggml_cuda_mmvq_typed(raw_weight.data_ptr(), type, quantized_input.data_ptr(), output.data_ptr(),
+                output_dtype == at::kHalf ? GGML_TYPE_F16 : GGML_TYPE_BF16,
+                in_features, out_features, batch_rows, padded_row, stream);
+        }
         CUDA_CHECK(cudaGetLastError());
         return output;
     }
     const bool fallback = out_features % 128 != 0;
+    TORCH_CHECK(output_dtype == at::kFloat && !silu_mul, "Typed/fused output requires MMVQ dispatch");
+
     // The MMQ tile loader intentionally performs vectorized reads beyond the
     // logical final activation row. llama.cpp's CUDA pool supplies allocation
     // slack; an exact-sized torch allocation does not, so reserve one maximum
@@ -1139,10 +1166,19 @@ const ggml_cuda_device_info & ggml_cuda_info() {
         CUDA_CHECK(cudaGetDeviceProperties(&prop, id));
         info->default_tensor_split[id] = total_vram;
         total_vram += prop.totalGlobalMem;
+#ifdef GGML_USE_HIP
+        // GGML dispatch uses its AMD architecture namespace, not CUDA major/minor.
+        info->devices[id].cc = GGML_CUDA_CC_OFFSET_AMD + int(std::strtoul(prop.gcnArchName + 3, nullptr, 16));
+#else
         info->devices[id].cc = 100 * prop.major + 10 * prop.minor;
+#endif
         info->devices[id].nsm = prop.multiProcessorCount;
         info->devices[id].smpb = prop.sharedMemPerBlock;
+#ifdef GGML_USE_HIP
+        info->devices[id].smpbo = prop.sharedMemPerBlock;
+#else
         info->devices[id].smpbo = prop.sharedMemPerBlockOptin;
+#endif
         info->devices[id].integrated = false;
         info->devices[id].vmm = false;
         info->devices[id].vmm_granularity = 0;
@@ -1238,7 +1274,7 @@ at::Tensor gguf_cuda_linear(
     at::Tensor input,
     c10::optional<at::Tensor> bias,
     const std::string & output_dtype_name,
-    const std::string & linear_mode_name) {
+    const std::string & linear_mode_name, bool fused_output, bool silu_mul) {
     TORCH_CHECK(tensor_shape.size() == 2, "GGUF CUDA linear expects a 2D tensor shape");
     check_cuda_tensor(raw_weight, "raw_weight");
     check_cuda_tensor(input, "input");
@@ -1262,7 +1298,18 @@ at::Tensor gguf_cuda_linear(
     const std::string linear_mode = normalize_linear_mode(linear_mode_name);
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
     const bool use_mmq = linear_mode == "mmq" || (linear_mode == "auto" && gguf_cuda_should_use_mmq_local(type, cc, input_2d.size(0)));
-    at::Tensor output = use_mmq ? run_linear_cuda(raw_weight, type, tensor_shape, input_2d) : run_linear_cuda_cublas(raw_weight, type, tensor_shape, input_2d, output_dtype);
+    const bool use_fusion = fused_output && use_mmq && gguf_cuda_supports_linear_fusions(qtype_name, input_2d.size(0), input.device().index());
+    TORCH_CHECK(!silu_mul || use_fusion, "Fused SiLU requires packed CUDA MMVQ");
+    at::Tensor output;
+    if (use_fusion) {
+        TORCH_CHECK(output_dtype == at::kHalf || output_dtype == at::kBFloat16 || output_dtype == at::kFloat, "Unsupported fused output dtype");
+        TORCH_CHECK(input.scalar_type() == at::kHalf || input.scalar_type() == at::kBFloat16 || input.scalar_type() == at::kFloat, "Unsupported fused input dtype");
+        TORCH_CHECK(tensor_shape[0] > 0 && tensor_shape[1] > 0 && tensor_shape[1] % ggml_blck_size(type) == 0, "Invalid packed matrix shape");
+        TORCH_CHECK(raw_weight.scalar_type() == at::kByte && raw_weight.is_contiguous() && raw_weight.numel() == tensor_shape[0] * (tensor_shape[1] / ggml_blck_size(type)) * ggml_type_size(type), "Invalid packed weight layout");
+        output = run_linear_cuda(raw_weight, type, tensor_shape, input_2d, output_dtype, silu_mul);
+    } else {
+        output = use_mmq ? run_linear_cuda(raw_weight, type, tensor_shape, input_2d) : run_linear_cuda_cublas(raw_weight, type, tensor_shape, input_2d, output_dtype);
+    }
     if (output.scalar_type() != output_dtype) {
         output = output.to(output_dtype);
     }
@@ -1301,4 +1348,14 @@ at::Tensor gguf_cuda_embedding(
     std::vector<int64_t> output_shape(indices.sizes().begin(), indices.sizes().end());
     output_shape.push_back(tensor_shape.at(1));
     return output.reshape(output_shape);
+}
+
+bool gguf_cuda_supports_linear_fusions(const std::string & qtype_name, int64_t tokens, int64_t device) {
+#ifdef GGML_USE_HIP
+    return false;
+#else
+    if (tokens < 1 || tokens > MMVQ_MAX_BATCH_SIZE || !gguf_cuda_supports_linear_qtype_name(qtype_name)) return false;
+    const at::cuda::CUDAGuard guard(at::Device(at::kCUDA, device));
+    return ggml_cuda_should_use_mmvq(ggml_type_from_qtype_name(qtype_name), ggml_cuda_info().devices[device].cc, tokens);
+#endif
 }

@@ -123,15 +123,15 @@ def test_rejection_preserves_target_distribution():
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA unavailable")
-@pytest.mark.parametrize("method", ["dflash", "mtp"])
+@pytest.mark.parametrize("method", ["dflash", "mtp", "dspark"])
 @torch.inference_mode()
 def test_warm_block_has_no_scalar_reads_or_dynamic_candidate_selection(method):
     from shared.llm_engines.nanovllm.engine.block_draft_runner import BlockDraftRunner
     from shared.llm_engines.nanovllm.engine.model_runner import ModelRunner
     from shared.llm_engines.nanovllm.engine.sequence import Sequence
     from shared.llm_engines.nanovllm.sampling_params import SamplingParams
-    runner = object.__new__(BlockDraftRunner if method == "dflash" else ModelRunner)
-    runner.model = SimpleNamespace(mtp=SimpleNamespace(method="dflash2"))
+    runner = object.__new__(BlockDraftRunner if method in ("dflash", "dspark") else ModelRunner)
+    runner.model = SimpleNamespace(mtp=SimpleNamespace(method="dflash2" if method == "dflash" else method))
     runner.config = SimpleNamespace(eos=0, max_num_seqs=1, hf_config=SimpleNamespace(vocab_size=129))
     runner.use_triton_sampling = True
     runner._logits_bias_cache = {}
@@ -139,7 +139,7 @@ def test_warm_block_has_no_scalar_reads_or_dynamic_candidate_selection(method):
     runner._sampling_generator = torch.Generator(device="cuda").manual_seed(5)
     runner._dflash_valid_length = torch.tensor(3, device="cuda")
     runner.speculative_stats = dict(drafted=0, accepted=0, drafted_by_position=[0]*3, accepted_by_position=[0]*3)
-    seq = Sequence([1, 2], SamplingParams(temperature=.6, top_k=20, top_p=.95, min_p=.05, repetition_penalty=1.05))
+    seq = Sequence([1, 2], SamplingParams(temperature=.6, top_k=1 if method == "dspark" else 20, top_p=.95, min_p=.05, repetition_penalty=1.05))
     seq.append_token(4)
     logits = torch.linspace(-5, 5, 129, device="cuda").repeat(4, 1)
     drafts = torch.tensor([128, 127, 126], device="cuda")
@@ -171,12 +171,42 @@ def test_warm_block_has_no_scalar_reads_or_dynamic_candidate_selection(method):
         runner._graph_cache = {}
         runner.clear_graph_cache()
         assert not runner._speculative_acceptance_graphs
-        return
+    elif method == "dflash":
+        # No valid proposals still emits one exact target sample, using row zero.
+        runner._dflash_valid_length.zero_()
+        emitted, accepted = runner._sample_verified_block(seq, logits, drafts, q, None)
+        assert len(emitted) == 1 and accepted == 0
 
-    # No valid proposals still emits one exact target sample, using row zero.
-    runner._dflash_valid_length.zero_()
-    emitted, accepted = runner._sample_verified_block(seq, logits, drafts, q, None)
-    assert len(emitted) == 1 and accepted == 0
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA unavailable")
+@torch.inference_mode()
+def test_varying_confidence_lengths_do_not_recapture_warm_graphs(monkeypatch):
+    from shared.llm_engines.nanovllm.engine.model_runner import ModelRunner
+    from shared.llm_engines.nanovllm.engine.sequence import Sequence
+    from shared.llm_engines.nanovllm.engine.speculative_sampling import sample_verified_block
+    from shared.llm_engines.nanovllm.sampling_params import SamplingParams
+
+    runner = object.__new__(ModelRunner)
+    runner.config = SimpleNamespace(eos=0)
+    runner._logits_bias_cache = {}
+    runner._sampling_generator = torch.Generator(device="cuda").manual_seed(135)
+    runner.speculative_stats = dict(drafted=0, accepted=0, drafted_by_position=[0]*8, accepted_by_position=[0]*8)
+    seq = Sequence([1, 2], SamplingParams(temperature=.6, top_k=20, top_p=.95, min_p=.05, repetition_penalty=1.))
+    logits = torch.linspace(-5, 5, 129, device="cuda").repeat(9, 1)
+    drafts = torch.full((8,), 128, device="cuda", dtype=torch.int64)
+    probabilities = list(logits[:8].softmax(dim=-1).unbind())
+
+    def run(length):
+        return sample_verified_block(runner, seq, logits[:length+1], drafts[:length], probabilities[:length], None)
+
+    for length in range(1, 9):
+        run(length)
+    def unexpected_capture():
+        raise AssertionError("A warmed verification length was evicted during one request")
+    monkeypatch.setattr(torch.cuda, "CUDAGraph", unexpected_capture)
+    for length in (7, 1, 4, 8, 2, 6, 3, 5, 7):
+        emitted, _ = run(length)
+        assert 1 <= len(emitted) <= length + 1
 
 
 @pytest.mark.parametrize("triton,eager,top_k,allowed", [(False, False, 20, False), (True, True, 20, False),

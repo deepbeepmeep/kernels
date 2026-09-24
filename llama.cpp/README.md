@@ -1,4 +1,8 @@
-# llamacpp-gguf-cuda 1.0.22
+# llamacpp-gguf-cuda 1.0.23
+
+## 1.0.23 additions
+
+This release adds a native short-batch GGUF linear path that writes FP16/BF16 outputs directly and can fuse SiLU-and-multiply into activation quantization. The existing FP32-output path remains available. CUDA dispatch enables the new path only when the quantization format, token count and device support it; the HIP implementation retains its established dispatch. The source tree includes the native CUDA/HIP kernels, vendored GGML changes, the Gluon source and build script for the bundled SM120 binaries, and a hashed WanGP integration overlay.
 
 GGUF CUDA linear, embedding and paged-attention kernels for WanGP. The source tree contains the complete vendored llama.cpp/GGML implementation and the sources needed to reproduce the wheels.
 
@@ -8,11 +12,18 @@ Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 fo
 
 `prism_hadamard(input, signs, inverse=False, grouped_shape=(0, 0, 0))` applies normalized 1024-wide signed Sylvester transforms with FP32 accumulation. It supports forward/inverse transforms, the Prism GDN head permutation, FP16/BF16/FP32 inputs, PyTorch streams and CUDA graph capture. Signs are caller-owned tensors; the kernel retains no model weights or graph buffers. WanGP also needs its matching Prism GGUF metadata/loader integration: decoding ternary bytes alone does not correctly run a folded checkpoint.
 
-The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.22/README.md` for the final build and validation records.
+The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.23/README.md` for the final build and validation records.
 
 The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. The current WanGP overlay enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
 
 Validation scripts: `tests/test_quant_compatibility.py` compares saved old-format outputs bit-for-bit; `tests/test_ptq1.py` checks independent base-3 references, shape tails, bias, three dtypes and graph replay; `tests/test_prism_hadamard.py` checks independent signed FWHT references and GDN permutation. `tests/benchmark_quant_compatibility.py` measures unchanged formats before/after in separate processes.
+
+## AMD HIP build
+
+The maintained kernels also have a HIP build covering the local GGUF/PTQ1,
+Prism and paged-attention changes. See [HIP.md](HIP.md) for the isolated Windows
+build, hardware validation command and current limitations. The gfx1201 wheel
+has been compiled and imported; AMD inference has not yet been hardware-validated.
 
 ## What is included
 

@@ -120,6 +120,7 @@ def test_remote_save_preserves_hidden_local_options(save_config):
 @pytest.mark.parametrize("method,tokens,quantization,expected", [
     ("mtp", 8, "gguf", {"method": "mtp", "tokens": 8}),
     ("dspark", 3, "gguf", {"method": "dspark", "tokens": 3}),
+    ("dspark", 7, "gguf_ptq1", {"method": "dspark", "tokens": 7}),
     ("dflash2", 3, "gguf_ptq1", {"method": "dflash2", "tokens": 3}),
     ("dflash2", 7, "gguf", {"method": "dflash2", "tokens": 7}),
     ("dflash2", 7, "gguf_q3", {"method": "dflash2", "tokens": 7}),

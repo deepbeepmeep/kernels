@@ -1,3 +1,4 @@
+#include "gpu_compat.h"
 // PTQ1 decode: existing Prism FWHT and llama.cpp DP4A arithmetic, fused I/O.
 // See THIRD_PARTY_NOTICES.md and the vendored llama.cpp MIT license.
 #include <ATen/ATen.h>
@@ -35,7 +36,7 @@ __global__ void prism_prepare_decode_kernel(const T * x, const int8_t * signs, b
     for (int stride = 1; stride < 32; stride *= 2) {
         #pragma unroll
         for (int j = 0; j < 4; ++j) {
-            const float other = __shfl_xor_sync(0xffffffff, v[j], stride);
+            const float other = __shfl_xor_sync(WGP_WARP_MASK, v[j], stride, 32);
             v[j] = (t & stride) ? other - v[j] : v[j] + other;
         }
     }

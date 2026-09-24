@@ -19,7 +19,7 @@ at::Tensor gguf_cuda_linear(
     at::Tensor input,
     c10::optional<at::Tensor> bias,
     const std::string & output_dtype_name,
-    const std::string & linear_mode_name);
+    const std::string & linear_mode_name, bool fused_output = false, bool silu_mul = false);
 
 at::Tensor gguf_cuda_embedding(
     at::Tensor raw_weight,
@@ -27,3 +27,5 @@ at::Tensor gguf_cuda_embedding(
     std::vector<int64_t> tensor_shape,
     at::Tensor indices,
     const std::string & output_dtype_name);
+
+bool gguf_cuda_supports_linear_fusions(const std::string & qtype_name, int64_t tokens, int64_t device);

@@ -70,8 +70,8 @@ def test_complete_gdn_block_preserves_checkpoint_layout_and_state(layout):
     from shared.llm_engines.nanovllm.models.qwen3_5 import Qwen3_5Block
     from shared.llm_engines.nanovllm.utils.context import set_context, reset_context
 
-    if torch.cuda.get_device_capability(0) != (12, 0):
-        pytest.skip("Installer is enabled only on SM120")
+    if torch.version.hip is not None or torch.cuda.get_device_capability(0)[0] < 8:
+        pytest.skip("Installer requires NVIDIA Ampere or newer")
     config = Qwen3_5TextConfig(hidden_size=128, intermediate_size=256, num_hidden_layers=1,
         num_attention_heads=2, num_key_value_heads=1, head_dim=64,
         linear_num_key_heads=2, linear_num_value_heads=4,

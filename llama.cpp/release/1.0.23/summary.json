@@ -1,0 +1,228 @@
+{
+  "release": "gguf-v1.0.23",
+  "hardware": "NVIDIA GeForce RTX 5090 (SM120)",
+  "stacks": {
+    "win_py310": {
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.23+torch271cu128py310-cp310-cp310-win_amd64.whl",
+      "bytes": 238728484,
+      "sha256": "ba12a2c11fc6f2684a51e339681aef650e133c50df2aff5b91254adbc46e439f",
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 16.328000000008615
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 26.578999999997905
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 23.530999999988126
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 5.89000000001397
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 26.75
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 17.546999999991385
+        }
+      ]
+    },
+    "win_py311": {
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.23+torch210cu130py311-cp311-cp311-win_amd64.whl",
+      "bytes": 149628895,
+      "sha256": "d6b1f6ed0f551d6c2b565e6d66ec6bfc7f50103882de135f643c051442116507",
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 17.54700000002049
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 19.015999999974156
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 18.437000000005355
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.937999999994645
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 17.187000000005355
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 17.29700000002049
+        }
+      ]
+    },
+    "linux_py310": {
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.23+torch271cu128py310-cp310-cp310-linux_x86_64.whl",
+      "bytes": 240781669,
+      "sha256": "1c46c16d62957a41ff10d3800b15095a29afe68d4a01a7c5ad0562b9fe0aa66d",
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 12.630983855000068
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 23.713511356000254
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 8.987076585000068
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.192487924000488
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 10.030933836000258
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 2.852018304000012
+        }
+      ]
+    },
+    "linux_py311": {
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.23+torch210cu130py311-cp311-cp311-linux_x86_64.whl",
+      "bytes": 151983253,
+      "sha256": "380cca99e2639e0361ee8727b1f64cffd7a778de59784f385b94ec17228fdf1d",
+      "checks": [
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 13.199427472000025
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 18.266000695999992
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 3.0948699440000382
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 2.5171727869997085
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 2.8964698249997127
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 3.2760364219998337
+        }
+      ]
+    }
+  }
+}

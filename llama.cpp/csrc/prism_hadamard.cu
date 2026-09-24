@@ -1,3 +1,4 @@
+#include "gpu_compat.h"
 // Normalized Sylvester FWHT used by Prism Hadamard-folded checkpoints.
 // The transform is block-local (1024 values), with FP32 accumulation.
 #include <ATen/ATen.h>
@@ -34,7 +35,7 @@ __global__ void prism_hadamard_kernel(const T * x, const int8_t * signs, T * out
     for (int stride = 1; stride < 32; stride *= 2) {
         #pragma unroll
         for (int j = 0; j < 4; ++j) {
-            const float other = __shfl_xor_sync(0xffffffff, v[j], stride);
+            const float other = __shfl_xor_sync(WGP_WARP_MASK, v[j], stride, 32);
             v[j] = (t & stride) ? other - v[j] : v[j] + other;
         }
     }

@@ -33,7 +33,11 @@ int64_t choose_num_splits(const at::Tensor & query, int64_t cache_capacity, int6
 }
 
 int64_t q8_max_auto_splits(const at::Tensor & query) {
+#ifdef GGML_USE_HIP
+    return kMaxDefaultAutoSplits;
+#else
     return at::cuda::getDeviceProperties(query.get_device())->major == 12 ? kMaxQ8BlackwellAutoSplits : kMaxDefaultAutoSplits;
+#endif
 }
 
 void validate_inputs(const at::Tensor & query, const at::Tensor & key_cache, const at::Tensor & value_cache, const at::Tensor & key_scales, const at::Tensor & value_scales, const at::Tensor & block_tables, const at::Tensor & context_lens) {
@@ -122,7 +126,9 @@ at::Tensor dense_paged_attention(at::Tensor query, at::Tensor key_cache, at::Ten
 void register_sm120_bindings(pybind11::module_ & module);
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, module) {
+#ifndef GGML_USE_HIP
     register_sm120_bindings(module);
+#endif
     module.def("q8_paged_attention", &q8_paged_attention, "Direct Q8_0 paged KV attention with split-K online softmax", pybind11::arg("query"), pybind11::arg("key_cache"), pybind11::arg("value_cache"), pybind11::arg("key_scales"), pybind11::arg("value_scales"), pybind11::arg("block_tables"), pybind11::arg("context_lens"), pybind11::arg("softmax_scale"), pybind11::arg("forced_num_splits") = 0);
     module.def("q8_paged_attention_num_splits", &q8_paged_attention_num_splits, "Return the split count selected for a query/cache capacity", pybind11::arg("query"), pybind11::arg("cache_capacity"));
     module.def("dense_paged_attention", &dense_paged_attention, "Dense FP16/BF16 paged KV attention", pybind11::arg("query"), pybind11::arg("key_cache"), pybind11::arg("value_cache"), pybind11::arg("block_tables"), pybind11::arg("context_lens"), pybind11::arg("softmax_scale"), pybind11::arg("forced_num_splits") = 0);

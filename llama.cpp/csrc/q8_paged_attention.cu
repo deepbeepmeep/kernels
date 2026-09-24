@@ -1,3 +1,4 @@
+#include "gpu_compat.h"
 #include "q8_paged_attention_cuda.h"
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
@@ -15,10 +16,20 @@ template <> __device__ __forceinline__ float to_float(__half value) { return __h
 template <> __device__ __forceinline__ float to_float(__nv_bfloat16 value) { return __bfloat162float(value); }
 template <typename T> __device__ __forceinline__ T from_float(float value);
 template <> __device__ __forceinline__ __half from_float(float value) { return __float2half_rn(value); }
-template <> __device__ __forceinline__ __nv_bfloat16 from_float(float value) { return __float2bfloat16_rn(value); }
+template <> __device__ __forceinline__ __nv_bfloat16 from_float(float value) {
+#if defined(__HIP_PLATFORM_AMD__)
+    return __float2bfloat16(value); // HIP's default conversion is round-to-nearest-even.
+#else
+    return __float2bfloat16_rn(value);
+#endif
+}
 
 __device__ __forceinline__ int packed_dot_i8(int a, int b) {
-#if __CUDA_ARCH__ >= 610
+#if defined(__HIP_PLATFORM_AMD__)
+    const char4 av = make_char4(a, a >> 8, a >> 16, a >> 24);
+    const char4 bv = make_char4(b, b >> 8, b >> 16, b >> 24);
+    return amd_mixed_dot(av, bv, 0, false);
+#elif __CUDA_ARCH__ >= 610
     return __dp4a(a, b, 0);
 #else
     int result = 0;
@@ -35,8 +46,8 @@ __global__ void quantize_query_kernel(const T * query, int8_t * quantized, __hal
     const int64_t base = (static_cast<int64_t>(q) * heads + head) * dim;
     const float value = to_float(query[base + d]);
     float maximum = fabsf(value);
-    for (int offset = 16; offset; offset >>= 1) maximum = fmaxf(maximum, __shfl_down_sync(0xffffffff, maximum, offset));
-    maximum = __shfl_sync(0xffffffff, maximum, 0);
+    for (int offset = 16; offset; offset >>= 1) maximum = fmaxf(maximum, __shfl_down_sync(WGP_WARP_MASK, maximum, offset, 32));
+    maximum = __shfl_sync(WGP_WARP_MASK, maximum, 0, 32);
     const float scale = fmaxf(maximum / 127.0f, 1.0e-8f);
     quantized[base + d] = static_cast<int8_t>(max(-127, min(127, __float2int_rn(value / scale))));
     if (threadIdx.x == 0) scales[(static_cast<int64_t>(q) * heads + head) * (dim / kQuantBlock) + qblock] = __float2half_rn(scale);
@@ -79,7 +90,7 @@ __global__ void attention_partials_kernel(const int8_t * query, const __half * q
                 dot += static_cast<float>(packed_dot_i8(qp[lp], reinterpret_cast<const int *>(keys + cache_base)[pack])) * qs[lp] * __half2float(key_scales[scale_base + pack / 8]);
             }
         }
-        for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(0xffffffff, dot, offset);
+        for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(WGP_WARP_MASK, dot, offset, 32);
         float alpha = 1.0f, probability = 0.0f;
         if (lane == 0 && valid) {
             const float score = dot * softmax_scale;
@@ -89,8 +100,8 @@ __global__ void attention_partials_kernel(const int8_t * query, const __half * q
             denominator = denominator * alpha + probability;
             maximum = next;
         }
-        alpha = __shfl_sync(0xffffffff, alpha, 0);
-        probability = __shfl_sync(0xffffffff, probability, 0);
+        alpha = __shfl_sync(WGP_WARP_MASK, alpha, 0, 32);
+        probability = __shfl_sync(WGP_WARP_MASK, probability, 0, 32);
         if (valid) {
             lp = 0;
             for (int pack = lane; pack < packs; pack += kWarp, ++lp) {
@@ -122,8 +133,8 @@ __global__ void attention_partials_kernel(const int8_t * query, const __half * q
             #pragma unroll
             for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged_sum += warp_sums[w] * expf(warp_maxima[w] - merged_maximum);
         }
-        merged_maximum = __shfl_sync(0xffffffff, merged_maximum, 0);
-        merged_sum = __shfl_sync(0xffffffff, merged_sum, 0);
+        merged_maximum = __shfl_sync(WGP_WARP_MASK, merged_maximum, 0, 32);
+        merged_sum = __shfl_sync(WGP_WARP_MASK, merged_sum, 0, 32);
         const int64_t partial = (static_cast<int64_t>(q) * q_heads + head) * SPLITS + split;
         for (int d = lane; d < DIM; d += kWarp) {
             float merged = 0.0f;
@@ -146,8 +157,8 @@ __global__ void attention_reduce_kernel(const float * values, const float * maxi
         #pragma unroll
         for (int s = 0; s < SPLITS; ++s) if (sums[base + s] > 0.0f) denominator += sums[base + s] * expf(maxima[base + s] - maximum);
     }
-    maximum = __shfl_sync(0xffffffff, maximum, 0);
-    denominator = __shfl_sync(0xffffffff, denominator, 0);
+    maximum = __shfl_sync(WGP_WARP_MASK, maximum, 0, 32);
+    denominator = __shfl_sync(WGP_WARP_MASK, denominator, 0, 32);
     const int64_t out = (static_cast<int64_t>(q) * heads + head) * DIM;
     for (int d = threadIdx.x; d < DIM; d += kWarp) {
         float value = 0.0f;
@@ -203,7 +214,7 @@ __global__ void dense_attention_partials_kernel(const T * query, const T * keys,
             #pragma unroll
             for (int i = 0; i < per_lane; ++i) dot += qv[i] * to_float(keys[base + lane + i * kWarp]);
         }
-        for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(0xffffffff, dot, offset);
+        for (int offset = 16; offset; offset >>= 1) dot += __shfl_down_sync(WGP_WARP_MASK, dot, offset, 32);
         float alpha = 1.0f, probability = 0.0f;
         if (lane == 0 && valid) {
             const float score = dot * softmax_scale, next = fmaxf(maximum, score);
@@ -212,7 +223,7 @@ __global__ void dense_attention_partials_kernel(const T * query, const T * keys,
             denominator = denominator * alpha + probability;
             maximum = next;
         }
-        alpha = __shfl_sync(0xffffffff, alpha, 0); probability = __shfl_sync(0xffffffff, probability, 0);
+        alpha = __shfl_sync(WGP_WARP_MASK, alpha, 0, 32); probability = __shfl_sync(WGP_WARP_MASK, probability, 0, 32);
         if (valid) {
             #pragma unroll
             for (int i = 0; i < per_lane; ++i) acc[i] = acc[i] * alpha + probability * to_float(values[base + lane + i * kWarp]);
@@ -232,7 +243,7 @@ __global__ void dense_attention_partials_kernel(const T * query, const T * keys,
             #pragma unroll
             for (int w = 0; w < kWarps; ++w) if (warp_sums[w] > 0.0f) merged_sum += warp_sums[w] * expf(warp_maxima[w] - merged_maximum);
         }
-        merged_maximum = __shfl_sync(0xffffffff, merged_maximum, 0); merged_sum = __shfl_sync(0xffffffff, merged_sum, 0);
+        merged_maximum = __shfl_sync(WGP_WARP_MASK, merged_maximum, 0, 32); merged_sum = __shfl_sync(WGP_WARP_MASK, merged_sum, 0, 32);
         const int64_t partial = (static_cast<int64_t>(q) * q_heads + head) * SPLITS + split;
         for (int d = lane; d < DIM; d += kWarp) {
             float merged = 0.0f;
@@ -264,8 +275,11 @@ void launch_reduce(const float * v, const float * m, const float * s, T * out, i
 
 void q8_quantize_query_cuda(const void * query, bool bf16, int8_t * quantized, void * scales, int batch, int heads, int dim, cudaStream_t stream) {
     const dim3 grid(batch, heads, dim / kQuantBlock);
-    if (bf16) quantize_query_kernel<<<grid, kWarp, 0, stream>>>(static_cast<const __nv_bfloat16 *>(query), quantized, static_cast<__half *>(scales), heads, dim);
-    else quantize_query_kernel<<<grid, kWarp, 0, stream>>>(static_cast<const __half *>(query), quantized, static_cast<__half *>(scales), heads, dim);
+    if (bf16) {
+        quantize_query_kernel<<<grid, kWarp, 0, stream>>>(static_cast<const __nv_bfloat16 *>(query), quantized, static_cast<__half *>(scales), heads, dim);
+    } else {
+        quantize_query_kernel<<<grid, kWarp, 0, stream>>>(static_cast<const __half *>(query), quantized, static_cast<__half *>(scales), heads, dim);
+    }
 }
 
 void q8_attention_partials_cuda(const int8_t * q, const void * qs, const int8_t * k, const int8_t * v, const void * ks, const void * vs, const int32_t * tables, const int32_t * lengths, float * pv, float * pm, float * ps, int num_queries, int num_sequences, int qh, int kvh, int dim, int page, int blocks, int width, int splits, float scale, cudaStream_t stream) {

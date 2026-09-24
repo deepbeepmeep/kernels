@@ -6,6 +6,7 @@ import importlib.util
 import json
 import platform
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -42,6 +43,9 @@ def main():
     parser.add_argument("--greedy", action="store_true")
     parser.add_argument("--profile", choices=["decode", "prefill"])
     parser.add_argument("--no-stage-profile", action="store_true", help="Measure ordinary decode throughput without per-stage profiling events.")
+    parser.add_argument("--no-memory-poll", action="store_true", help="Measure throughput separately from background CUDA driver memory sampling.")
+    parser.add_argument("--cuda-fusions", choices=("baseline", "linear", "rope", "all"), default="all", help="Compare the optional typed-output, FFN and RoPE fusions.")
+    parser.add_argument("--gdn-materialized-layout", action="store_true", help="Benchmark the established GDN head-layout copies.")
     parser.add_argument("--kernel-library", type=Path)
     parser.add_argument("--reference-attention", type=Path)
     parser.add_argument("--unfused-prism", action="store_true", help="Benchmark the original Bonsai projection schedule.")
@@ -54,6 +58,19 @@ def main():
     if args.method != "mtp" and args.draft > {"dspark": 7, "dflash2": 7}[args.method]:
         parser.error("Draft count exceeds the checkpoint's proposal block.")
     args.output.mkdir(parents=True, exist_ok=True)
+    driver_peak = [0]
+    stop_memory_poll = threading.Event()
+    def sample_memory():
+        while not stop_memory_poll.is_set():
+            free, total = torch.cuda.mem_get_info(0)
+            driver_peak[0] = max(driver_peak[0], total - free)
+            stop_memory_poll.wait(.05)
+    memory_thread = threading.Thread(target=sample_memory, daemon=True)
+    if not args.no_memory_poll:
+        memory_thread.start()
+    if args.cuda_fusions in ("baseline", "linear"):
+        from shared.kernels import qwen_rope_cache
+        qwen_rope_cache.supported = lambda *args: False
     if args.unfused_prism:
         from shared.prompt_enhancer import qwen35_text
         original_fusions = qwen35_text._apply_qwen35_projection_fusions
@@ -88,13 +105,22 @@ def main():
                     warmup_context=max(args.contexts), requested_draft_tokens=args.draft, speculative_method=args.method, prism_projection_fusions=not args.unfused_prism,
                     prism_grouped_gdn=not (args.unfused_prism or args.prism_tiled_gdn),
                     prism_gdn_decode_fused=not (args.unfused_prism or args.prism_tiled_gdn or args.prism_reference_gdn),
-                    sm120_backend=getattr(attention._SM120_Q8, "__file__", None))
+                    sm120_backend=getattr(attention._SM120_Q8, "__file__", None), cuda_fusions=args.cuda_fusions, gdn_direct_layout=not args.gdn_materialized_layout, driver_memory_poll=not args.no_memory_poll)
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     checkpoint = args.assets / args.checkpoint
     dtype = get_gguf_compute_dtype()
     started = time.perf_counter()
     speculation = args.method if args.method != "mtp" and args.draft else args.draft > 0
     model = load_qwen35_text_prompt_enhancer(model_path=str(checkpoint), assets_dir=str(args.assets), default_dtype=dtype, backend="gguf", requested_lm_engine="vllm", variant=args.variant, speculative_decoding=speculation, kv_cache_int8=True)
+    if args.gdn_materialized_layout:
+        for block in model.blk:
+            block._gdn_direct_layout = False
+    if args.cuda_fusions in ("baseline", "rope"):
+        for module in model.modules():
+            if hasattr(module, "_use_optimized_kernels"):
+                module._use_optimized_kernels = False
+            if hasattr(module, "_fuse_silu_mul"):
+                module._fuse_silu_mul = False
     metadata["actual_decoder_engine"] = model._prompt_enhancer_engine_name
     metadata["gdn_decode_fused"] = any(getattr(block, "_gdn_prepare_decode", None) is not None for block in model.blk)
     metadata["prism_projection_fusions"] = any(getattr(block, "attn_qkv_gate", None) is not None for block in model.blk)
@@ -138,6 +164,7 @@ def main():
                     (args.output / f"prompt_{context}_{repeat}.json").write_text(json.dumps(ids), encoding="utf-8")
                     (args.output / f"prompt_{context}_{repeat}.txt").write_text(tokenizer.decode(ids), encoding="utf-8")
                     torch.cuda.reset_peak_memory_stats()
+                    driver_peak[0] = 0
                     torch.cuda.synchronize()
                     start = time.perf_counter()
                     runtime.prime_context(ids, seed=123)
@@ -160,7 +187,7 @@ def main():
                         record["alignment"] = runner.speculative_telemetry(sequence.seq_id, sequence.num_tokens)
                         assert record["alignment"]["sync_delta"] == 0, record["alignment"]
                     records.append(record)
-                    record.update(allocated_vram_gib=torch.cuda.memory_allocated() / 2**30, reserved_vram_gib=torch.cuda.memory_reserved() / 2**30, peak_reserved_vram_gib=torch.cuda.max_memory_reserved() / 2**30)
+                    record.update(allocated_vram_gib=torch.cuda.memory_allocated() / 2**30, reserved_vram_gib=torch.cuda.memory_reserved() / 2**30, peak_reserved_vram_gib=torch.cuda.max_memory_reserved() / 2**30, sampled_device_used_peak_gib=None if args.no_memory_poll else driver_peak[0] / 2**30)
                     print("RESULT=" + json.dumps({k: v for k, v in record.items() if k != "stages"}), flush=True)
                     (args.output / "results.json").write_text(json.dumps(records, indent=2), encoding="utf-8")
                     (args.output / f"completion_{context}_{repeat}.txt").write_text(result.raw_text, encoding="utf-8")
@@ -187,6 +214,9 @@ def main():
                 prof.export_chrome_trace(str(args.output / f"{args.profile}_trace.json"))
                 (args.output / f"{args.profile}_profile.txt").write_text(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=70), encoding="utf-8")
     finally:
+        stop_memory_poll.set()
+        if not args.no_memory_poll:
+            memory_thread.join()
         model.unload()
         manager.release()
 
