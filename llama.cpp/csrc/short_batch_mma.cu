@@ -15,7 +15,13 @@
 //
 // PTQ1_0 (Prism ternary, 128 base-3 values in 28 bytes) uses the same
 // staging and MMA shape. Each thread decodes its packed trits once for all
-// activation rows, instead of once per row as the dp4a kernels must.
+// activation rows, instead of once per row as the dp4a kernels must. Its
+// instruction-bound inner loop avoids per-trit work: tensor cores take the raw
+// base-3 digits {0, 1, 2} and the exact integer activation sum of each 32-value
+// block is subtracted afterwards (sum((t + 1) x) - sum(x) = sum(t x)); each
+// thread extracts only the shared-byte digits its fragments use; and PTQ1_0
+// activations are quantized in fragment order, so a thread reads its 32 bytes
+// per block with two 16-byte loads. Results are bit-identical.
 //
 // Tiles were tuned on an RTX 5090 (compute capability 12.0), where the path is
 // on by default. Other architectures keep MMVQ unless the caller measured this
@@ -48,7 +54,15 @@ template <typename T> __device__ __forceinline__ T from_float(float v) { return 
 template <> __device__ __forceinline__ __half from_float(float v) { return __float2half_rn(v); }
 template <> __device__ __forceinline__ __nv_bfloat16 from_float(float v) { return __float2bfloat16_rn(v); }
 
-template <typename src_t, bool SILU_MUL>
+// PTQ1_0 activation order within each 128-value block: quad thread t's eight
+// fragment words are contiguous (bytes 32t..32t+31). kPtq1Dest maps a value's
+// index to its stored position; the word order is x0, y0, x1, y1, x2, y2, x3, y3
+// of ptq1_mma_kernel.
+__constant__ unsigned char kPtq1Dest[128] = {0, 1, 2, 3, 32, 33, 34, 35, 64, 65, 66, 67, 96, 97, 98, 99, 4, 5, 6, 7, 36, 37, 38, 39, 68, 69, 70, 71, 100, 101, 102, 103, 8, 9, 10, 11, 40, 41, 42, 43, 72, 73, 74, 75, 104, 105, 106, 107, 12, 13, 14, 15, 44, 45, 46, 47, 76, 77, 78, 79, 108, 109, 110, 111, 16, 17, 18, 19, 48, 49, 50, 51, 80, 81, 82, 83, 112, 113, 114, 115, 20, 21, 22, 23, 84, 85, 86, 87, 52, 53, 54, 55, 116, 117, 118, 119, 24, 25, 26, 27, 28, 29, 30, 31, 56, 57, 58, 59, 60, 61, 62, 63, 88, 89, 90, 91, 92, 93, 94, 95, 120, 124, 121, 125, 122, 126, 123, 127};
+
+// PTQ1 stores the 32-value block's integer sum (exact in float) instead of d * sum
+// and writes values in the PTQ1_0 fragment order.
+template <typename src_t, bool SILU_MUL, bool PTQ1 = false>
 __global__ void quantize_rows_kernel(const src_t * __restrict__ x, int8_t * __restrict__ xq, float2 * __restrict__ xds, const int cols) {
     const int blocks = cols / 32;
     const int b = blockIdx.x * (blockDim.x / 32) + threadIdx.x / 32;
@@ -79,9 +93,9 @@ __global__ void quantize_rows_kernel(const src_t * __restrict__ x, int8_t * __re
     for (int offset = 16; offset > 0; offset >>= 1) {
         sum += __shfl_xor_sync(0xffffffffu, sum, offset);
     }
-    xq[static_cast<size_t>(row) * cols + col] = static_cast<int8_t>(q);
+    xq[static_cast<size_t>(row) * cols + (PTQ1 ? (col & ~127) + kPtq1Dest[col & 127] : col)] = static_cast<int8_t>(q);
     if (lane == 0) {
-        xds[static_cast<size_t>(row) * blocks + b] = make_float2(d, d * static_cast<float>(sum));
+        xds[static_cast<size_t>(row) * blocks + b] = make_float2(d, PTQ1 ? static_cast<float>(sum) : d * static_cast<float>(sum));
     }
 }
 
@@ -247,12 +261,20 @@ __global__ void __launch_bounds__(kWarps * 32) q4k_mma_kernel(const uint8_t * __
 // Byte i < 16 holds values i + 16n (n = 0..4); byte 16 + i' holds 80 + i' + 8n;
 // qh byte b holds 120 + b + 2n (n = 0..3). Quad thread t decodes qs word t once
 // and supplies for each 32-value activation block j the k-slots {4t..4t+3} (X)
-// and {16+4t..16+4t+3} (Y); activations are gathered in the same order.
+// and {16+4t..16+4t+3} (Y); activations are stored in that order (kPtq1Dest).
 __device__ __forceinline__ uint32_t trit_step(uint32_t & lo, uint32_t & hi) {
     const uint32_t wl = lo * 3, wh = hi * 3;
     lo = wl & 0x00FF00FF;
     hi = wh & 0x00FF00FF;
-    return __vsub4(__byte_perm(wl, wh, 0x7531), 0x01010101);  // four signed trits
+    return __byte_perm(wl, wh, 0x7531);  // four base-3 digits {0, 1, 2}
+}
+
+// Digit n of four packed bytes directly: ((v * 3^n) mod 256) * 3 >> 8 is what n + 1
+// sequential multiply-by-three steps produce, without computing the earlier digits.
+__device__ __forceinline__ uint32_t trit_digit(uint32_t word, int n) {
+    const uint32_t scale = n == 0 ? 1u : n == 1 ? 3u : n == 2 ? 9u : n == 3 ? 27u : 81u;
+    const uint32_t lo = (__byte_perm(word, 0, 0x4140) * scale) & 0x00FF00FF, hi = (__byte_perm(word, 0, 0x4342) * scale) & 0x00FF00FF;
+    return __byte_perm(lo * 3, hi * 3, 0x7531);
 }
 
 template <int WARPS> struct PtqTile {
@@ -290,7 +312,6 @@ __global__ void __launch_bounds__(WARPS * 32) ptq1_mma_kernel(const uint8_t * __
     const bool col_ok = g < NC;
     const int8_t * xcol = xq + static_cast<size_t>(col_ok ? g : 0) * K;
     const int c0 = min(2 * t, NC - 1), c1 = min(2 * t + 1, NC - 1);
-    const int ox2 = 64 + 4 * t, oy2 = 80 + 4 * (t >> 1) + 8 * (t & 1), ox3 = 96 + 8 * t, oy3 = 100 + 8 * t;
     float acc[4] = {};
     for (int chunk = 0; chunk < nchunks; ++chunk) {
         cp_async_wait<kStages - 2>();
@@ -309,26 +330,20 @@ __global__ void __launch_bounds__(WARPS * 32) ptq1_mma_kernel(const uint8_t * __
             const int8_t * xb = xcol + blk * 128;
             uint32_t bx[4] = {}, by[4] = {};
             if (col_ok) {
-                bx[0] = __ldg(reinterpret_cast<const uint32_t *>(xb + 4 * t));
-                by[0] = __ldg(reinterpret_cast<const uint32_t *>(xb + 16 + 4 * t));
-                bx[1] = __ldg(reinterpret_cast<const uint32_t *>(xb + 32 + 4 * t));
-                by[1] = __ldg(reinterpret_cast<const uint32_t *>(xb + 48 + 4 * t));
-                bx[2] = __ldg(reinterpret_cast<const uint32_t *>(xb + ox2));
-                by[2] = __ldg(reinterpret_cast<const uint32_t *>(xb + oy2));
-                if (t < 3) {
-                    bx[3] = __ldg(reinterpret_cast<const uint32_t *>(xb + ox3));
-                    by[3] = __ldg(reinterpret_cast<const uint32_t *>(xb + oy3));
-                } else {
-                    const uint32_t lo = __ldg(reinterpret_cast<const uint32_t *>(xb + 120)), hi = __ldg(reinterpret_cast<const uint32_t *>(xb + 124));
-                    bx[3] = __byte_perm(lo, hi, 0x6420);
-                    by[3] = __byte_perm(lo, hi, 0x7531);
-                }
+                // Activations are stored in fragment order (kPtq1Dest).
+                const uint4 * xp = reinterpret_cast<const uint4 *>(xb + 32 * t);
+                const uint4 u0 = __ldg(xp), u1 = __ldg(xp + 1);
+                bx[0] = u0.x; by[0] = u0.y; bx[1] = u0.z; by[1] = u0.w;
+                bx[2] = u1.x; by[2] = u1.y; bx[3] = u1.z; by[3] = u1.w;
             }
-            float d0[4], d1[4];
+            // (scale, integer sum) of the four 32-value blocks: 32 contiguous, 16-byte aligned bytes (K % 128 == 0).
+            float d0[4], d1[4], s0[4], s1[4];
+            const float4 * p0 = reinterpret_cast<const float4 *>(xds + c0 * kb + blk * 4), * p1 = reinterpret_cast<const float4 *>(xds + c1 * kb + blk * 4);
 #pragma unroll
-            for (int j = 0; j < 4; ++j) {
-                d0[j] = __ldg(xds + c0 * kb + blk * 4 + j).x;
-                d1[j] = __ldg(xds + c1 * kb + blk * 4 + j).x;
+            for (int h = 0; h < 2; ++h) {
+                const float4 a0 = __ldg(p0 + h), a1 = __ldg(p1 + h);
+                d0[2 * h] = a0.x; s0[2 * h] = a0.y; d0[2 * h + 1] = a0.z; s0[2 * h + 1] = a0.w;
+                d1[2 * h] = a1.x; s1[2 * h] = a1.y; d1[2 * h + 1] = a1.z; s1[2 * h + 1] = a1.w;
             }
             uint32_t fx[2][4], fy[2][4];
             float dw[2];
@@ -345,22 +360,16 @@ __global__ void __launch_bounds__(WARPS * 32) ptq1_mma_kernel(const uint8_t * __
                 for (int n = 0; n < 5; ++n) {
                     qa[n] = trit_step(lo, hi);
                 }
-                uint32_t l0 = __byte_perm(w0, 0, 0x4140), h0 = __byte_perm(w0, 0, 0x4342), l1 = __byte_perm(w1, 0, 0x4140), h1 = __byte_perm(w1, 0, 0x4342);
-                uint32_t q0[5], q1[5];
-#pragma unroll
-                for (int n = 0; n < 5; ++n) {
-                    q0[n] = trit_step(l0, h0);
-                    q1[n] = trit_step(l1, h1);
-                }
                 fx[rr][0] = qa[0];
                 fy[rr][0] = qa[1];
                 fx[rr][1] = qa[2];
                 fy[rr][1] = qa[3];
                 fx[rr][2] = qa[4];
-                fy[rr][2] = (t >> 1) ? ((t & 1) ? q1[1] : q1[0]) : ((t & 1) ? q0[1] : q0[0]);
+                // Bytes 16-23 are shared by the quad: extract only this thread's digits.
+                fy[rr][2] = trit_digit((t >> 1) ? w1 : w0, t & 1);
                 if (t < 3) {
-                    fx[rr][3] = t == 0 ? q0[2] : (t == 1 ? q0[3] : q0[4]);
-                    fy[rr][3] = t == 0 ? q1[2] : (t == 1 ? q1[3] : q1[4]);
+                    fx[rr][3] = trit_digit(w0, t + 2);
+                    fy[rr][3] = trit_digit(w1, t + 2);
                 } else {
                     uint32_t v = (tail & 0xFF) | ((tail & 0xFF00) << 8), even = 0, odd = 0;
 #pragma unroll
@@ -370,18 +379,19 @@ __global__ void __launch_bounds__(WARPS * 32) ptq1_mma_kernel(const uint8_t * __
                         even |= ((w >> 8) & 0xFF) << (8 * n);
                         odd |= ((w >> 24) & 0xFF) << (8 * n);
                     }
-                    fx[rr][3] = __vsub4(even, 0x01010101);
-                    fy[rr][3] = __vsub4(odd, 0x01010101);
+                    fx[rr][3] = even;
+                    fy[rr][3] = odd;
                 }
             }
 #pragma unroll
             for (int j = 0; j < 4; ++j) {
                 int c[4];
                 mma_s8(c, fx[0][j], fx[1][j], fy[0][j], fy[1][j], bx[j], by[j]);
-                acc[0] += dw[0] * d0[j] * static_cast<float>(c[0]);
-                acc[1] += dw[0] * d1[j] * static_cast<float>(c[1]);
-                acc[2] += dw[1] * d0[j] * static_cast<float>(c[2]);
-                acc[3] += dw[1] * d1[j] * static_cast<float>(c[3]);
+                // Digits {0, 1, 2} minus the block's activation sum give the signed-trit dot product exactly.
+                acc[0] += dw[0] * d0[j] * (static_cast<float>(c[0]) - s0[j]);
+                acc[1] += dw[0] * d1[j] * (static_cast<float>(c[1]) - s1[j]);
+                acc[2] += dw[1] * d0[j] * (static_cast<float>(c[2]) - s0[j]);
+                acc[3] += dw[1] * d1[j] * (static_cast<float>(c[3]) - s1[j]);
             }
         }
     }
@@ -416,10 +426,14 @@ __global__ void __launch_bounds__(WARPS * 32) ptq1_mma_kernel(const uint8_t * __
 }
 
 template <typename src_t>
-void quantize_rows(const at::Tensor & input, int8_t * xq, float2 * xds, int rows, int cols, bool silu_mul, cudaStream_t stream) {
+void quantize_rows(const at::Tensor & input, int8_t * xq, float2 * xds, int rows, int cols, bool silu_mul, bool ptq1, cudaStream_t stream) {
     const dim3 grid((cols / 32 + 7) / 8, rows);
     const src_t * x = reinterpret_cast<const src_t *>(input.data_ptr());
-    if (silu_mul) {
+    if (ptq1 && silu_mul) {
+        quantize_rows_kernel<src_t, true, true><<<grid, 256, 0, stream>>>(x, xq, xds, cols);
+    } else if (ptq1) {
+        quantize_rows_kernel<src_t, false, true><<<grid, 256, 0, stream>>>(x, xq, xds, cols);
+    } else if (silu_mul) {
         quantize_rows_kernel<src_t, true><<<grid, 256, 0, stream>>>(x, xq, xds, cols);
     } else {
         quantize_rows_kernel<src_t, false><<<grid, 256, 0, stream>>>(x, xq, xds, cols);
@@ -503,9 +517,9 @@ void short_batch_mma_linear(const at::Tensor & raw_weight, bool ptq1, int64_t ou
     int8_t * q = xq.data_ptr<int8_t>();
     float2 * ds = reinterpret_cast<float2 *>(xds.data_ptr<float>());
     switch (input.scalar_type()) {
-        case at::kFloat: quantize_rows<float>(input, q, ds, rows, K, silu_mul, stream); break;
-        case at::kHalf: quantize_rows<__half>(input, q, ds, rows, K, silu_mul, stream); break;
-        case at::kBFloat16: quantize_rows<__nv_bfloat16>(input, q, ds, rows, K, silu_mul, stream); break;
+        case at::kFloat: quantize_rows<float>(input, q, ds, rows, K, silu_mul, ptq1, stream); break;
+        case at::kHalf: quantize_rows<__half>(input, q, ds, rows, K, silu_mul, ptq1, stream); break;
+        case at::kBFloat16: quantize_rows<__nv_bfloat16>(input, q, ds, rows, K, silu_mul, ptq1, stream); break;
         default: TORCH_CHECK(false, "Unsupported GGUF CUDA input dtype for linear: ", input.scalar_type());
     }
     const uint8_t * W = static_cast<const uint8_t *>(raw_weight.data_ptr());

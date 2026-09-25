@@ -101,7 +101,7 @@ def test_older_wheel_keeps_existing_linear_signature(monkeypatch, silu_mul):
     assert calls == [torch.Size([1, 256])] and out.shape == (1, 128)
 
 
-@pytest.mark.parametrize('rows', [2, 3, 5, 512])
+@pytest.mark.parametrize('rows', [9, 512])
 @pytest.mark.parametrize('fuse_activation', [False, True])
 def test_multitoken_linear_keeps_existing_kernel_without_capability_probe(monkeypatch, rows, fuse_activation):
     projection = quantized_linear()
@@ -116,6 +116,26 @@ def test_multitoken_linear_keeps_existing_kernel_without_capability_probe(monkey
         x = torch.empty(rows, 512 if fuse_activation else 256, dtype=torch.bfloat16, device='cuda')
         out = projection([x] if fuse_activation else x)
     assert out.shape == (rows, 128)
+
+
+@pytest.mark.parametrize('rows', [2, 5, 8])
+@pytest.mark.parametrize('supported', [False, True])
+@pytest.mark.parametrize('fuse_activation', [False, True])
+def test_short_batch_linear_uses_typed_fused_output_when_supported(monkeypatch, rows, supported, fuse_activation):
+    # Speculative verification batches take the fused entry (typed output, optional fused SiLU)
+    # only where the native package supports them; otherwise the existing kernel is kept.
+    projection = quantized_linear()
+    projection._use_optimized_kernels = True
+    monkeypatch.setattr(activation, 'triton', None)
+    probes, fused = [], []
+    monkeypatch.setattr(gguf, '_gguf_cuda_module', lambda: SimpleNamespace(supports_linear_fusions=lambda qtype, tokens, device: probes.append(tokens) or supported))
+    monkeypatch.setattr(gguf, 'linear_fused', lambda x, raw, qtype, shape, bias, dtype, silu_mul: fused.append(silu_mul) or x.new_empty((*x.shape[:-1], shape[0]), dtype=dtype))
+    monkeypatch.setattr(gguf.GGUFWeightTensor, 'linear', lambda weight, x, bias=None: x.new_empty((*x.shape[:-1], weight.shape[0])))
+    with FakeTensorMode():
+        x = torch.empty(rows, 512 if fuse_activation else 256, dtype=torch.bfloat16, device='cuda')
+        out = projection([x] if fuse_activation else x)
+    assert out.shape == (rows, 128) and probes == [rows]
+    assert fused == ([fuse_activation] if supported else [])
 
 
 def test_activation_handoff_releases_original_before_unfused_linear(monkeypatch):

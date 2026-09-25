@@ -47,7 +47,7 @@ not rewritten. HIP outputs use `build/hip-torch210rocm714py311` and the `+torch2
 the wheel into an environment with matching ROCm PyTorch:
 
 ```powershell
-D:\AMD\qwen-hip210\Scripts\python.exe -m pip install --no-deps D:\AMD\dist\llamacpp_gguf_cuda-1.0.24+torch210rocm714py311-cp311-cp311-win_amd64.whl
+D:\AMD\qwen-hip210\Scripts\python.exe -m pip install --no-deps D:\AMD\dist\llamacpp_gguf_cuda-1.0.25+torch210rocm714py311-cp311-cp311-win_amd64.whl
 D:\AMD\qwen-hip210\Scripts\python.exe tests\validate_hip.py --output D:\AMD\validation
 ```
 

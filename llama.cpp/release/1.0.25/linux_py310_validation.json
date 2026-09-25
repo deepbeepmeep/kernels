@@ -1,0 +1,45 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.25+torch271cu128py310-cp310-cp310-linux_x86_64.whl",
+  "python": "3.10.9 (main, Mar  8 2023, 10:47:38) [GCC 11.2.0]",
+  "checks": [
+    {
+      "name": "old_quant_reference",
+      "exit_code": 0,
+      "seconds": 7.164286998999998
+    },
+    {
+      "name": "old_quant_exact",
+      "exit_code": 0,
+      "seconds": 6.841056335000005
+    },
+    {
+      "name": "standard",
+      "exit_code": 0,
+      "seconds": 22.944957485000003
+    },
+    {
+      "name": "ptq1",
+      "exit_code": 0,
+      "seconds": 8.664804680000017
+    },
+    {
+      "name": "hadamard",
+      "exit_code": 0,
+      "seconds": 4.326135997000023
+    },
+    {
+      "name": "prism_decode",
+      "exit_code": 0,
+      "seconds": 9.786119686000006
+    },
+    {
+      "name": "linear_fusions",
+      "exit_code": 0,
+      "seconds": 2.4585029209999902
+    }
+  ],
+  "passed": true,
+  "policy": "default (auto); reference = published 1.0.24 wheel of the same stack; bit-exact",
+  "short_batch_exactness": "259 PTQ1_0/Q4_K short-batch outputs (1-9 rows, BF16/FP16/FP32, typed, fused SiLU) bit-identical to 1.0.24",
+  "wangp_short_batch_tests": "27 passed in 12.68s"
+}

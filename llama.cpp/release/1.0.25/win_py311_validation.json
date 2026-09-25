@@ -1,0 +1,45 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.25+torch210cu130py311-cp311-cp311-win_amd64.whl",
+  "python": "3.11.9 | packaged by Anaconda, Inc. | (main, Apr 19 2024, 16:40:41) [MSC v.1916 64 bit (AMD64)]",
+  "checks": [
+    {
+      "name": "old_quant_reference",
+      "exit_code": 0,
+      "seconds": 11.76600000000326
+    },
+    {
+      "name": "old_quant_exact",
+      "exit_code": 0,
+      "seconds": 13.75
+    },
+    {
+      "name": "standard",
+      "exit_code": 0,
+      "seconds": 19.531000000002678
+    },
+    {
+      "name": "ptq1",
+      "exit_code": 0,
+      "seconds": 7.421999999998661
+    },
+    {
+      "name": "hadamard",
+      "exit_code": 0,
+      "seconds": 4.390999999995984
+    },
+    {
+      "name": "prism_decode",
+      "exit_code": 0,
+      "seconds": 3.1560000000026776
+    },
+    {
+      "name": "linear_fusions",
+      "exit_code": 0,
+      "seconds": 4.563000000001921
+    }
+  ],
+  "passed": true,
+  "policy": "default (auto); reference = published 1.0.24 wheel of the same stack; bit-exact",
+  "short_batch_exactness": "259 PTQ1_0/Q4_K short-batch outputs (1-9 rows, BF16/FP16/FP32, typed, fused SiLU) bit-identical to 1.0.24",
+  "wangp_short_batch_tests": "27 passed in 24.44s"
+}
