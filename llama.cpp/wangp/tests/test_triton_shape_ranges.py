@@ -65,7 +65,7 @@ def test_state_kernels_share_batch_and_token_lengths(monkeypatch, dtype):
 @torch.inference_mode()
 def test_attention_reuses_fixed_ranges_across_queries_and_table_capacities(monkeypatch):
     monkeypatch.setattr(torch.backends.cuda.matmul, "allow_tf32", False)
-    hashes = _record_kernels(monkeypatch, attention, ["q8_paged_prefill_kernel", "q8_grouped_partials_kernel", "q8_grouped_reduce_kernel"])
+    hashes = _record_kernels(monkeypatch, attention, ["q8_prefill_exact_kernel", "q8_grouped_partials_kernel", "q8_grouped_reduce_kernel"])
     for queries, widths in [([1, 3, 9], [1]), ([2, 4, 5, 6, 7, 8], [3, 16, 17, 128])]:
         for batch in [1, 2]:
             for tokens in queries:
@@ -82,6 +82,6 @@ def test_attention_reuses_fixed_ranges_across_queries_and_table_capacities(monke
             warmed = counts
         else:
             assert counts == warmed
-    assert counts["q8_paged_prefill_kernel"] == 1
+    assert counts["q8_prefill_exact_kernel"] == 1
     assert counts["q8_grouped_partials_kernel"] <= 16
     assert counts["q8_grouped_reduce_kernel"] <= 8

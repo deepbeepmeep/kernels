@@ -2,6 +2,8 @@
 
 Q4 remains the primary quality/performance target. Earlier shared optimizations and frozen snapshots are retained below; the latest [SM120 follow-up](#sm120-follow-up-tma-investigation-and-retained-asynchronous-copies) records the TMA experiments, VRAM diagnosis, and final asynchronous-copy implementation.
 
+**25 September 2026:** GPU sampling for live Deepy actions, exact-scale Q8 prefill (+11–19% prefill at 8K–30K), and the rejected multi-column GEMV are recorded in [QWEN38_SAMPLING_AND_EXACT_PREFILL_20260925.md](QWEN38_SAMPLING_AND_EXACT_PREFILL_20260925.md). RTX 50 tensor-core short-batch Q4_K/PTQ1_0 linears (-9% Qwen Q4 and -24-30% Bonsai MTP cycle time) are in [RTX50_SHORT_BATCH_GEMM_20260925.md](RTX50_SHORT_BATCH_GEMM_20260925.md).
+
 The subsequent [compaction checkpoint fix](#compaction-checkpoint-retention-fix) prevents an avoidable long-prefix replay while keeping the existing three-checkpoint RAM budget.
 
 **Current outcome:** the SM120 follow-up removes the approximately **3.27 GiB driver-memory increase** caused by the tested TMA path. The retained implementation uses ordinary `cp.async`, with **17–24% faster isolated prefix attention**, **4.4–4.6% higher full-20K prefill throughput**, and **7.3% higher throughput for a 1,024-token suffix on a cached 20K prefix**. It does not establish a reliable model-decode gain. Q4/Q8 precision is unchanged. Other GPU architectures keep the shared kernels; legacy/cg keep their PyTorch/native paths. The earlier shared decode/prefill gains remain documented separately. This follow-up postdates source snapshot **1.0.20** and does not rebuild the native package.

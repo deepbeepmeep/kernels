@@ -1,21 +1,17 @@
 {
-  "wangp_base_commit": "0528cefb6dd4661a6af3f70c3c845f5b76749efe",
-  "release": "1.0.23",
+  "wangp_base_commit": "2345ae148f82740f66e82c41292dbbdd592e713d",
+  "wangp_working_tree": "uncommitted changes on top of the base commit, captured 2026-09-25",
+  "release": "1.0.24",
   "files": [
     {
       "path": "README.md",
-      "sha256": "f745c3f62bded6e6c2580df10e3310eca7392b239b360dc365daa1b1ea293f0c",
-      "bytes": 900
+      "sha256": "fa92e70cbc2a7396bd9d804020b4667c530d3b9614cbcc1f24da8970a262ff1d",
+      "bytes": 1322
     },
     {
       "path": "docs/BONSAI_PTQ1.md",
       "sha256": "1f653460efbb7f3ec2bd1de543ef3cf73765a12948a444bba92de882e1ef1c7e",
       "bytes": 13496
-    },
-    {
-      "path": "docs/QWEN38_ENGINE_PERFORMANCE.md",
-      "sha256": "b0d1247e97e52e90455c4dc70b13059fd9e252c10a61ca1abb73c033bc89b081",
-      "bytes": 192285
     },
     {
       "path": "docs/QWEN_GDN_DECODE.md",
@@ -29,8 +25,8 @@
     },
     {
       "path": "plugins/configuration/plugin.py",
-      "sha256": "bb884294f5ba490fe845de96164627d4abdb5024f365f67a2b04d95b15b72896",
-      "bytes": 93705
+      "sha256": "779e8842a9c3dd770680eab175e420af419a019ca158e3c79ef06551cab8f6f4",
+      "bytes": 93766
     },
     {
       "path": "shared/gradio/assistant_chat.py",
@@ -48,9 +44,14 @@
       "bytes": 2917
     },
     {
+      "path": "shared/kernels/gguf_short_batch.py",
+      "sha256": "e858d75a77f9d2862194a29b9a28cc37188ea36b42e0badde8558f4b38223e45",
+      "bytes": 9037
+    },
+    {
       "path": "shared/kernels/int8_backend.py",
-      "sha256": "378502031bbeb86f0ce0ce8450e434fa54d89feb55d3d20ec553284f9cd3dab2",
-      "bytes": 17257
+      "sha256": "5e6dd171579fe07f1ae9d4280d1eaed953c4fae560b79a1b494c837c3d0d072a",
+      "bytes": 17357
     },
     {
       "path": "shared/kernels/kernel_policy.py",
@@ -104,8 +105,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/block_draft_runner.py",
-      "sha256": "56f70da4036a0314af35dd692815add05d53dc5d97f1b03b53bab4b7d3cca094",
-      "bytes": 17436
+      "sha256": "8bf27ddca7fd3c6fc8c60828b3116a26df2322ecaf021dbea96d4be3e8a3beda",
+      "bytes": 18920
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/block_manager.py",
@@ -114,8 +115,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/dflash_sampling.py",
-      "sha256": "d2a14df8074cc12b331204f3222c51edb6d7e499a97e2c0a190437e4fc27be8e",
-      "bytes": 4982
+      "sha256": "6b2b10c1ca5e20c2a6d67fe7832e05ea2ca03be7a9bb15ecebf68faad5a9c4c5",
+      "bytes": 6183
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/llm_engine.py",
@@ -124,8 +125,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/model_runner.py",
-      "sha256": "b92fd1619f91e87ad8b56917e5601b2ad0c71ed9a5aebaf1386c65d3b9cebe92",
-      "bytes": 115679
+      "sha256": "de0aef245c00437749b24ec31eaaced27505fc7ea35bfd4b6f8b100f9ce4d02b",
+      "bytes": 117081
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/scheduler.py",
@@ -139,8 +140,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/engine/speculative_sampling.py",
-      "sha256": "6d8339fcecc76070fadd9cec5ea15b884f85a88df3d3f2f5c6194260333ef782",
-      "bytes": 8053
+      "sha256": "0c835ad3fe310c228fefcb07c26da6170ee1c21224f1cb4f0bb8be353dd0ff82",
+      "bytes": 8354
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/activation.py",
@@ -149,8 +150,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/attention.py",
-      "sha256": "e874b18cfecf1b68a4877d8c5bfb0d85e2848e3b0fc92873d409a46f075f1e7f",
-      "bytes": 40142
+      "sha256": "04320a1eb3a080169287880807a5cae40cac6268853f63bd5cfd77a131b022e2",
+      "bytes": 45489
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/attention_sm120.py",
@@ -184,8 +185,8 @@
     },
     {
       "path": "shared/llm_engines/nanovllm/layers/speculative_state.py",
-      "sha256": "e36a95d56123094fc3f588cc163db378d8f4461228a53a5b79f12c3bb59711a0",
-      "bytes": 6036
+      "sha256": "f5957fa3c1294f5878b87af5f532a63a526e6b12dff71c2028912be1873c6e61",
+      "bytes": 6273
     },
     {
       "path": "shared/llm_engines/nanovllm/llm.py",
@@ -254,8 +255,8 @@
     },
     {
       "path": "shared/prompt_enhancer/block_draft.py",
-      "sha256": "4493ff89ce47bfc364ad2a1a146b14b30d292ceaf767efa555089811ecc20db3",
-      "bytes": 3462
+      "sha256": "3a006f2222da1e83d1f782dec90a328994a492583991c83d976836cfd661cf5d",
+      "bytes": 3780
     },
     {
       "path": "shared/prompt_enhancer/chaining.py",
@@ -304,8 +305,8 @@
     },
     {
       "path": "shared/prompt_enhancer/loader.py",
-      "sha256": "dd3a65239c3d032be17279f8688370bed7dc697ff2f7e4ae589b37f35e901e29",
-      "bytes": 15265
+      "sha256": "3709e7b6250153bf748bbac7df0f14963209acd9774066d1648481f7fc73ccb6",
+      "bytes": 15319
     },
     {
       "path": "shared/prompt_enhancer/progress.py",
@@ -319,8 +320,8 @@
     },
     {
       "path": "shared/prompt_enhancer/qwen35_assistant_runtime.py",
-      "sha256": "b7f35e363102fd98e54f9dd2635ad02f99ffc72561f74fcebe34f23d5463b4ba",
-      "bytes": 107547
+      "sha256": "6b320e23797d0b6bd55cde1dd2ada6110d8a8dbb7760730d0c866e9367e47c19",
+      "bytes": 108152
     },
     {
       "path": "shared/prompt_enhancer/qwen35_text.py",
@@ -399,8 +400,8 @@
     },
     {
       "path": "shared/qtypes/nvfp4.py",
-      "sha256": "36ed8ae5c015a09ad000fe0064252192c1a2cd51aa55ab4d9fbe8bd8d4ff4430",
-      "bytes": 49490
+      "sha256": "58e9613f2195cbfcf48006512b7a0aab77820a5e6e9c833f4f1f60434531bb8e",
+      "bytes": 50786
     },
     {
       "path": "shared/qtypes/prism.py",
@@ -428,6 +429,11 @@
       "bytes": 10866
     },
     {
+      "path": "specs/GGUF_SHORT_BATCH_OTHER_GPUS_PLAN.md",
+      "sha256": "f23a5deb0ccde43ad4505d3296f7448eff63cf962d8bde6d40ed49df48855b50",
+      "bytes": 7664
+    },
+    {
       "path": "specs/MTP_GPU_SAMPLING.md",
       "sha256": "ebcffddd3d50c02f512eb016e261035d4a96a8e998d3df9a1d5dfa3a79d2be3a",
       "bytes": 5463
@@ -438,19 +444,39 @@
       "bytes": 6582
     },
     {
+      "path": "specs/QWEN38_BLOCK_DRAFTERS_20260925.md",
+      "sha256": "8372910a179ee9e56aec58e6502453cdf55164778e3e0274e5731d8ce7882f11",
+      "bytes": 4312
+    },
+    {
+      "path": "specs/QWEN38_ENGINE_PERFORMANCE.md",
+      "sha256": "b1b21169885e620e23a454260feab52641e96304557d653897ecb186cbb4304c",
+      "bytes": 192729
+    },
+    {
+      "path": "specs/QWEN38_SAMPLING_AND_EXACT_PREFILL_20260925.md",
+      "sha256": "26911cf55f818a0a1e75d6bf9151aa90a3718fc2f1250ad23dba76cb5c3c201c",
+      "bytes": 9152
+    },
+    {
       "path": "specs/QWEN_CUDA_FUSIONS.md",
       "sha256": "ecf33cb4008734af24eaeae5da3514ff0b2ff89cc2b0688fc4d776300e41da49",
       "bytes": 22974
     },
     {
       "path": "specs/QWEN_DFLASH2.md",
-      "sha256": "25a94f75d2edd52719266c55e929f25bc1239b6c93a62806a48662fd5f84411a",
-      "bytes": 4158
+      "sha256": "7c8b5cf28c36e34c81f7dc45b1f28fd5889f24a7465569249f3bccf8106982d9",
+      "bytes": 4444
     },
     {
       "path": "specs/QWEN_MTP_COMPACT_ROLLBACK.md",
       "sha256": "6a1eebcf279bfff5a0711be3d1e2a580b6ee8a99c0d3d1866d1d7c76227ead08",
       "bytes": 20365
+    },
+    {
+      "path": "specs/RTX50_SHORT_BATCH_GEMM_20260925.md",
+      "sha256": "02f42328a32f61319e12240ee59d3ed2e7223449706f5362535f7c68627c7899",
+      "bytes": 7332
     },
     {
       "path": "specs/benchmarks/dflash2_dspark_2026-09-22.json",
@@ -494,18 +520,23 @@
     },
     {
       "path": "tests/test_dflash_gpu_acceptance.py",
-      "sha256": "102642f7b3fb1c4f6db099afc1339a37e53993540b9c18a817f9601c621ec8e1",
-      "bytes": 12858
+      "sha256": "84b80c57e38e0877f67d0c38174e9f2d468da100acdf445ab72257ac270ca6e8",
+      "bytes": 16386
     },
     {
       "path": "tests/test_dspark_gpu_chain.py",
-      "sha256": "288a58f137c9253910405b38b83f48b4ebaa6cefdfc72a082c7ab5ee58e446a5",
-      "bytes": 4843
+      "sha256": "028cc430eb23dd498c74a21335cfa677a5811ad77a41f383609a6ebfd31e3c85",
+      "bytes": 6397
     },
     {
       "path": "tests/test_fused_silu_mul.py",
       "sha256": "9a9178e1f2dfe5ebe51832bd5a7267f9cfa3af9c5f3d6f3bcdef45058718836b",
       "bytes": 1901
+    },
+    {
+      "path": "tests/test_gguf_short_batch_linear.py",
+      "sha256": "908d7d3437634906da3e5b09f6e33fb33d7a5e9b8f65601cd3f60c45d8f35826",
+      "bytes": 11437
     },
     {
       "path": "tests/test_gguf_torch_fallback.py",
@@ -549,23 +580,23 @@
     },
     {
       "path": "tests/test_prompt_enhancer_speculative_config.py",
-      "sha256": "969ce5d388fc0974e3a3ca1c700e1ebee84ebb3c68896cdb24f793d72ae2e58f",
-      "bytes": 7315
+      "sha256": "2aa9d9ba30832733db174527bb5111c586363eb5ed490f95689f0a49d043cbd7",
+      "bytes": 7974
     },
     {
       "path": "tests/test_q8_paged_attention.py",
-      "sha256": "168cbad15bf3bd976259eb7d7683af4fae5c9258be0e17c60dc853ef56883356",
-      "bytes": 4592
+      "sha256": "e7baaa0aeef40c61952204158c134c350d9834fd613f1f4603641feb2f70f976",
+      "bytes": 6309
     },
     {
       "path": "tests/test_q8_sm120_attention.py",
-      "sha256": "0feabd9b5999a2b24d6bef927485218c5864bf57c54021b87874e5219e8b0d5d",
-      "bytes": 7443
+      "sha256": "08f49abe3ba62433ea545de6a0c88f825a4e5c573980253da631c0683b369082",
+      "bytes": 7550
     },
     {
       "path": "tests/test_q8_sm120_compiled.py",
-      "sha256": "c01aa40717570f3abbef63b16abeccbf69253da40843f3e2169285fcf689f125",
-      "bytes": 3504
+      "sha256": "630b8db2bc4dc0118d00ed048ad7ce223efaeb01fe6c80b0abddb0108583be3d",
+      "bytes": 2139
     },
     {
       "path": "tests/test_qwen_cuda_fusion_modes.py",
@@ -579,7 +610,7 @@
     },
     {
       "path": "tests/test_triton_shape_ranges.py",
-      "sha256": "ef7373c7485c7181eb031263490fcb0d448a0e7e7428ce5a3c6c19fddd12b330",
+      "sha256": "e1121507a4ed5793ac892d8fe66048ac477d50e51e1c906ed725095169dc9d99",
       "bytes": 4646
     },
     {
@@ -599,13 +630,13 @@
     },
     {
       "path": "tools/benchmark_qwen38_engine.py",
-      "sha256": "35c0e03b7fe31e824adc99ad3d1c14bd22e5d666aaf0f73682fac65e6f26b7fc",
-      "bytes": 15396
+      "sha256": "3131232c14239b506d7398f239dccd02e27715a41f3e344261f159693cf9af47",
+      "bytes": 18065
     },
     {
       "path": "tools/benchmark_qwen_block_prediction.py",
-      "sha256": "98236932f7d97349d606d7392feb4968be93550743f465bb4fd38f248dbcdf2d",
-      "bytes": 14540
+      "sha256": "7619f3ebbec19bfee4764a6bdf6460dd40de37c3fb0bdf53e0b9eb4cb22bbe30",
+      "bytes": 16453
     },
     {
       "path": "tools/benchmark_qwen_fusion_graph.py",
@@ -711,6 +742,11 @@
       "path": "tools/test_qwen_gdn_layout.py",
       "sha256": "e11b7fbaff19be675c198361682f3f2614119b4e13e88b714494f9225a0ea29f",
       "bytes": 11346
+    },
+    {
+      "path": "tools/validate_gguf_short_batch.py",
+      "sha256": "262baa14e8591691e9c0f563ea78737e05e514fd1bc7544b50cee141537ac3c1",
+      "bytes": 8194
     }
   ]
 }

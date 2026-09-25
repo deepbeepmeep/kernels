@@ -62,6 +62,31 @@ def test_prefill_matches_float32_with_ragged_shuffled_pages(dtype, dim, queries,
     torch.testing.assert_close(actual, expected, atol=.0003, rtol=.009)
 
 
+def _high_low_prefill(q, k_cache, v_cache, k_scale, v_scale, context, softmax_scale):
+    output = torch.empty_like(q)
+    grid = (context.cu_seqlens_q.numel() - 1, q.shape[1], (q.shape[0] + 31) // 32)
+    attention.q8_paged_prefill_kernel[grid](
+        q, k_cache, v_cache, k_scale, v_scale, context.block_tables, context.cu_seqlens_q, context.cu_seqlens_k, output,
+        q.stride(0), q.stride(1), k_cache.stride(0), k_cache.stride(1), k_cache.stride(2),
+        k_scale.stride(0), k_scale.stride(1), k_scale.stride(2), context.block_tables.stride(0), output.stride(0), output.stride(1), softmax_scale,
+        q.shape[1], k_cache.shape[2], q.shape[2], k_cache.shape[1], BLOCK_M=32, BLOCK_N=32, num_warps=4, num_stages=1)
+    return output
+
+
+@pytest.mark.skipif(torch.version.hip is not None, reason="ROCm keeps the high/low prefill kernel")
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+@pytest.mark.parametrize("dim,queries,lengths,heads,kv_heads", [(256, [1024], [20000], 24, 4), (256, [17, 33], [257, 531], 24, 4), (128, [31], [4000], 16, 2), (64, [9], [300], 8, 8)])
+@torch.inference_mode()
+def test_exact_prefill_is_at_least_as_accurate_as_high_low(monkeypatch, dtype, dim, queries, lengths, heads, kv_heads):
+    monkeypatch.setattr(torch.backends.cuda.matmul, "allow_tf32", False)
+    args = _case(dtype, dim, queries, lengths, heads, kv_heads)
+    expected = _reference(*args).float()
+    error = lambda output: (output.float() - expected).norm() / expected.norm()
+    exact = attention._q8_paged_prefill(*args, dim ** -.5)
+    torch.testing.assert_close(exact.float(), expected, atol=.0003, rtol=.009)
+    assert error(exact) <= error(_high_low_prefill(*args, dim ** -.5)) * 1.01
+
+
 @pytest.mark.parametrize("dtype,dim,queries,lengths,heads,kv_heads", [(torch.bfloat16, 256, 3, [20000], 24, 4), (torch.float16, 128, 2, [257, 531], 8, 2), (torch.float16, 64, 1, [257], 4, 4)])
 @torch.inference_mode()
 def test_grouped_decode_and_verification_graph_reuse(dtype, dim, queries, lengths, heads, kv_heads):

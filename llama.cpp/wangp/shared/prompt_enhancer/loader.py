@@ -64,7 +64,7 @@ def ensure_prompt_enhancer_assets(process_files_def, enhancer_enabled: int, qwen
     if enhancer_enabled in (3, 4, 5):
         from .qwen35_vl import ensure_qwen35_prompt_enhancer_assets, get_qwen35_prompt_enhancer_variant
 
-        speculative_decoding = resolve_prompt_enhancer_speculative_decoding(enhancer_enabled, speculative_decoding)[0]
+        speculative_decoding = resolve_prompt_enhancer_speculative_decoding(enhancer_enabled, speculative_decoding, qwen_backend=qwen_backend)[0]
         speculative_decoding, _ = speculative_decoding_runtime(speculative_decoding)
         ensure_qwen35_prompt_enhancer_assets(process_files_def, backend=qwen_backend, variant=get_qwen35_prompt_enhancer_variant(enhancer_enabled), speculative_decoding=speculative_decoding)
 
@@ -157,7 +157,7 @@ def load_prompt_enhancer_runtime(process_files_def, enhancer_enabled: int, lm_de
     ensure_prompt_enhancer_assets(process_files_def, enhancer_enabled=enhancer_enabled, qwen_backend=qwen_backend, speculative_decoding=speculative_decoding)
 
     if enhancer_enabled in (3, 4, 5):
-        speculative_decoding, speculative_decoding_message = resolve_prompt_enhancer_speculative_decoding(enhancer_enabled, speculative_decoding)
+        speculative_decoding, speculative_decoding_message = resolve_prompt_enhancer_speculative_decoding(enhancer_enabled, speculative_decoding, qwen_backend=qwen_backend)
         speculative_decoding, speculative_tokens = speculative_decoding_runtime(speculative_decoding)
         deepy_kv_cache_quantization, kv_cache_message = resolve_deepy_kv_cache_quantization(deepy_kv_cache_quantization)
         if speculative_decoding_message:

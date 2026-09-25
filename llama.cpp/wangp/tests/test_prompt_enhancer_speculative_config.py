@@ -99,19 +99,33 @@ def test_model_and_method_switches_reset_or_clamp():
 
 
 @pytest.mark.parametrize("backend,folder,maximum", [
-    ("gguf", "Qwen3_8_27B_DFlash2", 7),
-    ("gguf_q3", "Qwen3_8_27B_DFlash2", 7),
-    ("gguf_q2", "Qwen3_8_27B_DFlash2", 7),
-    ("gguf_ptq1", "Bonsai_2_27B_DFlash2", 5),
+    ("gguf", "Qwen3_8_27B_Uncensored", 7),
+    ("gguf_q3", "Qwen3_8_27B_Uncensored", 7),
+    ("gguf_q2", "Qwen3_8_27B_Uncensored", 7),
+    ("gguf_ptq1", "Qwen3_8_27B_Uncensored", 5),
 ])
 def test_dflash_checkpoint_and_token_limits_follow_target(backend, folder, maximum):
     from shared.prompt_enhancer.block_draft import ensure_block_draft_assets, block_draft_spec
     downloads = []
     ensure_block_draft_assets(lambda **kwargs: downloads.append(kwargs), "dflash2", "27b", backend)
     assert downloads[0]["sourceFolderList"] == [folder]
+    spec = block_draft_spec("dflash2", bonsai=backend == "gguf_ptq1")
+    assert downloads[0]["fileList"] == [[spec["config"], spec["weights"]]]
     assert block_draft_spec("dflash2", bonsai=backend == "gguf_ptq1")["drafts"] == maximum
     assert speculative_decoding_ui_state(5, backend, "vllm", "dflash2")[1:] == ("dflash2", list(range(1, maximum + 1)), 5)
     assert speculative_decoding_ui_state(5, backend, "vllm", "dflash2", 7)[1:] == ("dflash2", list(range(1, maximum + 1)), maximum)
+
+
+def test_dspark_download_uses_shared_qwen_folder_and_unique_config():
+    from shared.prompt_enhancer.block_draft import ensure_block_draft_assets
+
+    downloads = []
+    ensure_block_draft_assets(lambda **kwargs: downloads.append(kwargs), "dspark", "27b", "gguf")
+    assert downloads == [{
+        "repoId": "DeepBeepMeep/Wan2.1",
+        "sourceFolderList": ["Qwen3_8_27B_Uncensored"],
+        "fileList": [["Qwen3_8_27B_DSpark.config.json", "Qwen3_8_27B_DSpark_int8_convrot.safetensors"]],
+    }]
 
 
 @pytest.mark.parametrize("vram,enabled", [(0, False), (8, False), (9.99, False), (10, False), (10.01, True), (12, True), (32, True)])

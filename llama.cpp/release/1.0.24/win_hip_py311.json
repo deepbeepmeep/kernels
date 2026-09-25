@@ -1,0 +1,18 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.24+torch210rocm714py311-cp311-cp311-win_amd64.whl",
+  "bytes": 5195404,
+  "sha256": "4ae0f41bf320d6c8a217716e09eccb6644ca04ca257fc9adf09418de503f4645",
+  "torch": "2.10.0+rocm7.14.0",
+  "hip": "7.14.60850",
+  "architectures": [
+    "gfx1201"
+  ],
+  "relabelled_from": "llamacpp_gguf_cuda-1.0.23+torch210rocm714py311-cp311-cp311-win_amd64.whl (hip_build.py still said 1.0.23)",
+  "short_batch_tensor_cores": "not compiled for HIP; has_short_batch_policy() is False",
+  "checks": [
+    "compiled with build_hip.ps1",
+    "all three extensions import under ROCm PyTorch 2.10.0"
+  ],
+  "post_build_patch": "llamacpp_gguf_cuda/__init__.py replaced with the committed version (Python argument validation only)",
+  "hardware_validation": "none: no AMD GPU on the build machine"
+}

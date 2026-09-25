@@ -22,6 +22,7 @@ from mmgp import offload
 from shared.prompt_enhancer.qwen35_assistant_runtime import Qwen35AssistantRuntime
 from shared.prompt_enhancer.qwen35_text import load_qwen35_text_prompt_enhancer
 from shared.qtypes.gguf import get_gguf_compute_dtype
+from shared.kernels import int8_backend, kernel_policy
 from shared.utils import files_locator
 
 
@@ -54,6 +55,11 @@ def main():
     parser.add_argument("--fiction-prompt", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--method", choices=("disabled", "mtp", "dflash2", "dspark"), required=True)
+    parser.add_argument("--draft-folder", type=Path, help="Override draft checkpoint folder for a local precision comparison")
+    parser.add_argument("--draft-config", default="config.json", help="Draft config filename within --draft-folder")
+    parser.add_argument("--draft-weight", help="Draft weight filename within --draft-folder")
+    parser.add_argument("--int8-kernels", choices=("auto", "triton", "kitchen", "disabled"), default="auto",
+                        help="Match WanGP's INT8 backend selection (default: auto)")
     parser.add_argument("--drafts", type=int)
     parser.add_argument("--compare-drafts", type=int, nargs="+", help="Interleave draft-count limits in one runtime; graph capacity stays at the largest count")
     parser.add_argument("--tokens", type=int, default=512)
@@ -64,6 +70,10 @@ def main():
     parser.add_argument("--compare-rope", action="store_true", help="Paired ABBA/BAAB old/fixed RoPE in one resident runtime")
     parser.add_argument("--compare-dspark", action="store_true", help="Paired ABBA/BAAB reference/GPU DSpark prediction and acceptance")
     args = parser.parse_args()
+    if bool(args.draft_folder) != bool(args.draft_weight):
+        parser.error("--draft-folder and --draft-weight must be supplied together")
+    if args.draft_folder and args.method not in ("dflash2", "dspark"):
+        parser.error("Draft weight overrides require DFlash2 or DSpark")
     if jobs := other_gpu_jobs():
         raise RuntimeError(f"Other Python jobs have GPU contexts: {jobs}")
     if args.compare_rope and (args.method != "dflash2" or args.legacy_draft_rope):
@@ -79,7 +89,24 @@ def main():
         from shared.prompt_enhancer import block_draft
         block_draft._load_draft_config = lambda path: Qwen3Config.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
     args.output.mkdir(parents=True, exist_ok=True)
+    int8_backend.configure(args.int8_kernels)
+    kernel_policy.configure("fast")
     files_locator.set_checkpoints_paths([str(args.checkpoint.parent.parent), str(args.checkpoints_root), "ckpts", "."])
+    if args.draft_folder:
+        from mmgp import quant_router
+        from shared.prompt_enhancer import block_draft
+
+        quant_router.register_handler("shared.qtypes.int8_convrot")
+        folder = args.draft_folder.resolve()
+        draft_path = folder / args.draft_weight
+        if not (folder / args.draft_config).is_file() or not draft_path.is_file():
+            parser.error(f"Missing draft config or weights in {folder}")
+        keys = ("dflash2", "dflash2_bonsai") if args.method == "dflash2" else ("dspark",)
+        for key in keys:
+            block_draft.BLOCK_DRAFT_ASSETS[key] = {
+                **block_draft.BLOCK_DRAFT_ASSETS[key], "folder": str(folder), "config": args.draft_config,
+                "weights": args.draft_weight,
+            }
     dtype = get_gguf_compute_dtype()
     drafts = args.drafts if args.drafts is not None else dict(disabled=0, mtp=2, dflash2=7, dspark=7)[args.method]
     if args.compare_drafts:
@@ -99,6 +126,8 @@ def main():
     binary = Path(llamacpp_gguf_cuda._C.__file__)
     report = dict(argv=sys.argv, torch=torch.__version__, gpu=torch.cuda.get_device_name(0), checkpoint=str(args.checkpoint),
         binary=str(binary), binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(), drafts=drafts, method=args.method,
+        draft_checkpoint=str(args.draft_folder / args.draft_weight) if args.draft_folder else None,
+        int8_backend=int8_backend._backend, kernel_precision=kernel_policy.precision,
         compared_drafts=args.compare_drafts,
         sampling=dict(temperature=.6, top_k=20, top_p=.95, min_p=model._prompt_enhancer_default_min_p,
                       repetition_penalty=1.05, seed=123), records=[], completed=False)

@@ -1,4 +1,7 @@
 #include "gpu_compat.h"
+#if !defined(GGML_USE_HIP)
+#include "short_batch_mma.h"
+#endif
 #include "gguf_llamacpp_ops.h"
 
 #ifdef small
@@ -777,6 +780,13 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
 
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
     const int64_t padded_row = GGML_PAD(in_features, MATRIX_ROW_PADDING);
+#if !defined(GGML_USE_HIP)
+    if ((type == GGML_TYPE_Q4_K || type == GGML_TYPE_PTQ1_0) && short_batch_mma_selected(cc, type == GGML_TYPE_PTQ1_0, batch_rows, out_features, in_features)) {
+        // Short speculative batches: coalesced tile staging and INT8 tensor cores.
+        short_batch_mma_linear(raw_weight, type == GGML_TYPE_PTQ1_0, out_features, in_features, input, silu_mul, output);
+        return output;
+    }
+#endif
     // PTQ1 MMQ consumes two 128-value blocks per K iteration. Odd block
     // counts use bounded MMVQ batches, avoiding reads into the next row.
     const int64_t ptq_step = turing_mma_available(cc) ? 7 : 1;

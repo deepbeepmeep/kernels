@@ -39,8 +39,15 @@ def main():
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--draft", type=int, choices=range(9))
     parser.add_argument("--method", choices=("mtp", "dspark", "dflash2"), default="mtp")
+    parser.add_argument("--int8-kernels", default="auto", help="INT8 kernel backend for DSpark/DFlash2 drafters, as the WanGP int8_kernels setting (auto, triton, kitchen, pytorch).")
     parser.add_argument("--confidence", type=float, default=0.30)
     parser.add_argument("--greedy", action="store_true")
+    parser.add_argument("--top-k", type=int, default=20, help="0 disables top-k; the Qwen runtime default is 20.")
+    parser.add_argument("--top-p", type=float, default=.95)
+    parser.add_argument("--temperature", type=float, default=.6)
+    parser.add_argument("--reference-sampling", action="store_true", help="Use the established per-draft sampler instead of GPU block acceptance.")
+    parser.add_argument("--ab-sampling", action="store_true", help="Run every prompt with the reference and GPU samplers in alternating order.")
+    parser.add_argument("--deepy-action", action="store_true", help="Decode through Deepy's thought-action path and its logits processors.")
     parser.add_argument("--profile", choices=["decode", "prefill"])
     parser.add_argument("--no-stage-profile", action="store_true", help="Measure ordinary decode throughput without per-stage profiling events.")
     parser.add_argument("--no-memory-poll", action="store_true", help="Measure throughput separately from background CUDA driver memory sampling.")
@@ -92,7 +99,13 @@ def main():
         spec = importlib.util.spec_from_file_location("candidate._C", args.kernel_library)
         candidate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(candidate)
+        # CPython returns the already imported extension object: use a separate process and PYTHONPATH instead.
+        if candidate is llamacpp_gguf_cuda._C:
+            parser.error("--kernel-library cannot replace an imported _C; put a package copy with the candidate first on PYTHONPATH.")
         llamacpp_gguf_cuda._C = candidate
+    from shared.kernels import int8_backend
+    # WanGP configures INT8 kernels at startup; without this, INT8 drafters dequantize every call.
+    int8_backend.configure(args.int8_kernels)
     import llamacpp_gguf_cuda
     from shared.llm_engines.nanovllm.layers import attention
     properties = torch.cuda.get_device_properties(0)
@@ -101,11 +114,11 @@ def main():
                     gpu=properties.name, compute_capability=[properties.major, properties.minor], multiprocessors=properties.multi_processor_count,
                     kernel_package_version=llamacpp_gguf_cuda.__version__, kernel_binary=str(binary), kernel_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
                     checkpoint=str(args.assets / args.checkpoint), variant=args.variant, context_capacity=32768, kv_cache="Q8 with FP16 scales per 32 values",
-                    sampling=dict(temperature=.6, top_p=.95, top_k=20, min_p=.05, repetition_penalty=1.05, seed=123),
+                    deepy_action=args.deepy_action, reference_sampling=args.reference_sampling, sampling=dict(temperature=args.temperature, top_p=args.top_p, top_k=args.top_k, min_p=.05, repetition_penalty=1.05, seed=123),
                     warmup_context=max(args.contexts), requested_draft_tokens=args.draft, speculative_method=args.method, prism_projection_fusions=not args.unfused_prism,
                     prism_grouped_gdn=not (args.unfused_prism or args.prism_tiled_gdn),
                     prism_gdn_decode_fused=not (args.unfused_prism or args.prism_tiled_gdn or args.prism_reference_gdn),
-                    sm120_backend=getattr(attention._SM120_Q8, "__file__", None), cuda_fusions=args.cuda_fusions, gdn_direct_layout=not args.gdn_materialized_layout, driver_memory_poll=not args.no_memory_poll)
+                    sm120_backend=getattr(attention._SM120_Q8, "__file__", None), int8_backend=int8_backend._backend, cuda_fusions=args.cuda_fusions, gdn_direct_layout=not args.gdn_materialized_layout, driver_memory_poll=not args.no_memory_poll)
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     checkpoint = args.assets / args.checkpoint
     dtype = get_gguf_compute_dtype()
@@ -147,19 +160,29 @@ def main():
 
     def decode(tokens):
         start_tokens = runtime._get_active_sequence().num_tokens
-        return runtime.generate_segment(max_new_tokens=tokens, seed=123, do_sample=not args.greedy, temperature=0.6, top_p=0.95, top_k=20, thinking_enabled=True, stop_requested=lambda: runtime._get_active_sequence().num_tokens - start_tokens >= tokens)
+        stop = lambda: runtime._get_active_sequence().num_tokens - start_tokens >= tokens
+        runner = runtime._get_live_llm().model_runner
+        runner._disable_mtp_gpu_acceptance = runner._disable_mtp_gpu_draft = reference_sampling[0]
+        if args.deepy_action:
+            return runtime.generate_action("thought", seed=123, do_sample=not args.greedy, temperature=args.temperature, top_p=args.top_p, top_k=args.top_k, thinking_enabled=True, stop_requested=stop)
+        return runtime.generate_segment(max_new_tokens=tokens, seed=123, do_sample=not args.greedy, temperature=args.temperature, top_p=args.top_p, top_k=args.top_k, thinking_enabled=True, stop_requested=lambda: runtime._get_active_sequence().num_tokens - start_tokens >= tokens)
 
     records = []
+    reference_sampling = [args.reference_sampling]
     try:
         with torch.inference_mode():
             # Warm the prefix kernel and final partial prefill chunk as well as
             # the decode graphs, so first-use compilation is outside timings.
-            runtime.prime_context(prompt(max(args.contexts), 0), seed=123)
-            decode(64)
+            for arm in (True, False) if args.ab_sampling else (args.reference_sampling,):
+                reference_sampling[0] = arm
+                runtime.prime_context(prompt(max(args.contexts), 0), seed=123)
+                decode(64)
             torch.cuda.synchronize()
             print(f"WARMUP_SECONDS={time.perf_counter() - started:.3f}", flush=True)
+            arms = [(repeat, arm) for repeat in range(args.repeats) for arm in ((repeat % 2 == 0, repeat % 2 == 1) if args.ab_sampling else (args.reference_sampling,))]
             for context in args.contexts:
-                for repeat in range(args.repeats):
+                for repeat, arm in arms:
+                    reference_sampling[0] = arm
                     ids = prompt(context, repeat)
                     (args.output / f"prompt_{context}_{repeat}.json").write_text(json.dumps(ids), encoding="utf-8")
                     (args.output / f"prompt_{context}_{repeat}.txt").write_text(tokenizer.decode(ids), encoding="utf-8")
@@ -178,10 +201,10 @@ def main():
                     elapsed = time.perf_counter() - start
                     stages = runner.mtp_stage_profile_samples()
                     runner.set_mtp_stage_profile_enabled(False)
-                    record = dict(context_tokens=len(ids), repeat=repeat, generated_tokens=result.token_count, stop_reason=result.stop_reason,
+                    record = dict(context_tokens=len(ids), repeat=repeat, reference_sampling=arm, generated_tokens=result.token_count, stop_reason=result.stop_reason,
                                   prefill_seconds=prefill, prefill_tps=len(ids) / prefill, decode_seconds=elapsed, decode_tps=result.token_count / elapsed,
                                   draft=args.draft, confidence=args.confidence, greedy=args.greedy, speculative_stats=runner.speculative_stats,
-                                  peak_vram_gib=torch.cuda.max_memory_allocated() / 2**30, prompt_sha256=hashlib.sha256(bytes(json.dumps(ids), "utf-8")).hexdigest(), stages=stages)
+                                  peak_vram_gib=torch.cuda.max_memory_allocated() / 2**30, gpu_acceptance_rounds=sum(getattr(runner, f"_{m}_gpu_acceptance_rounds", 0) for m in ("mtp", "dflash", "dspark")), acceptance_fallbacks=sum(getattr(runner, f"_{m}_acceptance_fallbacks", 0) for m in ("mtp", "dflash", "dspark")), prompt_sha256=hashlib.sha256(bytes(json.dumps(ids), "utf-8")).hexdigest(), stages=stages)
                     if args.draft > 0:
                         sequence = runtime._get_active_sequence()
                         record["alignment"] = runner.speculative_telemetry(sequence.seq_id, sequence.num_tokens)
@@ -190,8 +213,8 @@ def main():
                     record.update(allocated_vram_gib=torch.cuda.memory_allocated() / 2**30, reserved_vram_gib=torch.cuda.memory_reserved() / 2**30, peak_reserved_vram_gib=torch.cuda.max_memory_reserved() / 2**30, sampled_device_used_peak_gib=None if args.no_memory_poll else driver_peak[0] / 2**30)
                     print("RESULT=" + json.dumps({k: v for k, v in record.items() if k != "stages"}), flush=True)
                     (args.output / "results.json").write_text(json.dumps(records, indent=2), encoding="utf-8")
-                    (args.output / f"completion_{context}_{repeat}.txt").write_text(result.raw_text, encoding="utf-8")
-                    if repeat == 0:
+                    (args.output / f"completion_{context}_{repeat}{'_ref' if arm else ''}.txt").write_text(result.raw_text, encoding="utf-8")
+                    if repeat == 0 and not arm:
                         segments = torch.cuda.memory_snapshot()
                         pools = {}
                         for segment in segments:
