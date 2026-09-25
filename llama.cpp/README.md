@@ -1,4 +1,8 @@
-# llamacpp-gguf-cuda 1.0.24
+# llamacpp-gguf-cuda 1.0.25
+
+## 1.0.25 additions: faster PTQ1_0 short-batch path
+
+The PTQ1_0 (Bonsai ternary) tensor-core path for 2-8 activation rows is instruction-bound, so 1.0.25 removes per-trit work: the tensor cores take the raw base-3 digits {0, 1, 2} and the exact integer activation sum of each 32-value block is subtracted afterwards; each thread extracts only the shared-byte digits its fragments use; and PTQ1_0 activations are quantized in fragment order, so each thread reads its activations and scales with 16-byte loads. Outputs are bit-identical to 1.0.24. On an RTX 5090, PTQ1_0 verification linears take 28% less time and Bonsai speculative decoding runs about 15% faster; Q4_K and all other paths are unchanged.
 
 ## 1.0.24 additions: short-batch tensor-core linear
 
@@ -18,7 +22,7 @@ Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 fo
 
 `prism_hadamard(input, signs, inverse=False, grouped_shape=(0, 0, 0))` applies normalized 1024-wide signed Sylvester transforms with FP32 accumulation. It supports forward/inverse transforms, the Prism GDN head permutation, FP16/BF16/FP32 inputs, PyTorch streams and CUDA graph capture. Signs are caller-owned tensors; the kernel retains no model weights or graph buffers. WanGP also needs its matching Prism GGUF metadata/loader integration: decoding ternary bytes alone does not correctly run a folded checkpoint.
 
-The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.24/README.md` for the final build and validation records.
+The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.25/README.md` for the final build and validation records.
 
 The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. The current WanGP overlay enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
 
@@ -29,7 +33,7 @@ Validation scripts: `tests/test_quant_compatibility.py` compares saved old-forma
 The maintained kernels also have a HIP build covering the local GGUF/PTQ1,
 Prism and paged-attention changes. See [HIP.md](HIP.md) for the isolated Windows
 build, hardware validation command and current limitations. The gfx1201 wheel
-has been compiled and imported (1.0.24; the short-batch tensor-core path is CUDA-only); AMD inference has not yet been hardware-validated.
+has been compiled and imported (1.0.25; the short-batch tensor-core path is CUDA-only); AMD inference has not yet been hardware-validated.
 
 ## What is included
 

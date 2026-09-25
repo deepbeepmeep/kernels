@@ -1,12 +1,12 @@
 {
-  "wangp_base_commit": "2345ae148f82740f66e82c41292dbbdd592e713d",
+  "wangp_base_commit": "f025f33f34cc368bfa26ec9412adbbfc83c8ebb9",
   "wangp_working_tree": "uncommitted changes on top of the base commit, captured 2026-09-25",
-  "release": "1.0.24",
+  "release": "1.0.25",
   "files": [
     {
       "path": "README.md",
-      "sha256": "fa92e70cbc2a7396bd9d804020b4667c530d3b9614cbcc1f24da8970a262ff1d",
-      "bytes": 1322
+      "sha256": "aa136987983cf31672b618e7b81bf642a6c92b7b1a291061fead7ef07ba6c20c",
+      "bytes": 1575
     },
     {
       "path": "docs/BONSAI_PTQ1.md",
@@ -380,8 +380,8 @@
     },
     {
       "path": "shared/qtypes/gguf.py",
-      "sha256": "2da8d3941f00d70299ea8ac709f55778a7bb4a6fdfb9e741dc408268c9efe974",
-      "bytes": 87804
+      "sha256": "13012198c2a00a2518841bce8915be5cc9af7c71f61ffd4e3c1997ea5b808a22",
+      "bytes": 87895
     },
     {
       "path": "shared/qtypes/int8_convrot.py",
@@ -477,6 +477,11 @@
       "path": "specs/RTX50_SHORT_BATCH_GEMM_20260925.md",
       "sha256": "02f42328a32f61319e12240ee59d3ed2e7223449706f5362535f7c68627c7899",
       "bytes": 7332
+    },
+    {
+      "path": "specs/SHORT_BATCH_TUNING_ATTEMPT_20260925.md",
+      "sha256": "085f4b7822e127373f9a9cdb42fb121ff9c25cfb6bcd194bbcce8e76d4a578b2",
+      "bytes": 5340
     },
     {
       "path": "specs/benchmarks/dflash2_dspark_2026-09-22.json",
@@ -600,8 +605,8 @@
     },
     {
       "path": "tests/test_qwen_cuda_fusion_modes.py",
-      "sha256": "234349e45fba1f4e4032be6ce0635b23a4001f4ff964b60d1a298df2459f50df",
-      "bytes": 9707
+      "sha256": "bdb549800b5638c3c306b72692d759eb5d7141cdd804f1d311cbda7e25a5ab91",
+      "bytes": 11097
     },
     {
       "path": "tests/test_speculative_state.py",

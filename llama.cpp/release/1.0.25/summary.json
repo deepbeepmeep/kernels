@@ -1,0 +1,292 @@
+{
+  "release": "gguf-v1.0.25",
+  "hardware": "NVIDIA GeForce RTX 5090 (SM120)",
+  "stacks": {
+    "win_py310": {
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.25+torch271cu128py310-cp310-cp310-win_amd64.whl",
+      "bytes": 242376132,
+      "sha256": "f726609f3a8ec43d9034c208d594ee783aab8a0d017d0b80bbf357f551797d33",
+      "sass_per_extension": {
+        "_attention.cp310-win_amd64.pyd": 17,
+        "_C.cp310-win_amd64.pyd": 17,
+        "_prism.cp310-win_amd64.pyd": 17
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 18.56300000000192
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 6.76600000000326
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 30.968999999997322
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 27.43699999999808
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 7.25
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 15.359000000004016
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 6.485000000000582
+        }
+      ],
+      "short_batch_exactness": "259 PTQ1_0/Q4_K short-batch outputs (1-9 rows, BF16/FP16/FP32, typed, fused SiLU) bit-identical to 1.0.24",
+      "wangp_short_batch_tests": "27 passed in 27.16s"
+    },
+    "win_py311": {
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.25+torch210cu130py311-cp311-cp311-win_amd64.whl",
+      "bytes": 153515584,
+      "sha256": "74e280baac174c128c9b29627fa756c14c865cdda8bff118a90e42cca3803ada",
+      "sass_per_extension": {
+        "_attention.cp311-win_amd64.pyd": 12,
+        "_C.cp311-win_amd64.pyd": 12,
+        "_prism.cp311-win_amd64.pyd": 12
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 11.76600000000326
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 13.75
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 19.531000000002678
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 7.421999999998661
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.390999999995984
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 3.1560000000026776
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 4.563000000001921
+        }
+      ],
+      "short_batch_exactness": "259 PTQ1_0/Q4_K short-batch outputs (1-9 rows, BF16/FP16/FP32, typed, fused SiLU) bit-identical to 1.0.24",
+      "wangp_short_batch_tests": "27 passed in 24.44s"
+    },
+    "linux_py310": {
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.25+torch271cu128py310-cp310-cp310-linux_x86_64.whl",
+      "bytes": 244437591,
+      "sha256": "be79df12b6151371300032861af28d7bfe1e0024b04f34e5240d03b4451c5829",
+      "sass_per_extension": {
+        "_C.cpython-310-x86_64-linux-gnu.so": 17,
+        "_attention.cpython-310-x86_64-linux-gnu.so": 17,
+        "_prism.cpython-310-x86_64-linux-gnu.so": 17
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 7.164286998999998
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 6.841056335000005
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 22.944957485000003
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 8.664804680000017
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.326135997000023
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 9.786119686000006
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 2.4585029209999902
+        }
+      ],
+      "short_batch_exactness": "259 PTQ1_0/Q4_K short-batch outputs (1-9 rows, BF16/FP16/FP32, typed, fused SiLU) bit-identical to 1.0.24",
+      "wangp_short_batch_tests": "27 passed in 12.68s"
+    },
+    "linux_py311": {
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "wheel": "llamacpp_gguf_cuda-1.0.25+torch210cu130py311-cp311-cp311-linux_x86_64.whl",
+      "bytes": 155882908,
+      "sha256": "726938c8d09300c9846b80b532772b99f875528e6150b37a12c5929bf062a1b5",
+      "sass_per_extension": {
+        "_C.cpython-311-x86_64-linux-gnu.so": 12,
+        "_attention.cpython-311-x86_64-linux-gnu.so": 12,
+        "_prism.cpython-311-x86_64-linux-gnu.so": 12
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 11.699392997
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 2.2322501430000017
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 17.415328274999997
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 4.0271347460000015
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 2.2656013779999995
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 2.6704369380000017
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 2.8911256299999977
+        }
+      ],
+      "short_batch_exactness": "259 PTQ1_0/Q4_K short-batch outputs (1-9 rows, BF16/FP16/FP32, typed, fused SiLU) bit-identical to 1.0.24",
+      "wangp_short_batch_tests": "27 passed in 10.40s"
+    },
+    "win_hip_py311": {
+      "wheel": "llamacpp_gguf_cuda-1.0.25+torch210rocm714py311-cp311-cp311-win_amd64.whl",
+      "bytes": 5195405,
+      "sha256": "b58bf0ac3bdcb7e3de375052d93a637072cdef23d63cc9294310cc4cd5537de4",
+      "torch": "2.10.0+rocm7.14.0",
+      "hip": "7.14.60850",
+      "architectures": [
+        "gfx1201"
+      ],
+      "relabelled_from": "llamacpp_gguf_cuda-1.0.24+torch210rocm714py311-cp311-cp311-win_amd64.whl: the HIP build does not compile short_batch_mma.cu, the only changed source, so its native binaries are unchanged",
+      "short_batch_tensor_cores": "not compiled for HIP; has_short_batch_policy() is False",
+      "checks": [
+        "1.0.24 HIP: compiled with build_hip.ps1; all three extensions import under ROCm PyTorch 2.10.0"
+      ],
+      "hardware_validation": "none: no AMD GPU on the build machine"
+    }
+  }
+}
