@@ -99,14 +99,15 @@ def test_other_architectures_dimensions_and_old_triton_keep_shared_kernels(monke
 
 @torch.inference_mode()
 def test_one_prefill_and_eight_grouped_variants_cover_length_ranges(monkeypatch):
-    hashes = {"q8_prefill_async_kernel": set(), "q8_grouped_async_kernel": set()}
+    hashes = {"q8_prefill_exact_kernel": set(), "q8_grouped_async_kernel": set()}
     for name in hashes:
-        kernel = getattr(sm120, name)
+        kernel = getattr(sm120 if name == "q8_grouped_async_kernel" else attention, name)
         original = kernel.run
         def run(*args, _original=original, _name=name, **kwargs):
             compiled = _original(*args, **kwargs)
             hashes[_name].add(compiled.hash)
-            assert re.search(r"cp\.async\.(ca|cg)\.shared\.global", compiled.asm["ptx"])
+            if _name == "q8_grouped_async_kernel":
+                assert re.search(r"cp\.async\.(ca|cg)\.shared\.global", compiled.asm["ptx"])
             assert "cp.async.bulk.tensor" not in compiled.asm["ptx"]
             return compiled
         monkeypatch.setattr(kernel, "run", run)
@@ -121,7 +122,7 @@ def test_one_prefill_and_eight_grouped_variants_cover_length_ranges(monkeypatch)
             actual = attention._q8_grouped_attention(*args)
             expected = _shared(monkeypatch, attention._q8_grouped_attention, *args)
             torch.testing.assert_close(actual, expected, atol=0, rtol=0)
-    assert len(hashes["q8_prefill_async_kernel"]) == 1
+    assert len(hashes["q8_prefill_exact_kernel"]) == 1
     assert 1 <= len(hashes["q8_grouped_async_kernel"]) <= 8
 
 

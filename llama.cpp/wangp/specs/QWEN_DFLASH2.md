@@ -1,5 +1,7 @@
 # Qwen3.8 DFlash2 — 2026-09-20
 
+Update 2026-09-23: this BF16 preparation and publication status is historical. The active INT8 ConvRot drafter is now in `DeepBeepMeep/Wan2.1/Qwen3_8_27B_Uncensored/`; the old remote BF16 folder was retired. See [the ConvRot migration and validation](BLOCK_DRAFT_CONVROT_20260923.md).
+
 Follow-up 2026-09-22: the original measurements below used an incorrect draft
 RoPE configuration on Transformers 4.54.0. See
 [the configuration correction and controlled remeasurements](DFLASH2_ROPE_AND_DRAFT_COUNTS.md).

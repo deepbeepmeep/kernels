@@ -1,6 +1,9 @@
 #include <torch/extension.h>
 
 #include "gguf_llamacpp_ops.h"
+#if !defined(GGML_USE_HIP)
+#include "short_batch_mma.h"
+#endif
 
 #include <pybind11/stl.h>
 
@@ -29,4 +32,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         pybind11::arg("silu_mul") = false
     );
     m.def("embedding", &gguf_cuda_embedding, "GGUF embedding lookup using CUDA row dequantization.");
+#if !defined(GGML_USE_HIP)
+    m.def("set_short_batch_mode", &short_batch_set_mode, "Short-batch Q4_K/PTQ1_0 tensor-core policy: auto, native or mma.");
+    m.def("short_batch_mode", &short_batch_mode, "Current short-batch tensor-core policy.");
+    m.def("set_short_batch_decision", &short_batch_set_decision, "Enable or disable the tensor-core path for one (qtype, rows, out, in) shape under the auto policy.");
+    m.def("clear_short_batch_decisions", &short_batch_clear_decisions, "Forget per-shape short-batch decisions.");
+#endif
 }

@@ -18,6 +18,9 @@ _LINEAR_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_LINEAR_MODE"
 _MATMUL_MODE_ENV = "WGP_GGUF_LLAMACPP_CUDA_MATMUL_MODE"
 _FAST_LINEAR_QTYPES = {"PTQ1_0", "Q2_K", "Q3_K", "Q4_0", "Q4_1", "Q4_K", "Q5_0", "Q5_1", "Q5_K", "Q6_K", "Q8_0", "IQ1_S", "IQ2_S", "IQ2_XS", "IQ2_XXS", "IQ3_S", "IQ3_XXS", "IQ4_NL", "IQ4_XS"}
 _FAST_EMBEDDING_QTYPES = {"PTQ1_0", "Q4_K", "Q6_K"}
+_SHORT_BATCH_ENV = "LLAMACPP_GGUF_SHORT_BATCH"
+_SHORT_BATCH_MODES = ("auto", "native", "mma")
+_SHORT_BATCH_QTYPES = ("Q4_K", "PTQ1_0")
 _LOGGED = set()
 _BACKEND = "HIP" if torch.version.hip is not None else "CUDA"
 
@@ -43,6 +46,13 @@ try:
     from . import _attention
 except ImportError:
     _attention = None
+
+if hasattr(_C, "set_short_batch_mode"):
+    _short_batch_mode = str(os.environ.get(_SHORT_BATCH_ENV, "auto")).strip().lower() or "auto"
+    if _short_batch_mode not in _SHORT_BATCH_MODES:
+        print(f"[GGUF] Ignoring {_SHORT_BATCH_ENV}={_short_batch_mode!r}; expected auto, native or mma.")
+        _short_batch_mode = "auto"
+    _C.set_short_batch_mode(_short_batch_mode)
 
 if torch.version.hip is None and _attention is not None and hasattr(_attention, "load_sm120_kernel"):
     from . import sm120
@@ -144,6 +154,34 @@ def supports_linear_fusions(qtype_name, tokens, device):
             and bool(_C.supports_linear_fusions(qtype_name, tokens, device)))
 
 
+def has_short_batch_policy() -> bool:
+    """Whether this build has the 2-8 row Q4_K/PTQ1_0 tensor-core path and its policy controls."""
+    return hasattr(_C, "set_short_batch_mode")
+
+
+def set_short_batch_mode(mode: str) -> None:
+    """auto: per-shape decisions, else on for compute capability 12.0 only; native: MMVQ; mma: tensor cores (8.0+)."""
+    # Validate here: a native check failure terminates the process on Linux builds instead of raising.
+    if mode not in _SHORT_BATCH_MODES:
+        raise ValueError(f"short-batch mode must be one of {_SHORT_BATCH_MODES}, got {mode!r}")
+    _C.set_short_batch_mode(mode)
+
+
+def short_batch_mode() -> str:
+    return _C.short_batch_mode()
+
+
+def set_short_batch_decision(qtype_name: str, rows: int, out_features: int, in_features: int, enabled: bool) -> None:
+    """Record a measured choice for one shape; applies under the auto policy. Set before CUDA graph capture."""
+    if qtype_name not in _SHORT_BATCH_QTYPES:
+        raise ValueError(f"short-batch tensor-core decisions apply to {_SHORT_BATCH_QTYPES}, got {qtype_name!r}")
+    _C.set_short_batch_decision(qtype_name, int(rows), int(out_features), int(in_features), bool(enabled))
+
+
+def clear_short_batch_decisions() -> None:
+    _C.clear_short_batch_decisions()
+
+
 def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype, *, fused_output=False, silu_mul=False):
     if fused_output or silu_mul:
         return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), _linear_mode(), fused_output, silu_mul)
@@ -172,4 +210,5 @@ __all__ = [
     "__version__", "embedding", "linear", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
     "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits", "dense_paged_attention",
     "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name", "supports_linear_fusions",
+    "has_short_batch_policy", "set_short_batch_mode", "short_batch_mode", "set_short_batch_decision", "clear_short_batch_decisions",
 ]

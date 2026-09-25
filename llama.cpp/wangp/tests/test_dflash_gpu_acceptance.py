@@ -23,6 +23,36 @@ def test_batched_distribution_matches_reference_or_flags_ambiguous_ties(device, 
             torch.testing.assert_close(probabilities[i], expected, atol=2e-7, rtol=2e-6)
 
 
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+@pytest.mark.parametrize("dtype", [torch.float32, torch.bfloat16])
+@pytest.mark.parametrize("top_p,min_p", [(.9, None), (.9, .05), (.95, .05), (None, .05), (.5, .2)])
+def test_unbounded_top_k_matches_full_vocabulary_reference(device, dtype, top_p, min_p):
+    if device == "cuda" and not torch.cuda.is_available():
+        pytest.skip("CUDA unavailable")
+    generator = torch.Generator(device=device).manual_seed(246)
+    # Peaked rows fit the fixed capacity; flat rows overflow it.
+    scales = torch.tensor([.3, 1., 2., 4., 8., 16.], device=device).repeat_interleave(8)[:, None]
+    logits = (torch.randn((48, 8192), generator=generator, device=device) * scales).to(dtype)
+    probabilities, unsafe = target_probabilities(logits, None, top_p, min_p, .6)
+    for i in range(len(logits)):
+        if not unsafe[i]:
+            expected = _reference_distribution(logits[i].float() / .6, None, top_p, min_p)
+            torch.testing.assert_close(probabilities[i], expected, atol=2e-7, rtol=2e-6)
+    assert 0 < int(unsafe.sum()) < len(logits)
+
+
+@pytest.mark.parametrize("top_p,min_p", [(.9, None), (.9, .05), (None, .05)])
+def test_unbounded_top_k_flags_support_beyond_capacity(top_p, min_p):
+    from shared.llm_engines.nanovllm.engine.dflash_sampling import NUCLEUS_CAPACITY
+    logits = torch.full((2, 4 * NUCLEUS_CAPACITY), -30.)
+    # Row 0: twice the capacity shares the mass nearly equally; row 1 is peaked.
+    logits[0, :2 * NUCLEUS_CAPACITY] = torch.linspace(0, -1e-3, 2 * NUCLEUS_CAPACITY)
+    logits[1, :3] = torch.tensor([5., 4., 3.])
+    probabilities, unsafe = target_probabilities(logits, None, top_p, min_p, .6)
+    assert unsafe.tolist() == [True, False]
+    torch.testing.assert_close(probabilities[1], _reference_distribution(logits[1] / .6, None, top_p, min_p), atol=2e-7, rtol=2e-6)
+
+
 def test_top_k_support_overflow_is_not_silently_truncated():
     _, unsafe = target_probabilities(torch.ones((2, 257)), 20, .95, .05, .6)
     assert unsafe.all()
@@ -137,7 +167,7 @@ def test_warm_block_has_no_scalar_reads_or_dynamic_candidate_selection(method):
     runner._logits_bias_cache = {}
     runner._repetition_token_cache = {}
     runner._sampling_generator = torch.Generator(device="cuda").manual_seed(5)
-    runner._dflash_valid_length = torch.tensor(3, device="cuda")
+    runner._draft_valid_length = torch.tensor(3, device="cuda")
     runner.speculative_stats = dict(drafted=0, accepted=0, drafted_by_position=[0]*3, accepted_by_position=[0]*3)
     seq = Sequence([1, 2], SamplingParams(temperature=.6, top_k=1 if method == "dspark" else 20, top_p=.95, min_p=.05, repetition_penalty=1.05))
     seq.append_token(4)
@@ -173,7 +203,7 @@ def test_warm_block_has_no_scalar_reads_or_dynamic_candidate_selection(method):
         assert not runner._speculative_acceptance_graphs
     elif method == "dflash":
         # No valid proposals still emits one exact target sample, using row zero.
-        runner._dflash_valid_length.zero_()
+        runner._draft_valid_length.zero_()
         emitted, accepted = runner._sample_verified_block(seq, logits, drafts, q, None)
         assert len(emitted) == 1 and accepted == 0
 
@@ -209,13 +239,15 @@ def test_varying_confidence_lengths_do_not_recapture_warm_graphs(monkeypatch):
         assert 1 <= len(emitted) <= length + 1
 
 
-@pytest.mark.parametrize("triton,eager,top_k,allowed", [(False, False, 20, False), (True, True, 20, False),
-                                                        (True, False, 0, False), (True, False, 129, False),
-                                                        (True, False, 20, True)])
-def test_shared_acceptance_backend_and_support_guard(triton, eager, top_k, allowed):
+@pytest.mark.parametrize("triton,eager,top_k,top_p,min_p,allowed", [(False, False, 20, None, None, False), (True, True, 20, None, None, False),
+                                                                    (True, False, 0, None, None, False), (True, False, 129, None, None, False),
+                                                                    (True, False, 20, None, None, True), (True, False, None, .9, None, True),
+                                                                    (True, False, None, None, .05, True), (True, False, None, None, None, False),
+                                                                    (True, False, None, 1., 0., False)])
+def test_shared_acceptance_backend_and_support_guard(triton, eager, top_k, top_p, min_p, allowed):
     from shared.llm_engines.nanovllm.engine.speculative_sampling import can_batch_acceptance
     runner = SimpleNamespace(use_triton_sampling=triton, enforce_eager=eager)
-    seq = SimpleNamespace(top_k=top_k, logits_processor=None, logits_processor_update_state=None)
+    seq = SimpleNamespace(top_k=top_k, top_p=top_p, min_p=min_p, logits_processor=None, logits_processor_update_state=None)
     assert can_batch_acceptance(runner, seq) == allowed
     seq.logits_processor = lambda ids, scores: scores
     assert not can_batch_acceptance(runner, seq)
@@ -240,3 +272,19 @@ def test_native_draft_filter_reuses_graph_without_sync_and_retains_each_q():
     torch.testing.assert_close(first, expected)
     assert second.isfinite().all()
     torch.testing.assert_close(second.sum(), torch.ones((), device="cuda"))
+
+
+@pytest.mark.parametrize("phase,penalty_mode,batched", [("thought", "repetition", True), ("tool", "repetition", True), ("thought", "presence", False)])
+def test_deepy_action_processors_expose_gpu_acceptance_rules(phase, penalty_mode, batched):
+    from shared.llm_engines.nanovllm.engine.speculative_sampling import can_batch_acceptance
+    from shared.prompt_enhancer.qwen35_assistant_runtime import Qwen35AssistantRuntime
+    model = SimpleNamespace(_prompt_enhancer_penalty_mode=penalty_mode, _prompt_enhancer_close_think_token_id=7, _prompt_enhancer_stop_token_ids=(3, 7, 9))
+    runtime = SimpleNamespace(model=model, _assistant_presence_state=None)
+    seq = SimpleNamespace(top_k=20, top_p=.9, min_p=.05)
+    Qwen35AssistantRuntime._install_action_processors(runtime, seq, phase, 100, continuing_response=False)
+    assert can_batch_acceptance(SimpleNamespace(use_triton_sampling=True, enforce_eager=False), seq) == batched
+    if phase == "thought" and batched:
+        seq.logits_processor_update_state(5)
+        rules = seq.logits_processor._speculative_batch_rules()
+        assert rules == {"suppressed": (), "thinking_stops": rules["thinking_stops"], "thinking": (7, 99, 1)}
+        assert sorted(rules["thinking_stops"]) == [3, 9]

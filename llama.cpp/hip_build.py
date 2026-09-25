@@ -55,7 +55,7 @@ def build_hip():
     }
     extensions = [Extension('llamacpp_gguf_cuda.' + name, sources=[source(s) for s in files], include_dirs=includes, library_dirs=library_paths(device_type='cuda'), libraries=['c10', 'torch', 'torch_cpu', 'torch_python', 'amdhip64', 'c10_hip', 'torch_hip', 'hipblas'], extra_compile_args={'cxx': ['-O2', '-std=c++17', '-DGGML_USE_HIP'], 'nvcc': list(flags)}, language='c++') for name, files in modules.items()]
     suffix = os.environ.get('LLAMACPP_GGUF_CUDA_VERSION_SUFFIX', '+' + build_tag)
-    version = '1.0.23' + suffix
+    version = '1.0.24' + suffix
 
     class HIPBuildPy(build_py):
         def find_package_modules(self, package, package_dir):
