@@ -1,4 +1,28 @@
-# llamacpp-gguf-cuda 1.0.25
+# llamacpp-gguf-cuda 1.0.26
+
+## 1.0.26 additions: packed logical rows crossing GGUF blocks
+
+The package now owns the packed row kernels previously implemented in WanGP.
+`linear` handles restored matrix rows that cross quantization blocks, including
+MiniMax H3's reference-image vision projections. `supports_linear_layout`
+lets callers check a layout before launching. Q2_K, Q3_K, Q4_K, Q5_K, Q6_K,
+Q4_0, Q4_1, Q5_0, Q5_1 and Q8_0 are supported with FP16/BF16/FP32 outputs.
+Weights stay packed: tiles decode into registers/shared memory, with no dense
+weight allocation and no padding of the matrix. IQ/PTQ1 crossing-row layouts
+remain unsupported; aligned native dispatch and explicit cuBLAS mode are unchanged.
+
+RTX 20 (SM75) uses header-free NVRTC compilation and FP16 WMMA with FP32
+accumulation. BF16's range is preserved inside tiles, including a bounded SIMT
+path for exceptional values. RTX 30/40/50 (SM86/89/120) share a Triton kernel.
+Triton must already be installed for that path; SM75 requires only the NVRTC
+runtime supplied by CUDA PyTorch. First use compiles/tunes kernels; subsequent
+calls reuse caches. Existing cache names are retained to preserve measured
+launch configurations. Hardware measurements use RTX 5090; SM75 assembly and
+dispatch checks do not substitute for timing on RTX 20/30/40 hardware.
+
+All four CUDA wheels reuse the verified 1.0.25 native extensions and bundled
+GPU binaries byte-for-byte. Only Python/source packaging changes; no full CUDA
+rebuild is needed. See `release/1.0.26/README.md` for validation and reproduction.
 
 ## 1.0.25 additions: faster PTQ1_0 short-batch path
 
@@ -22,7 +46,7 @@ Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 fo
 
 `prism_hadamard(input, signs, inverse=False, grouped_shape=(0, 0, 0))` applies normalized 1024-wide signed Sylvester transforms with FP32 accumulation. It supports forward/inverse transforms, the Prism GDN head permutation, FP16/BF16/FP32 inputs, PyTorch streams and CUDA graph capture. Signs are caller-owned tensors; the kernel retains no model weights or graph buffers. WanGP also needs its matching Prism GGUF metadata/loader integration: decoding ternary bytes alone does not correctly run a folded checkpoint.
 
-The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.25/README.md` for the final build and validation records.
+The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.26/README.md` for the final build and validation records.
 
 The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. The current WanGP overlay enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
 
@@ -33,7 +57,7 @@ Validation scripts: `tests/test_quant_compatibility.py` compares saved old-forma
 The maintained kernels also have a HIP build covering the local GGUF/PTQ1,
 Prism and paged-attention changes. See [HIP.md](HIP.md) for the isolated Windows
 build, hardware validation command and current limitations. The gfx1201 wheel
-has been compiled and imported (1.0.25; the short-batch tensor-core path is CUDA-only); AMD inference has not yet been hardware-validated.
+has been compiled and imported (the 1.0.26 HIP wheel is a version-only relabel of 1.0.25; CUDA packed-row additions are not included); AMD inference has not yet been hardware-validated.
 
 ## What is included
 

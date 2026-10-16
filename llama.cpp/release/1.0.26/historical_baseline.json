@@ -1,0 +1,188 @@
+{
+  "hardware": "RTX 5090; forced SM75 path is not RTX 20 hardware timing",
+  "baseline": "Pre-regression WanGP native assertion catch followed by dequantization and F.linear; same real H3 vision weights and images, alternated warm runs.",
+  "provenance": "Measurements preceding the package move; kernel_source_equivalence.json verifies unchanged GPU arithmetic.",
+  "cases": {
+    "portable_q4": {
+      "256": {
+        "fixed": {
+          "median_ms": 64.96010000410024,
+          "peak_mib": 384.97314453125,
+          "reserved_mib": 492.0,
+          "max_output_relative_l2": 0.048831790685653687
+        },
+        "previous": {
+          "median_ms": 155.6038500057184,
+          "peak_mib": 426.24658203125,
+          "reserved_mib": 492.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "512": {
+        "fixed": {
+          "median_ms": 67.17754999408498,
+          "peak_mib": 420.46826171875,
+          "reserved_mib": 512.0,
+          "max_output_relative_l2": 0.07491777837276459
+        },
+        "previous": {
+          "median_ms": 143.96105000196258,
+          "peak_mib": 453.98388671875,
+          "reserved_mib": 512.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "1024": {
+        "fixed": {
+          "median_ms": 137.89660000475124,
+          "peak_mib": 558.56201171875,
+          "reserved_mib": 698.0,
+          "max_output_relative_l2": 0.042783692479133606
+        },
+        "previous": {
+          "median_ms": 278.70394999627024,
+          "peak_mib": 558.56201171875,
+          "reserved_mib": 698.0,
+          "max_output_relative_l2": 0.0
+        }
+      }
+    },
+    "turing_q4_bf16_v6": {
+      "256": {
+        "fixed": {
+          "median_ms": 62.380499999562744,
+          "peak_mib": 384.97314453125,
+          "reserved_mib": 492.0,
+          "max_output_relative_l2": 0.04764894023537636
+        },
+        "previous": {
+          "median_ms": 156.34559999307385,
+          "peak_mib": 426.24658203125,
+          "reserved_mib": 492.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "512": {
+        "fixed": {
+          "median_ms": 71.94344999879831,
+          "peak_mib": 420.46826171875,
+          "reserved_mib": 512.0,
+          "max_output_relative_l2": 0.07245039939880371
+        },
+        "previous": {
+          "median_ms": 168.51494999718852,
+          "peak_mib": 453.98388671875,
+          "reserved_mib": 512.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "1024": {
+        "fixed": {
+          "median_ms": 199.49619999533752,
+          "peak_mib": 558.56201171875,
+          "reserved_mib": 698.0,
+          "max_output_relative_l2": 0.0416099913418293
+        },
+        "previous": {
+          "median_ms": 274.3473499940592,
+          "peak_mib": 558.56201171875,
+          "reserved_mib": 698.0,
+          "max_output_relative_l2": 0.0
+        }
+      }
+    },
+    "turing_q4_fp16": {
+      "256": {
+        "fixed": {
+          "median_ms": 59.32264999864856,
+          "peak_mib": 384.97314453125,
+          "reserved_mib": 492.0,
+          "max_output_relative_l2": 0.026749109849333763
+        },
+        "previous": {
+          "median_ms": 157.5076499939314,
+          "peak_mib": 426.24658203125,
+          "reserved_mib": 492.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "512": {
+        "fixed": {
+          "median_ms": 69.75349999993341,
+          "peak_mib": 420.46826171875,
+          "reserved_mib": 512.0,
+          "max_output_relative_l2": 0.026065072044730186
+        },
+        "previous": {
+          "median_ms": 149.6668000036152,
+          "peak_mib": 453.98388671875,
+          "reserved_mib": 512.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "1024": {
+        "fixed": {
+          "median_ms": 178.97840000659926,
+          "peak_mib": 558.56201171875,
+          "reserved_mib": 698.0,
+          "max_output_relative_l2": 0.02501237578690052
+        },
+        "previous": {
+          "median_ms": 270.2440499997465,
+          "peak_mib": 558.56201171875,
+          "reserved_mib": 698.0,
+          "max_output_relative_l2": 0.0
+        }
+      }
+    },
+    "turing_q2_bf16": {
+      "256": {
+        "fixed": {
+          "median_ms": 63.58784999611089,
+          "peak_mib": 239.8896484375,
+          "reserved_mib": 336.0,
+          "max_output_relative_l2": 0.03733793646097183
+        },
+        "previous": {
+          "median_ms": 123.77140000171494,
+          "peak_mib": 284.06787109375,
+          "reserved_mib": 336.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "512": {
+        "fixed": {
+          "median_ms": 70.28515000274638,
+          "peak_mib": 275.4130859375,
+          "reserved_mib": 356.0,
+          "max_output_relative_l2": 0.030028169974684715
+        },
+        "previous": {
+          "median_ms": 125.12854999658884,
+          "peak_mib": 310.9296875,
+          "reserved_mib": 356.0,
+          "max_output_relative_l2": 0.0
+        }
+      },
+      "1024": {
+        "fixed": {
+          "median_ms": 187.7656999931787,
+          "peak_mib": 413.5068359375,
+          "reserved_mib": 542.0,
+          "max_output_relative_l2": 0.025499649345874786
+        },
+        "previous": {
+          "median_ms": 230.2893999949447,
+          "peak_mib": 415.66943359375,
+          "reserved_mib": 542.0,
+          "max_output_relative_l2": 0.0
+        }
+      }
+    }
+  },
+  "quality": {
+    "captured_sm75_projections": 648,
+    "relative_to_fp32_reference": "Every captured projection had lower error than the old dense path. Whole-vision BF16 outputs improved; FP16 improved for 21/24 outputs, with a maximum 0.000074013 relative-error increase for the other three.",
+    "full_h3_generation": "12 steps, 384x256, 107 frames, same reference/seed. Valid subject-preserving outputs; Triton cat SSIM 0.965158 versus the old working path; forced SM75 cat SSIM 0.926565. These are not bit-identical to the historical dense path."
+  }
+}

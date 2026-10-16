@@ -1,0 +1,28 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.26+torch210rocm714py311-cp311-cp311-win_amd64.whl",
+  "bytes": 5195406,
+  "sha256": "b83b29e167fbc9b06059aee428a29d5c01dd714cad96ef4ecebbf43fe9d0b648",
+  "baseline_wheel": "llamacpp_gguf_cuda-1.0.25+torch210rocm714py311-cp311-cp311-win_amd64.whl",
+  "baseline_sha256": "b58bf0ac3bdcb7e3de375052d93a637072cdef23d63cc9294310cc4cd5537de4",
+  "torch": "2.10.0+rocm7.14.0",
+  "hip": "7.14.60850",
+  "architectures": [
+    "gfx1201"
+  ],
+  "changed_payloads": [
+    "llamacpp_gguf_cuda/version.py: __version__ only",
+    "METADATA: Version only",
+    "dist-info directory and RECORD"
+  ],
+  "unchanged_payload_sha256": {
+    "llamacpp_gguf_cuda/_C.cp311-win_amd64.pyd": "2d4e20a332265de434c1bcbb49ff80c78f081651422a9fb0d72fdc1e7fe3b11a",
+    "llamacpp_gguf_cuda/__init__.py": "09e136ea7ae2c5df2667f72d93697fbadc08732b5b7837a085d8d02e0e2ccd51",
+    "llamacpp_gguf_cuda/_attention.cp311-win_amd64.pyd": "98a6dbe28034d5c88c713adeb8dc02be9bc3a5ac6cf467271f8820f1c6493136",
+    "llamacpp_gguf_cuda/_prism.cp311-win_amd64.pyd": "9ee4c575c3cec4f266cc16b2317db498616e2eb5dc4db1df7c689f3a979c2b75",
+    "llamacpp_gguf_cuda/__pycache__/__init__.cpython-311.pyc": "4aa08774cff6e74b696bee6739b4cae4cae2cfc3aa63ffd82abdd917414f09a4",
+    "llamacpp_gguf_cuda/__pycache__/version.cpython-311.pyc": "9de8289aec8b1e119e4fb5da2e338a641e762c2f28e10543e8c9e4791b7e776f",
+    "llamacpp_gguf_cuda-1.0.26+torch210rocm714py311.dist-info/WHEEL": "ca4ccf7d3bbcdc38ba4cdfe55cd04dc390834de6251db378d9a268211541a498",
+    "llamacpp_gguf_cuda-1.0.26+torch210rocm714py311.dist-info/top_level.txt": "66bc261e6eae0ee8ca399a87494fc60d90ec5ba9e925189a173a38178f534a36"
+  },
+  "hardware_validation": "No AMD GPU available; version-only relabel, not a new HIP implementation."
+}

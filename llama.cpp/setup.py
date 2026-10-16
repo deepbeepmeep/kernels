@@ -74,7 +74,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.25"
+BASE_VERSION = "1.0.26"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")
@@ -202,9 +202,9 @@ setup(
     description=PACKAGE_DESCRIPTION,
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    package_data={"llamacpp_gguf_cuda": ["kernels/*/*.cubin", "kernels/*/manifest.json"]},
+    package_data={"llamacpp_gguf_cuda": ["kernels/*/*.cubin", "kernels/*/manifest.json", "_packed_turing.cu"]},
     ext_modules=ext_modules,
     cmdclass={"build_ext": PortableBuildExtension},
-    license_files=["_vendor/llama.cpp/LICENSE", "_vendor/llama.cpp/ggml/LICENSE"],
+    license_files=["_vendor/llama.cpp/LICENSE", "_vendor/llama.cpp/ggml/LICENSE", "LICENSE-WanGP.txt"],
     zip_safe=False,
 )

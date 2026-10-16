@@ -20,11 +20,20 @@ provide the corresponding operations on AMD. WanGP's automatically selected GDN
 and Prism fusions remain restricted to validated NVIDIA hardware; compiling their
 AMD implementations does not establish numerical correctness or performance.
 
+## Version 1.0.26 packaging
+
+The released HIP wheel is identical to 1.0.25 except for the package version,
+dist-info directory and RECORD hashes. It retains Python 3.11, PyTorch
+2.10.0+rocm7.14.0 and gfx1201 support; it does not include the new CUDA
+crossing-row kernels. Reproduce this exact update with
+`scripts/relabel_hip_release.py --old-wheel <published-1.0.25-HIP-wheel> --dist <output>`.
+The script verifies the published checksum and every unchanged payload.
+
 ## Reproduce on Windows
 
 The tested compiler environment is Python 3.11, ROCm 7.14 and ROCm PyTorch 2.10.0.
-It matches WanGP's PyTorch 2.10.0 requirement in `docs/INSTALLATION.md`,
-`setup_config.json` (recommended cu130 option), and the `py311` environment.
+This is a separate legacy AMD environment, not the installer's current Python
+3.12 / PyTorch 2.13 / ROCm 10 environment.
 The build rejects other PyTorch versions; the wheel records and checks the exact
 ROCm PyTorch build at import. It is separate from the NVIDIA environment. Example installation on D:
 
@@ -47,7 +56,7 @@ not rewritten. HIP outputs use `build/hip-torch210rocm714py311` and the `+torch2
 the wheel into an environment with matching ROCm PyTorch:
 
 ```powershell
-D:\AMD\qwen-hip210\Scripts\python.exe -m pip install --no-deps D:\AMD\dist\llamacpp_gguf_cuda-1.0.25+torch210rocm714py311-cp311-cp311-win_amd64.whl
+D:\AMD\qwen-hip210\Scripts\python.exe -m pip install --no-deps D:\AMD\dist\llamacpp_gguf_cuda-1.0.26+torch210rocm714py311-cp311-cp311-win_amd64.whl
 D:\AMD\qwen-hip210\Scripts\python.exe tests\validate_hip.py --output D:\AMD\validation
 ```
 

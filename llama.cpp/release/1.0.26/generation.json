@@ -1,0 +1,76 @@
+{
+  "queue_completed": true,
+  "generation_seconds": 36.1,
+  "all_decoded_video_audio_records_identical": true,
+  "decoded_record_count": 246,
+  "video_sha256": "9c19e9fed4f828c07b6ef3c233322db554589f1f6bb43097a96238cdbc3e4450",
+  "reference_framemd5_sha256": "5a57ddb859e30dad877ec0bb744326c4872f6397bd7b9184cc6388c88542db5b",
+  "decoded_framemd5_sha256": "1082dc2a310b2e01eab8755d5c3c316bc9c57282eb3d526ce8142633ea09065f",
+  "streams": [
+    {
+      "codec_type": "video",
+      "width": 384,
+      "height": 256,
+      "nb_frames": "107"
+    },
+    {
+      "codec_type": "audio",
+      "nb_frames": "140",
+      "sample_rate": "32000",
+      "channels": 2
+    }
+  ],
+  "local_kernel_copies_removed": true,
+  "vram_phases": [
+    {
+      "phase": "start",
+      "before_allocated": 20058112,
+      "package_allocated": 20058112,
+      "before_reserved": 67108864,
+      "package_reserved": 67108864
+    },
+    {
+      "phase": "video_encoder",
+      "before_allocated": 465290528,
+      "package_allocated": 465290528,
+      "before_reserved": 536870912,
+      "package_reserved": 536870912
+    },
+    {
+      "phase": "vision_encoder",
+      "before_allocated": 412079688,
+      "package_allocated": 412079688,
+      "before_reserved": 503316480,
+      "package_reserved": 503316480
+    },
+    {
+      "phase": "text_encoder",
+      "before_allocated": 1082827355,
+      "package_allocated": 1082827355,
+      "before_reserved": 1308622848,
+      "package_reserved": 1308622848
+    },
+    {
+      "phase": "transformer",
+      "before_allocated": 1664198680,
+      "package_allocated": 1664198680,
+      "before_reserved": 1778384896,
+      "package_reserved": 1778384896
+    },
+    {
+      "phase": "vae",
+      "before_allocated": 2561347036,
+      "package_allocated": 2561347036,
+      "before_reserved": 2684354560,
+      "package_reserved": 2684354560
+    },
+    {
+      "phase": "audio_vae",
+      "before_allocated": 792705171,
+      "package_allocated": 792705171,
+      "before_reserved": 872415232,
+      "package_reserved": 872415232
+    }
+  ],
+  "canonical_decoded_records_sha256": "117ff25dcedc9fb51e8dc553757eb488fd81df5a553f35a13f344efab3fb4d57"
+}

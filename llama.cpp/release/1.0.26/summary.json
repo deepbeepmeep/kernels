@@ -1,0 +1,527 @@
+{
+  "release": "gguf-v1.0.26",
+  "build_method": "repackage; no native compilation",
+  "baseline_commit": "d19749f",
+  "stacks": {
+    "win_py310": {
+      "wheel": "llamacpp_gguf_cuda-1.0.26+torch271cu128py310-cp310-cp310-win_amd64.whl",
+      "bytes": 242399329,
+      "sha256": "143d091437a16b299dc4fd7362d34e9f8db69c9fb2a3573ae89bee9b34dfe1c4",
+      "baseline_wheel": "llamacpp_gguf_cuda-1.0.25+torch271cu128py310-cp310-cp310-win_amd64.whl",
+      "baseline_sha256": "f726609f3a8ec43d9034c208d594ee783aab8a0d017d0b80bbf357f551797d33",
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "unchanged_binary_sha256": {
+        "llamacpp_gguf_cuda/_C.cp310-win_amd64.pyd": "5cc6f8bfd2f93ac3971ed7de02acf7107bf89c20e043cc5206096b89a55c316d",
+        "llamacpp_gguf_cuda/_attention.cp310-win_amd64.pyd": "95128541ce9206414227c35cc9217525c66301f603f745934e966b784b5f3025",
+        "llamacpp_gguf_cuda/_prism.cp310-win_amd64.pyd": "61bd5f5f1d99a799b7fbc82d5507866cec03e6a7a82bfaa0f584304feaf1c900",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02"
+      },
+      "packed_tests": {
+        "tests": "425",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "169.339"
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 16.139999999999418
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 3.3909999999887077
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 27.453000000008615
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 14.468999999997322
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 6.389999999999418
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 11.14100000000326
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 5.514999999999418
+        }
+      ],
+      "tested_runtime_sha256": {
+        "llamacpp_gguf_cuda/_C.cp310-win_amd64.pyd": "5cc6f8bfd2f93ac3971ed7de02acf7107bf89c20e043cc5206096b89a55c316d",
+        "llamacpp_gguf_cuda/__init__.py": "fcf24a67ac0616a27f27f3ebec77261b467abb5d89b553f37591b5fbe8009c3a",
+        "llamacpp_gguf_cuda/_attention.cp310-win_amd64.pyd": "95128541ce9206414227c35cc9217525c66301f603f745934e966b784b5f3025",
+        "llamacpp_gguf_cuda/_cuda_jit.py": "c425e721ea9842f86f7e01e4e2ffe10fe1a5a8ce033f745f64dc1f40dc6e3e58",
+        "llamacpp_gguf_cuda/_packed.py": "eebc303682e673548e9d67694c8156459bd30b73afd65f0246b2f2ef3b15b62b",
+        "llamacpp_gguf_cuda/_packed_triton.py": "5a540c01a79c7bbe8e3dbbfd05d36d37ad9c2021a8921113028fa7513e50f0b4",
+        "llamacpp_gguf_cuda/_packed_turing.cu": "f7932c7f70882a583c937019631fdf0976aab1041a1c474066b8ee847826139d",
+        "llamacpp_gguf_cuda/_packed_turing.py": "51bb33717b8d7d95c92698f0d7461b916ecb26a42e5777bcae7e66dd96fa2e90",
+        "llamacpp_gguf_cuda/_prism.cp310-win_amd64.pyd": "61bd5f5f1d99a799b7fbc82d5507866cec03e6a7a82bfaa0f584304feaf1c900",
+        "llamacpp_gguf_cuda/_tuning.py": "2584cd6ec1f6884e0737f81301cbaf7b3bc31936e9b10254427d142ff61084d2",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/manifest.json": "058ce43ab11a10b0a55d50afa6bbe5376c45687549c59ab47b224a5cdab1b0c3",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/manifest.json": "adaec1d07229c195b4e5ad9c447ebfe6688bf87f24a4aed13d042aeedd8d53d4",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02",
+        "llamacpp_gguf_cuda/sm120.py": "e0abb9eb014caa06b4f83c17223b03c4baa71c32c03c96ff31e17e9093834d56",
+        "llamacpp_gguf_cuda/version.py": "ec6a63c92e28f7682ef1abc5e4866b94a78caaae0b4cc9afa783529b19b62866"
+      }
+    },
+    "win_py311": {
+      "wheel": "llamacpp_gguf_cuda-1.0.26+torch210cu130py311-cp311-cp311-win_amd64.whl",
+      "bytes": 153538784,
+      "sha256": "bc4276a3b2ef99ba17ecefa3a90a2e2363fe125a31decd2cac55dd60456a89f9",
+      "baseline_wheel": "llamacpp_gguf_cuda-1.0.25+torch210cu130py311-cp311-cp311-win_amd64.whl",
+      "baseline_sha256": "74e280baac174c128c9b29627fa756c14c865cdda8bff118a90e42cca3803ada",
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "unchanged_binary_sha256": {
+        "llamacpp_gguf_cuda/_C.cp311-win_amd64.pyd": "a8f7b7bc5ccb4431afde582053d5ce1ff7f1a4b74142c895c8563ed8a421e1c7",
+        "llamacpp_gguf_cuda/_attention.cp311-win_amd64.pyd": "98a7a03dabcfdb2226171ae81e7ce6d35c24dc2f252331276d3673b2fc958d46",
+        "llamacpp_gguf_cuda/_prism.cp311-win_amd64.pyd": "01848a8cd36ddf9006f8edfd553ef34e1bb48f91c8c331a418ae3df15c5d4dea",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02"
+      },
+      "packed_tests": {
+        "tests": "425",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "138.165"
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 5.297000000005937
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 3.25
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 9.202999999994063
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 3.5310000000026776
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 4.375
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 3.610000000000582
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 3.4219999999913853
+        }
+      ],
+      "tested_runtime_sha256": {
+        "llamacpp_gguf_cuda/_C.cp311-win_amd64.pyd": "a8f7b7bc5ccb4431afde582053d5ce1ff7f1a4b74142c895c8563ed8a421e1c7",
+        "llamacpp_gguf_cuda/__init__.py": "fcf24a67ac0616a27f27f3ebec77261b467abb5d89b553f37591b5fbe8009c3a",
+        "llamacpp_gguf_cuda/_attention.cp311-win_amd64.pyd": "98a7a03dabcfdb2226171ae81e7ce6d35c24dc2f252331276d3673b2fc958d46",
+        "llamacpp_gguf_cuda/_cuda_jit.py": "c425e721ea9842f86f7e01e4e2ffe10fe1a5a8ce033f745f64dc1f40dc6e3e58",
+        "llamacpp_gguf_cuda/_packed.py": "eebc303682e673548e9d67694c8156459bd30b73afd65f0246b2f2ef3b15b62b",
+        "llamacpp_gguf_cuda/_packed_triton.py": "5a540c01a79c7bbe8e3dbbfd05d36d37ad9c2021a8921113028fa7513e50f0b4",
+        "llamacpp_gguf_cuda/_packed_turing.cu": "f7932c7f70882a583c937019631fdf0976aab1041a1c474066b8ee847826139d",
+        "llamacpp_gguf_cuda/_packed_turing.py": "51bb33717b8d7d95c92698f0d7461b916ecb26a42e5777bcae7e66dd96fa2e90",
+        "llamacpp_gguf_cuda/_prism.cp311-win_amd64.pyd": "01848a8cd36ddf9006f8edfd553ef34e1bb48f91c8c331a418ae3df15c5d4dea",
+        "llamacpp_gguf_cuda/_tuning.py": "2584cd6ec1f6884e0737f81301cbaf7b3bc31936e9b10254427d142ff61084d2",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/manifest.json": "058ce43ab11a10b0a55d50afa6bbe5376c45687549c59ab47b224a5cdab1b0c3",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/manifest.json": "adaec1d07229c195b4e5ad9c447ebfe6688bf87f24a4aed13d042aeedd8d53d4",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02",
+        "llamacpp_gguf_cuda/sm120.py": "e0abb9eb014caa06b4f83c17223b03c4baa71c32c03c96ff31e17e9093834d56",
+        "llamacpp_gguf_cuda/version.py": "040741123cae8264f56ba47a4ba9e0ba0d248e1fb9859273bb475aa8cb6dad32"
+      }
+    },
+    "linux_py310": {
+      "wheel": "llamacpp_gguf_cuda-1.0.26+torch271cu128py310-cp310-cp310-linux_x86_64.whl",
+      "bytes": 244460369,
+      "sha256": "dacca08d4f382ba72b2ed4c855f1f50ac1113789ff36d6aecdefe904e651342a",
+      "baseline_wheel": "llamacpp_gguf_cuda-1.0.25+torch271cu128py310-cp310-cp310-linux_x86_64.whl",
+      "baseline_sha256": "be79df12b6151371300032861af28d7bfe1e0024b04f34e5240d03b4451c5829",
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "architectures": [
+        "sm_50",
+        "sm_52",
+        "sm_53",
+        "sm_60",
+        "sm_61",
+        "sm_62",
+        "sm_70",
+        "sm_72",
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_101",
+        "sm_120"
+      ],
+      "unchanged_binary_sha256": {
+        "llamacpp_gguf_cuda/_C.cpython-310-x86_64-linux-gnu.so": "d641fc36152eff5c21927f183a8c8dc4ab2eca57ece4c464b05ab9931342708d",
+        "llamacpp_gguf_cuda/_attention.cpython-310-x86_64-linux-gnu.so": "bc9d0a2b50b1fbd5ebbf6bde2e3b47e37f84fa51c685c685099f1e3315d6af16",
+        "llamacpp_gguf_cuda/_prism.cpython-310-x86_64-linux-gnu.so": "beefcdc3aad752592ea541ce75e193548b65c9ae6dfb76032abac2c1a45afa6f",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02"
+      },
+      "packed_tests": {
+        "tests": "425",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "154.078"
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 11.764940719000002
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 2.7701476850000013
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 21.973491593999995
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 14.316805969999997
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 5.137359807999999
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 11.526270838999991
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 2.393831438999996
+        }
+      ],
+      "tested_runtime_sha256": {
+        "llamacpp_gguf_cuda/_C.cpython-310-x86_64-linux-gnu.so": "d641fc36152eff5c21927f183a8c8dc4ab2eca57ece4c464b05ab9931342708d",
+        "llamacpp_gguf_cuda/__init__.py": "fcf24a67ac0616a27f27f3ebec77261b467abb5d89b553f37591b5fbe8009c3a",
+        "llamacpp_gguf_cuda/_attention.cpython-310-x86_64-linux-gnu.so": "bc9d0a2b50b1fbd5ebbf6bde2e3b47e37f84fa51c685c685099f1e3315d6af16",
+        "llamacpp_gguf_cuda/_cuda_jit.py": "c425e721ea9842f86f7e01e4e2ffe10fe1a5a8ce033f745f64dc1f40dc6e3e58",
+        "llamacpp_gguf_cuda/_packed.py": "eebc303682e673548e9d67694c8156459bd30b73afd65f0246b2f2ef3b15b62b",
+        "llamacpp_gguf_cuda/_packed_triton.py": "5a540c01a79c7bbe8e3dbbfd05d36d37ad9c2021a8921113028fa7513e50f0b4",
+        "llamacpp_gguf_cuda/_packed_turing.cu": "f7932c7f70882a583c937019631fdf0976aab1041a1c474066b8ee847826139d",
+        "llamacpp_gguf_cuda/_packed_turing.py": "51bb33717b8d7d95c92698f0d7461b916ecb26a42e5777bcae7e66dd96fa2e90",
+        "llamacpp_gguf_cuda/_prism.cpython-310-x86_64-linux-gnu.so": "beefcdc3aad752592ea541ce75e193548b65c9ae6dfb76032abac2c1a45afa6f",
+        "llamacpp_gguf_cuda/_tuning.py": "2584cd6ec1f6884e0737f81301cbaf7b3bc31936e9b10254427d142ff61084d2",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/manifest.json": "058ce43ab11a10b0a55d50afa6bbe5376c45687549c59ab47b224a5cdab1b0c3",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/manifest.json": "adaec1d07229c195b4e5ad9c447ebfe6688bf87f24a4aed13d042aeedd8d53d4",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02",
+        "llamacpp_gguf_cuda/sm120.py": "e0abb9eb014caa06b4f83c17223b03c4baa71c32c03c96ff31e17e9093834d56",
+        "llamacpp_gguf_cuda/version.py": "ec6a63c92e28f7682ef1abc5e4866b94a78caaae0b4cc9afa783529b19b62866"
+      }
+    },
+    "linux_py311": {
+      "wheel": "llamacpp_gguf_cuda-1.0.26+torch210cu130py311-cp311-cp311-linux_x86_64.whl",
+      "bytes": 155905687,
+      "sha256": "8ce038f799a0afbef6bff7a902931245f6940d4c3551157e7d23cd2a8bfcfbe0",
+      "baseline_wheel": "llamacpp_gguf_cuda-1.0.25+torch210cu130py311-cp311-cp311-linux_x86_64.whl",
+      "baseline_sha256": "726938c8d09300c9846b80b532772b99f875528e6150b37a12c5929bf062a1b5",
+      "torch": "2.10.0+cu130",
+      "cuda": "13.0",
+      "architectures": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_87",
+        "sm_88",
+        "sm_89",
+        "sm_90",
+        "sm_100",
+        "sm_110",
+        "sm_103",
+        "sm_120",
+        "sm_121"
+      ],
+      "unchanged_binary_sha256": {
+        "llamacpp_gguf_cuda/_C.cpython-311-x86_64-linux-gnu.so": "cd2d6ae743f16144448d63f65b44816d3202eacb0fc71feca849665bf48e6e0c",
+        "llamacpp_gguf_cuda/_attention.cpython-311-x86_64-linux-gnu.so": "346f71deff10f3bb235baec7d4ba86961a5b1facb91a3c4069b54a772a4913dc",
+        "llamacpp_gguf_cuda/_prism.cpython-311-x86_64-linux-gnu.so": "ccdb8d06d17a1f2a3cf20d3ed0d2479e729dbba9bb0f728ee2a9f9ca627a120f",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02"
+      },
+      "packed_tests": {
+        "tests": "425",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "114.819"
+      },
+      "checks": [
+        {
+          "name": "old_quant_reference",
+          "exit_code": 0,
+          "seconds": 11.451589880999961
+        },
+        {
+          "name": "old_quant_exact",
+          "exit_code": 0,
+          "seconds": 3.106659595999986
+        },
+        {
+          "name": "standard",
+          "exit_code": 0,
+          "seconds": 15.727811038000027
+        },
+        {
+          "name": "ptq1",
+          "exit_code": 0,
+          "seconds": 11.767347045000008
+        },
+        {
+          "name": "hadamard",
+          "exit_code": 0,
+          "seconds": 2.660655197999972
+        },
+        {
+          "name": "prism_decode",
+          "exit_code": 0,
+          "seconds": 3.0860797220000222
+        },
+        {
+          "name": "linear_fusions",
+          "exit_code": 0,
+          "seconds": 4.130789075999985
+        }
+      ],
+      "tested_runtime_sha256": {
+        "llamacpp_gguf_cuda/_C.cpython-311-x86_64-linux-gnu.so": "cd2d6ae743f16144448d63f65b44816d3202eacb0fc71feca849665bf48e6e0c",
+        "llamacpp_gguf_cuda/__init__.py": "fcf24a67ac0616a27f27f3ebec77261b467abb5d89b553f37591b5fbe8009c3a",
+        "llamacpp_gguf_cuda/_attention.cpython-311-x86_64-linux-gnu.so": "346f71deff10f3bb235baec7d4ba86961a5b1facb91a3c4069b54a772a4913dc",
+        "llamacpp_gguf_cuda/_cuda_jit.py": "c425e721ea9842f86f7e01e4e2ffe10fe1a5a8ce033f745f64dc1f40dc6e3e58",
+        "llamacpp_gguf_cuda/_packed.py": "eebc303682e673548e9d67694c8156459bd30b73afd65f0246b2f2ef3b15b62b",
+        "llamacpp_gguf_cuda/_packed_triton.py": "5a540c01a79c7bbe8e3dbbfd05d36d37ad9c2021a8921113028fa7513e50f0b4",
+        "llamacpp_gguf_cuda/_packed_turing.cu": "f7932c7f70882a583c937019631fdf0976aab1041a1c474066b8ee847826139d",
+        "llamacpp_gguf_cuda/_packed_turing.py": "51bb33717b8d7d95c92698f0d7461b916ecb26a42e5777bcae7e66dd96fa2e90",
+        "llamacpp_gguf_cuda/_prism.cpython-311-x86_64-linux-gnu.so": "ccdb8d06d17a1f2a3cf20d3ed0d2479e729dbba9bb0f728ee2a9f9ca627a120f",
+        "llamacpp_gguf_cuda/_tuning.py": "2584cd6ec1f6884e0737f81301cbaf7b3bc31936e9b10254427d142ff61084d2",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/manifest.json": "058ce43ab11a10b0a55d50afa6bbe5376c45687549c59ab47b224a5cdab1b0c3",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.cubin": "4cafc5e1500653dce30fe39e7ebd3538fa2939ad1779d324bd33da5c034d061e",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_bf16.ptx": "410b9e16eb8e02aba89b7301f346ef0f20c541a6a9e97ae43fa3f179f4d8a1cf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.cubin": "6f52382e03561b8f50f1100e9092519f6f01cb16283e9d90c48c807354b0ce43",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_grouped_async_fp16.ptx": "4857066e83c9d34b9fbc8158dfe60749879a7f8ad873e84cc9a72cafbec87123",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.cubin": "76f628a961e1340b866a2ddb7b57ff591eaf3b545e43290a06dcdefc388f6453",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_bf16.ptx": "6548ccadc84a7cf76e3793d13ef8407873aed2f5add9f35056604ee0c3f4a406",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.cubin": "0191c93f1ad279484e6e6d50a3023612f7bd95509503d900fa2ef65350704524",
+        "llamacpp_gguf_cuda/kernels/sm120_cu12/q8_prefill_async_fp16.ptx": "f20774d8ff917da1806786fb130534eeecb810553c7ab86354623fd5905f7811",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/manifest.json": "adaec1d07229c195b4e5ad9c447ebfe6688bf87f24a4aed13d042aeedd8d53d4",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.cubin": "cbcdce30895124517e5959dba2a02f77d9f9d8ce8c2755655a0336e3e1e43d7d",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_bf16.ptx": "c553ca15eb3202ed35cedfc535412b3aa83979d1d97d952804f08f51a21d60f5",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.cubin": "b3cdce1e1e6424c266c42e19afebee34172fd7bfe65d865c326d3c41fc9d082b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_grouped_async_fp16.ptx": "483edb634b7a2c16ebb2c67ae2bcceb709bf17b14d0d0cab4e2741ee562941bf",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.cubin": "d994f66f0e2b53360e193d78a23dcb10ab8ea8f90d05ecc59e1a626815952f32",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_bf16.ptx": "98e9d7667e9c62523cf417761ddb56b31fe5d4e7e042823b088da1eae1a511a7",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.cubin": "fea4bf62397975447c77bafee232d34d658c92be6c7caca34bf74100d9950f1b",
+        "llamacpp_gguf_cuda/kernels/sm120_cu13/q8_prefill_async_fp16.ptx": "bab2e6c3423b7cb48640a31336217f3595c1605caecb3e166ee6d8182742da02",
+        "llamacpp_gguf_cuda/sm120.py": "e0abb9eb014caa06b4f83c17223b03c4baa71c32c03c96ff31e17e9093834d56",
+        "llamacpp_gguf_cuda/version.py": "040741123cae8264f56ba47a4ba9e0ba0d248e1fb9859273bb475aa8cb6dad32"
+      }
+    }
+  },
+  "hardware": "RTX 5090; Windows and Ubuntu 22.04 WSL. No physical RTX 20/30/40 or AMD GPU measurements.",
+  "hip": {
+    "wheel": "llamacpp_gguf_cuda-1.0.26+torch210rocm714py311-cp311-cp311-win_amd64.whl",
+    "bytes": 5195406,
+    "sha256": "b83b29e167fbc9b06059aee428a29d5c01dd714cad96ef4ecebbf43fe9d0b648",
+    "baseline_wheel": "llamacpp_gguf_cuda-1.0.25+torch210rocm714py311-cp311-cp311-win_amd64.whl",
+    "baseline_sha256": "b58bf0ac3bdcb7e3de375052d93a637072cdef23d63cc9294310cc4cd5537de4",
+    "torch": "2.10.0+rocm7.14.0",
+    "hip": "7.14.60850",
+    "architectures": [
+      "gfx1201"
+    ],
+    "changed_payloads": [
+      "llamacpp_gguf_cuda/version.py: __version__ only",
+      "METADATA: Version only",
+      "dist-info directory and RECORD"
+    ],
+    "unchanged_payload_sha256": {
+      "llamacpp_gguf_cuda/_C.cp311-win_amd64.pyd": "2d4e20a332265de434c1bcbb49ff80c78f081651422a9fb0d72fdc1e7fe3b11a",
+      "llamacpp_gguf_cuda/__init__.py": "09e136ea7ae2c5df2667f72d93697fbadc08732b5b7837a085d8d02e0e2ccd51",
+      "llamacpp_gguf_cuda/_attention.cp311-win_amd64.pyd": "98a6dbe28034d5c88c713adeb8dc02be9bc3a5ac6cf467271f8820f1c6493136",
+      "llamacpp_gguf_cuda/_prism.cp311-win_amd64.pyd": "9ee4c575c3cec4f266cc16b2317db498616e2eb5dc4db1df7c689f3a979c2b75",
+      "llamacpp_gguf_cuda/__pycache__/__init__.cpython-311.pyc": "4aa08774cff6e74b696bee6739b4cae4cae2cfc3aa63ffd82abdd917414f09a4",
+      "llamacpp_gguf_cuda/__pycache__/version.cpython-311.pyc": "9de8289aec8b1e119e4fb5da2e338a641e762c2f28e10543e8c9e4791b7e776f",
+      "llamacpp_gguf_cuda-1.0.26+torch210rocm714py311.dist-info/WHEEL": "ca4ccf7d3bbcdc38ba4cdfe55cd04dc390834de6251db378d9a268211541a498",
+      "llamacpp_gguf_cuda-1.0.26+torch210rocm714py311.dist-info/top_level.txt": "66bc261e6eae0ee8ca399a87494fc60d90ec5ba9e925189a173a38178f534a36"
+    },
+    "hardware_validation": "No AMD GPU available; version-only relabel, not a new HIP implementation.",
+    "import_check": "2.10.0+rocm7.14.0 1.0.26+torch210rocm714py311 True True True"
+  }
+}

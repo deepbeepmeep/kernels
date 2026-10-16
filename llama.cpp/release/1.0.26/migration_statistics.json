@@ -1,0 +1,72 @@
+{
+  "triton_bf16": {
+    "256": {
+      "previous_ms": 59.41489999531768,
+      "package_ms": 54.774349999206606,
+      "ratio_95pct_ci": [
+        0.782318477636315,
+        1.0999608459860806
+      ],
+      "peak_mib": 383.97314453125,
+      "reserved_mib": 418.0,
+      "bit_identical": true
+    },
+    "512": {
+      "previous_ms": 42.54205000324873,
+      "package_ms": 43.0426000020816,
+      "ratio_95pct_ci": [
+        0.9284630003263673,
+        1.250857386092679
+      ],
+      "peak_mib": 418.96826171875,
+      "reserved_mib": 478.0,
+      "bit_identical": true
+    },
+    "1024": {
+      "previous_ms": 133.71085000107996,
+      "package_ms": 132.57745000737486,
+      "ratio_95pct_ci": [
+        0.9610989106706107,
+        1.0080464804058702
+      ],
+      "peak_mib": 557.56201171875,
+      "reserved_mib": 628.0,
+      "bit_identical": true
+    }
+  },
+  "turing_fp16": {
+    "256": {
+      "previous_ms": 53.90139999508392,
+      "package_ms": 55.408150001312606,
+      "ratio_95pct_ci": [
+        0.9259954759574652,
+        1.1555573126873315
+      ],
+      "peak_mib": 383.97314453125,
+      "reserved_mib": 418.0,
+      "bit_identical": true
+    },
+    "512": {
+      "previous_ms": 66.72819999948842,
+      "package_ms": 65.65360000240617,
+      "ratio_95pct_ci": [
+        0.9293304854578822,
+        1.0425370688767748
+      ],
+      "peak_mib": 418.96826171875,
+      "reserved_mib": 478.0,
+      "bit_identical": true
+    },
+    "1024": {
+      "previous_ms": 183.98145000537625,
+      "package_ms": 183.76905000332044,
+      "ratio_95pct_ci": [
+        0.994198153099145,
+        1.005839383101191
+      ],
+      "peak_mib": 557.56201171875,
+      "reserved_mib": 628.0,
+      "bit_identical": true
+    }
+  }
+}

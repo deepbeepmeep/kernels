@@ -1,0 +1,15 @@
+{
+  "triton_kernel_functions": [
+    "_q45_tile",
+    "_packed_mm",
+    "_q45_tile_16",
+    "_k236_scale",
+    "_k236_values",
+    "_weight_tile",
+    "_weight_tile_16"
+  ],
+  "triton_arithmetic_identical": true,
+  "normalization": "Parenthesized constant Boolean chains for Triton 3.3 parsing; no arithmetic changes.",
+  "sm75_cuda_body_identical": true,
+  "sm75_cuda_body_sha256": "9129fcc55e3cffdbbca9559957aee4c5a41729828b5a4d77dd6536448f52430a"
+}
