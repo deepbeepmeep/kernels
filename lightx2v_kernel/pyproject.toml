@@ -1,14 +1,14 @@
 [build-system]
 requires = [
   "scikit-build-core>=0.10",
-  "torch==2.9.1",
+  "torch>=2.9.1",
   "wheel",
 ]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "lightx2v-kernel"
-version = "0.0.1+torch2.9.1"
+version = "0.0.1"
 description = "Kernel Library for lightx2v"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -19,7 +19,7 @@ classifiers = [
   "Environment :: GPU :: NVIDIA CUDA"
 ]
 dependencies = [
-  "torch==2.9.1",
+  "torch>=2.9.1",
 ]
 
 [project.urls]
