@@ -94,9 +94,8 @@ def prepare_runtime_buffers(device: torch.device | int | None = None) -> int:
     if device_index is None:
         device_index = torch.cuda.current_device()
     max_size = torch.cuda.get_device_properties(device_index).multi_processor_count * 256 * 128 * 4
-    reserve_size = ((max_size + 16 * 1024 * 1024 - 1) // (16 * 1024 * 1024)) * 16 * 1024 * 1024
-    _C.prepare_runtime_buffers(device_index, reserve_size)
-    return reserve_size
+    _C.prepare_runtime_buffers(device_index, max_size)
+    return max_size
 
 
 def has_q8_paged_attention() -> bool:
@@ -231,6 +230,25 @@ def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor
     return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), mode)
 
 
+def linear_chunked(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype, chunk_rows: int):
+    """Run a bounded GPU row loop, or return None for the existing sliced path.
+
+    chunk_rows is the caller's existing 128-row-aligned slice size. Keeping it
+    preserves the stream-K partitions and FP32 accumulation of separate calls.
+    Automatic use currently targets SM120 Q4_K/Q5_K/Q6_K configurations;
+    other devices, Q8_0, non-square Q5_K and narrow output projections retain
+    ordinary slices. These shapes did not benefit from the resident grid.
+    """
+    if (_linear_mode() != "mmq" or qtype_name not in ("Q4_K", "Q5_K", "Q6_K")
+            or not input_tensor.is_contiguous()
+            or torch.cuda.get_device_capability(input_tensor.device) != (12, 0)
+            or (qtype_name == "Q5_K" and tensor_shape[0] != tensor_shape[1])
+            or (tensor_shape[0] < tensor_shape[1]
+                and (qtype_name != "Q6_K" or tensor_shape[0] < 4096))):
+        return None
+    return _C.linear_chunked(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), chunk_rows)
+
+
 def embedding(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, indices: torch.Tensor, output_dtype: torch.dtype):
     return _C.embedding(raw_weight, qtype_name, list(tensor_shape), indices, str(output_dtype).replace("torch.", ""))
 
@@ -250,7 +268,7 @@ def prism_decode(input_tensor, raw_weight, signs, bias, rows, grouped_shape=(0, 
 __all__ = [
     "has_prism_decode", "prism_decode",
     "prism_hadamard",
-    "__version__", "embedding", "linear", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
+    "__version__", "embedding", "linear", "linear_chunked", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
     "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits", "dense_paged_attention",
     "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name", "supports_linear_fusions",
     "supports_linear_layout", "packed_row_kernel",

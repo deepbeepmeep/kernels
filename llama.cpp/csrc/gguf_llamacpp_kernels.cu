@@ -33,6 +33,10 @@
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/mmq.cuh"
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/mmvq.cuh"
 #include "_vendor/llama.cpp/ggml/src/ggml-cuda/quantize.cuh"
+#include "quantize_mmq_typed.cuh"
+#if !defined(GGML_USE_HIP)
+#include "mmq_chunked.cuh"
+#endif
 
 namespace {
 
@@ -142,7 +146,7 @@ struct gguf_cuda_pool_simple : public ggml_cuda_pool {
     explicit gguf_cuda_pool_simple(int device_id) : device(device_id) {
     }
 
-    void * alloc(size_t size, size_t * actual_size) override {
+    cudaStream_t reserve(size_t size) {
         ggml_cuda_set_device(device);
         const cudaStream_t stream = at::cuda::getCurrentCUDAStream(device).stream();
         cudaStreamCaptureStatus capture_status = cudaStreamCaptureStatusNone;
@@ -159,6 +163,11 @@ struct gguf_cuda_pool_simple : public ggml_cuda_pool {
             buffer = at::empty({static_cast<int64_t>(reserve_size)}, at::TensorOptions().device(at::Device(at::kCUDA, device)).dtype(at::kByte));
             capacity = reserve_size;
         }
+        return stream;
+    }
+
+    void * alloc(size_t size, size_t * actual_size) override {
+        const cudaStream_t stream = reserve(size);
         void * ptr = buffer.data_ptr();
         CUDA_CHECK(cudaMemsetAsync(ptr, 0, size, stream));
         active = true;
@@ -606,89 +615,8 @@ static __global__ void quantize_mmq_q8_1_typed(
         const src_t * __restrict__ x, const int32_t * __restrict__ ids, void * __restrict__ vy,
         const int64_t ne00, const int64_t s01, const int64_t s02, const int64_t s03,
         const int64_t ne0, const int ne1, const int ne2) {
-
-    constexpr int vals_per_scale = ds_layout == MMQ_Q8_1_DS_LAYOUT_D2S6 ? 64 : 32;
-    constexpr int vals_per_sum = ds_layout == MMQ_Q8_1_DS_LAYOUT_D2S6 ? 16 : 32;
-
-    const int64_t i0 = ((int64_t) blockDim.x * blockIdx.y + threadIdx.x) * 4;
-    if (i0 >= ne0) {
-        return;
-    }
-
-    const int64_t i1 = blockIdx.x;
-    const int64_t i2 = blockIdx.z % ne2;
-    const int64_t i3 = blockIdx.z / ne2;
-
-    const int64_t i00 = i0;
-    const int64_t i01 = ids ? ids[i1] : i1;
-    const int64_t i02 = i2;
-    const int64_t i03 = i3;
-
-    block_q8_1_mmq * y = (block_q8_1_mmq *) vy;
-    const int64_t ib0 = blockIdx.z * ((int64_t) gridDim.x * gridDim.y * blockDim.x / QK8_1);
-    const int64_t ib = ib0 + (i0 / (4 * QK8_1)) * ne1 + blockIdx.x;
-    const int64_t iqs = i0 % (4 * QK8_1);
-
-    const float4 xi = i0 < ne00
-        ? make_float4(
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 0]),
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 1]),
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 2]),
-            ggml_cuda_cast<float>(x[i03 * s03 + i02 * s02 + i01 * s01 + i00 + 3]))
-        : make_float4(0.0f, 0.0f, 0.0f, 0.0f);
-
-    float amax = fabsf(xi.x);
-    amax = fmaxf(amax, fabsf(xi.y));
-    amax = fmaxf(amax, fabsf(xi.z));
-    amax = fmaxf(amax, fabsf(xi.w));
-
-#pragma unroll
-    for (int offset = vals_per_scale / 8; offset > 0; offset >>= 1) {
-        amax = fmaxf(amax, __shfl_xor_sync(WGP_WARP_MASK, amax, offset, WARP_SIZE));
-    }
-
-    float sum = 0.0f;
-    if (ds_layout != MMQ_Q8_1_DS_LAYOUT_D4) {
-        sum = xi.x + xi.y + xi.z + xi.w;
-#pragma unroll
-        for (int offset = vals_per_sum / 8; offset > 0; offset >>= 1) {
-            sum += __shfl_xor_sync(WGP_WARP_MASK, sum, offset, WARP_SIZE);
-        }
-    }
-
-    const float d_inv = amax > 0.0f ? 127.0f / amax : 0.0f;
-    char4 q;
-    q.x = amax > 0.0f ? roundf(xi.x * d_inv) : 0;
-    q.y = amax > 0.0f ? roundf(xi.y * d_inv) : 0;
-    q.z = amax > 0.0f ? roundf(xi.z * d_inv) : 0;
-    q.w = amax > 0.0f ? roundf(xi.w * d_inv) : 0;
-
-    char4 * yqs4 = (char4 *) y[ib].qs;
-    yqs4[iqs / 4] = q;
-
-    if (ds_layout == MMQ_Q8_1_DS_LAYOUT_D2S6) {
-        if (iqs % 16 != 0 || iqs >= 96) {
-            return;
-        }
-        y[ib].d2s6[2 + iqs / 16] = sum;
-        if (iqs % 64 != 0) {
-            return;
-        }
-        const float d = amax > 0.0f ? 1.0f / d_inv : 0.0f;
-        y[ib].d2s6[iqs / 64] = d;
-        return;
-    }
-
-    if (iqs % 32 != 0) {
-        return;
-    }
-
-    const float d = amax > 0.0f ? 1.0f / d_inv : 0.0f;
-    if (ds_layout == MMQ_Q8_1_DS_LAYOUT_DS4) {
-        y[ib].ds4[iqs / 32] = make_half2(d, sum);
-    } else {
-        y[ib].d4[iqs / 32] = d;
-    }
+    quantize_mmq_q8_1_block<src_t, ds_layout>(blockIdx, gridDim, threadIdx, blockDim,
+        x, ids, vy, ne00, s01, s02, s03, ne0, ne1, ne2);
 }
 
 template <typename src_t>
@@ -1020,6 +948,66 @@ at::Tensor run_embedding_cuda(at::Tensor raw_weight, ggml_type type, std::vector
     return output;
 }
 
+#if !defined(GGML_USE_HIP)
+template <ggml_type type, typename scalar_t>
+c10::optional<at::Tensor> run_linear_chunked(const at::Tensor & weight, const at::Tensor & input, int rows, int k, int n, int step) {
+    const int device = input.device().index();
+    const auto & info = ggml_cuda_info().devices[device];
+    const auto config = ggml_cuda_mmq_get_config(type, 128, false, info.cc);
+    if (config.type == GGML_TYPE_COUNT) return c10::nullopt;
+    const size_t shared = mmq_get_nbytes_shared(config, info.cc);
+    // Two compact stream-K partials must fit the existing per-model arena.
+    // Keep layouts with a different tile/partition scheme on ordinary slicing.
+    if (!config.use_mma_data_layout(info.cc) || !config.stream_k || config.I > 128 || n % config.I ||
+            shared > info.smpbo || k % config.K_vram ||
+            mmq_select_J(type, false, step, info.cc, info.smpbo) != 128 ||
+            int64_t((step + 127)/128) * (n/config.I) * (k/ggml_blck_size(type)) >= (1 << 30)) return c10::nullopt;
+    const int tail = rows % step;
+    int native_rows = tail && mmq_select_J(type, false, tail, info.cc, info.smpbo) != 128 ? rows - tail : rows;
+    int cooperative = 0;
+    CUDA_CHECK(cudaDeviceGetAttribute(&cooperative, cudaDevAttrCooperativeLaunch, device));
+    if (!cooperative) return c10::nullopt;
+    auto kernel = mmq_chunked<type, scalar_t>;
+    CUDA_CHECK(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, shared));
+    int occupancy = 0;
+    CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&occupancy, kernel, config.nthreads, shared));
+    if (occupancy < 1) return c10::nullopt;
+
+    const cudaStream_t stream = at::cuda::getCurrentCUDAStream(device).stream();
+    auto & pool = static_cast<gguf_cuda_pool_simple &>(get_backend_ctx(device, stream).pool(device));
+    const size_t partial_values = size_t(info.nsm) * config.I * 128;
+    pool.reserve(2 * partial_values * sizeof(float));
+    // All partials consumed by fixup are written by this launch; no memset is needed.
+    float * completed = static_cast<float *>(pool.buffer.data_ptr());
+    float * partial = completed + partial_values;
+    const int64_t q8_bytes = (int64_t(step) * GGML_PAD(k, MATRIX_ROW_PADDING) / 128 + 128) * sizeof(block_q8_1_mmq);
+    at::Tensor output = at::empty({rows, n}, input.options());
+    // Match the sliced path's allocation order so graph pools can reuse the
+    // output's physical chunks before placing the short-lived Q8 scratch.
+    at::Tensor q8_buffer = at::empty({q8_bytes}, input.options().dtype(at::kByte));
+    const char * w = static_cast<const char *>(weight.data_ptr());
+    const scalar_t * x = static_cast<const scalar_t *>(input.data_ptr());
+    scalar_t * y = static_cast<scalar_t *>(output.data_ptr());
+    int * q8 = static_cast<int *>(q8_buffer.data_ptr());
+    int nsm = info.nsm;
+    void * args[] = {&w, &x, &y, &q8, &completed, &partial, &native_rows, &k, &n, &step, &nsm};
+    CUDA_CHECK(cudaLaunchCooperativeKernel(reinterpret_cast<const void *>(kernel), dim3(nsm), dim3(32, config.nthreads/32), args, shared, stream));
+    if (native_rows < rows) {
+        // Preserve the original tail's tile size/accumulation. Free Q8 first so
+        // this bounded tail cannot add its scratch to the main loop's peak.
+        q8_buffer = at::Tensor();
+        output.narrow(0, native_rows, tail).copy_(run_linear_cuda(weight, type, {n, k}, input.narrow(0, native_rows, tail)));
+    }
+    return output;
+}
+
+template <ggml_type type>
+c10::optional<at::Tensor> run_linear_chunked_dtype(const at::Tensor & weight, const at::Tensor & input, int rows, int k, int n, int step) {
+    if (input.scalar_type() == at::kHalf) return run_linear_chunked<type, half>(weight, input, rows, k, n, step);
+    return run_linear_chunked<type, nv_bfloat16>(weight, input, rows, k, n, step);
+}
+#endif
+
 } // namespace
 
 extern "C" GGML_API ggml_abort_callback_t ggml_set_abort_callback(ggml_abort_callback_t callback) {
@@ -1275,6 +1263,11 @@ void gguf_cuda_prepare_runtime_buffers(int64_t device, int64_t size) {
     TORCH_CHECK(size > 0, "CUDA runtime scratch-buffer size must be positive");
     std::lock_guard<std::mutex> lock(g_backend_ctx_mutex);
     g_runtime_buffer_sizes[device] = static_cast<size_t>(size);
+    auto & context = g_backend_contexts[device];
+    if (context == nullptr) {
+        context = std::make_unique<ggml_backend_cuda_context>(device);
+    }
+    static_cast<gguf_cuda_pool_simple &>(context->pool(device)).reserve(static_cast<size_t>(size));
 }
 
 at::Tensor gguf_cuda_linear(
@@ -1328,6 +1321,45 @@ at::Tensor gguf_cuda_linear(
     std::vector<int64_t> output_shape(input.sizes().begin(), input.sizes().end() - 1);
     output_shape.push_back(tensor_shape.at(0));
     return output.reshape(output_shape);
+}
+
+c10::optional<at::Tensor> gguf_cuda_linear_chunked(
+    at::Tensor raw_weight, const std::string & qtype_name, std::vector<int64_t> tensor_shape,
+    at::Tensor input, c10::optional<at::Tensor> bias, const std::string & output_dtype_name, int64_t chunk_rows) {
+    TORCH_CHECK(tensor_shape.size() == 2 && tensor_shape[0] > 0 && tensor_shape[1] > 0, "Expected a positive GGUF matrix shape");
+    check_cuda_tensor(raw_weight, "raw_weight");
+    check_cuda_tensor(input, "input");
+    TORCH_CHECK(input.dim() > 0 && input.size(-1) == tensor_shape[1], "Input width does not match GGUF matrix");
+    TORCH_CHECK(raw_weight.device() == input.device(), "Weights and input must share a CUDA device");
+    TORCH_CHECK(chunk_rows > 0 && chunk_rows <= INT_MAX && chunk_rows % 128 == 0, "chunk_rows must be a positive 32-bit multiple of 128");
+#if defined(GGML_USE_HIP)
+    return c10::nullopt;
+#else
+    const at::cuda::CUDAGuard guard(input.device());
+    const ggml_type type = ggml_type_from_qtype_name(qtype_name);
+    const auto dtype = scalar_type_from_name(output_dtype_name);
+    const int64_t rows = input.numel() / tensor_shape[1];
+    const int64_t n = tensor_shape[0], k = tensor_shape[1];
+    if ((dtype != at::kHalf && dtype != at::kBFloat16) || input.scalar_type() != dtype ||
+            rows < 2*chunk_rows || rows > INT_MAX || n > INT_MAX || k > INT_MAX ||
+            n % 128 || k % 256 || n*k/ggml_blck_size(type) > INT_MAX) return c10::nullopt;
+    TORCH_CHECK(raw_weight.scalar_type() == at::kByte && raw_weight.is_contiguous() &&
+        raw_weight.numel() == n * (k / ggml_blck_size(type)) * ggml_type_size(type), "Invalid packed weight layout");
+    at::Tensor x = input.reshape({rows, k}).contiguous();
+    c10::optional<at::Tensor> result;
+    switch (type) {
+        case GGML_TYPE_Q4_K: result = run_linear_chunked_dtype<GGML_TYPE_Q4_K>(raw_weight, x, rows, k, n, chunk_rows); break;
+        case GGML_TYPE_Q5_K: result = run_linear_chunked_dtype<GGML_TYPE_Q5_K>(raw_weight, x, rows, k, n, chunk_rows); break;
+        case GGML_TYPE_Q6_K: result = run_linear_chunked_dtype<GGML_TYPE_Q6_K>(raw_weight, x, rows, k, n, chunk_rows); break;
+        case GGML_TYPE_Q8_0: result = run_linear_chunked_dtype<GGML_TYPE_Q8_0>(raw_weight, x, rows, k, n, chunk_rows); break;
+        default: return c10::nullopt;
+    }
+    if (!result) return c10::nullopt;
+    maybe_cast_bias_inplace(*result, bias);
+    std::vector<int64_t> shape(input.sizes().begin(), input.sizes().end() - 1);
+    shape.push_back(n);
+    return result->reshape(shape);
+#endif
 }
 
 at::Tensor gguf_cuda_embedding(

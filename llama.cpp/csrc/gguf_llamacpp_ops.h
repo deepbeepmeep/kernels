@@ -29,3 +29,7 @@ at::Tensor gguf_cuda_embedding(
     const std::string & output_dtype_name);
 
 bool gguf_cuda_supports_linear_fusions(const std::string & qtype_name, int64_t tokens, int64_t device);
+
+c10::optional<at::Tensor> gguf_cuda_linear_chunked(
+    at::Tensor raw_weight, const std::string & qtype_name, std::vector<int64_t> tensor_shape,
+    at::Tensor input, c10::optional<at::Tensor> bias, const std::string & output_dtype_name, int64_t chunk_rows);
