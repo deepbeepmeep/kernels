@@ -1,4 +1,40 @@
-# llamacpp-gguf-cuda 1.0.26
+# llamacpp-gguf-cuda 1.0.27
+
+## 1.0.27 additions: single-launch row loop for large linears
+
+`linear_chunked(raw_weight, qtype_name, tensor_shape, input, bias, output_dtype, scratch_bytes)`
+runs a linear over many rows in one cooperative launch. Row chunks are quantized
+into a ring of three Q8 slots, at most `scratch_bytes` in total, while other SMs
+multiply earlier chunks: there is no FP32 product, no 16-bit copy kernel and no
+grid barrier, and only the last wave of the whole linear can be partial. Each
+output tile accumulates its full K range in one block (no stream-K split), so
+results do not depend on the chunk size or the GPU and match ordinary MMQ tiles
+bit for bit. The bias is added in the output type in the tile write-back, with
+the same rounding as a separate add. In a CUDA graph a linear becomes one kernel
+node plus one memset node.
+
+`linear_chunked_supported(qtype_name, tensor_shape, output_dtype, biased, device_index)`
+reports eligibility from structural limits only: Q4_K, Q5_K, Q6_K and Q8_0;
+FP16/BF16 input and output; the tensor-core MMQ data layout (SM75 and newer);
+cooperative launch, shared memory and occupancy. There is no GPU or shape list:
+callers decide where it is faster (WanGP times it against its row slices once
+per layer shape, row range and GPU). HIP builds report it unsupported and keep
+the existing kernels.
+
+Validation: 126 cases (four formats, BF16/FP16, no/16-bit/FP32 bias,
+9,999-93,840 rows at LTX-2 shapes) are bit-identical to sliced MMQ except in
+slices where llama.cpp itself chose stream-K, where the error against an FP64
+product stays within 0.2% of the slices'; CUDA graph capture and replay match
+eager execution. Graph-replay timings against the row slices: 5-10% faster
+without bias and 7-19% faster with bias on Q4_K/Q6_K layers of 23k-94k rows,
+with a per-call memory peak 2-6 MiB lower. LLM prefill shapes are mostly faster;
+one long-K narrow shape (25600->5120) is up to 8% slower between about 2k and
+8k rows, which is why callers keep the choice.
+
+The HIP build now targets Python 3.12 / PyTorch 2.13.0+rocm10.0.0 (ROCm 10)
+on Windows and Linux for gfx1200 and gfx1201 (see `HIP.md`). Linux wheels are
+built against a glibc 2.28 sysroot with GCC 13 and need glibc 2.28 or newer.
+The WanGP source overlay is no longer part of the repository.
 
 ## 1.0.26 additions: packed logical rows crossing GGUF blocks
 
@@ -46,7 +82,7 @@ Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 fo
 
 `prism_hadamard(input, signs, inverse=False, grouped_shape=(0, 0, 0))` applies normalized 1024-wide signed Sylvester transforms with FP32 accumulation. It supports forward/inverse transforms, the Prism GDN head permutation, FP16/BF16/FP32 inputs, PyTorch streams and CUDA graph capture. Signs are caller-owned tensors; the kernel retains no model weights or graph buffers. WanGP also needs its matching Prism GGUF metadata/loader integration: decoding ternary bytes alone does not correctly run a folded checkpoint.
 
-The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.26/README.md` for the final build and validation records.
+The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Compilation coverage is not hardware testing on every GPU model. See `release/1.0.27/README.md` for the final build and validation records.
 
 The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. WanGP enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
 
@@ -55,9 +91,11 @@ Validation scripts: `tests/test_quant_compatibility.py` compares saved old-forma
 ## AMD HIP build
 
 The maintained kernels also have a HIP build covering the local GGUF/PTQ1,
-Prism and paged-attention changes. See [HIP.md](HIP.md) for the isolated Windows
-build, hardware validation command and current limitations. The gfx1201 wheel
-has been compiled and imported (the 1.0.26 HIP wheel is a version-only relabel of 1.0.25; CUDA packed-row additions are not included); AMD inference has not yet been hardware-validated.
+Prism and paged-attention changes. See [HIP.md](HIP.md) for the Windows and
+Linux builds, hardware validation command and current limitations. The 1.0.27
+wheels target Python 3.12 / PyTorch 2.13.0+rocm10.0.0 for gfx1200 and gfx1201;
+they have been compiled and imported, and AMD inference has not yet been
+hardware-validated. CUDA packed-row and row-loop additions are not included.
 
 ## What is included
 
@@ -97,6 +135,21 @@ python scripts/build_release.py --target py310 --cuda-home "C:\Program Files\NVI
 python scripts/build_release.py --target py310 --cuda-home /usr/local/cuda-12.8 --work-dir /tmp/gguf-build/linux310 --dist-dir /tmp/gguf-build/dist
 python scripts/build_release.py --target py311 --cuda-home /path/to/cuda-13.1 --work-dir /tmp/gguf-build/linux311 --dist-dir /tmp/gguf-build/dist
 ```
+
+Release Linux wheels are compiled with conda-forge GCC 13 against a glibc 2.28
+sysroot, so they also load on distributions older than the build machine. The
+extensions link libstdc++ statically and carry no build-machine RPATH:
+
+```bash
+mamba create -p /opt/gcc13-sysroot228 -c conda-forge gcc_linux-64=13 gxx_linux-64=13 sysroot_linux-64=2.28
+export CC=/opt/gcc13-sysroot228/bin/x86_64-conda-linux-gnu-g++ CXX=/opt/gcc13-sysroot228/bin/x86_64-conda-linux-gnu-g++
+export LDSHARED="$CXX -shared"
+```
+
+The conda-forge compiler's `specs` file (under `lib/gcc/x86_64-conda-linux-gnu/13.*`)
+appends `%{!static:-rpath <environment>/lib}` to every link; delete that entry
+before building. Check the result with `objdump -p` (only `$ORIGIN` RPATHs) and
+`objdump -T` (highest `GLIBC_` symbol version).
 
 The release helper intentionally clears `TORCH_CUDA_ARCH_LIST` to include every code reported by `nvcc --list-gpu-code`. Default compilation concurrency is one job with two NVCC threads; increase `--max-jobs` only if sufficient RAM is available. For a private, architecture-limited build, use `TORCH_CUDA_ARCH_LIST` with `python -m pip wheel . --no-build-isolation --no-deps` directly instead.
 
