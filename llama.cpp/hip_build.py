@@ -1,6 +1,7 @@
 """HIP build of the same modified GGML and custom kernels as the CUDA wheel."""
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 
@@ -10,16 +11,17 @@ from setuptools.command.build_py import build_py
 
 def build_hip():
     import torch
-    if torch.__version__.split('+', 1)[0] != '2.10.0' or torch.version.hip is None:
-        raise RuntimeError('The supported HIP wheel requires ROCm PyTorch 2.10.0; got ' + torch.__version__)
-    if sys.version_info[:2] != (3, 11):
-        raise RuntimeError('The supported HIP wheel requires Python 3.11.')
+    if torch.__version__.split('+', 1)[0] != '2.13.0' or torch.version.hip is None:
+        raise RuntimeError('The supported HIP wheel requires ROCm PyTorch 2.13.0; got ' + torch.__version__)
+    if sys.version_info[:2] != (3, 12):
+        raise RuntimeError('The supported HIP wheel requires Python 3.12.')
     from torch.utils.cpp_extension import BuildExtension, include_paths, library_paths
     from torch.utils.hipify import hipify_python
 
     root = Path(__file__).resolve().parent
-    rocm_tag = ''.join(torch.version.hip.split('.')[:2])
-    build_tag = 'torch210rocm' + rocm_tag + 'py311'
+    # The ROCm release of the PyTorch build (+rocm10.0.0 -> 100); torch.version.hip is the HIP runtime version (7.x).
+    rocm_tag = ''.join(torch.__version__.split('+rocm', 1)[1].split('.')[:2])
+    build_tag = 'torch213rocm' + rocm_tag + 'py312'
     build_base = 'build/hip-' + build_tag
     stage = root / 'build' / ('hip-src-' + build_tag)
     previous = {p: (p.read_bytes(), p.stat().st_atime_ns, p.stat().st_mtime_ns)
@@ -47,15 +49,17 @@ def build_hip():
 
     ggml = stage / '_vendor' / 'llama.cpp' / 'ggml'
     includes = [str(stage), str(stage / 'csrc'), str(ggml / 'include'), str(ggml / 'src'), str(ggml / 'src' / 'ggml-cuda')] + include_paths(device_type='cuda')
-    flags = ['-O3', '-std=c++17', '-DGGML_USE_HIP', '-DHIPBLAS_V2', '-U__HIP_NO_HALF_OPERATORS__', '-U__HIP_NO_HALF_CONVERSIONS__']
+    # Extra flags for every compiler, e.g. an older glibc sysroot on Linux (--sysroot / --gcc-toolchain).
+    extra = os.environ.get('LLAMACPP_GGUF_HIP_EXTRA_FLAGS', '').split()
+    flags = ['-O3', '-std=c++17', '-DGGML_USE_HIP', '-DHIPBLAS_V2', '-U__HIP_NO_HALF_OPERATORS__', '-U__HIP_NO_HALF_CONVERSIONS__'] + extra
     modules = {
         '_prism': ['csrc/prism_decode_bindings.cpp', 'csrc/prism_decode.cu'],
         '_C': ['csrc/gguf_llamacpp_bindings.cpp', 'csrc/prism_hadamard.cu', 'csrc/gguf_llamacpp_kernels.cu'] + ['_vendor/llama.cpp/ggml/src/ggml-cuda/' + name + '.cu' for name in ('quantize', 'mmvq', 'convert')],
         '_attention': ['csrc/q8_paged_attention_bindings.cpp', 'csrc/q8_paged_attention.cu'],
     }
-    extensions = [Extension('llamacpp_gguf_cuda.' + name, sources=[source(s) for s in files], include_dirs=includes, library_dirs=library_paths(device_type='cuda'), libraries=['c10', 'torch', 'torch_cpu', 'torch_python', 'amdhip64', 'c10_hip', 'torch_hip', 'hipblas'], extra_compile_args={'cxx': ['-O2', '-std=c++17', '-DGGML_USE_HIP'], 'nvcc': list(flags)}, language='c++') for name, files in modules.items()]
+    extensions = [Extension('llamacpp_gguf_cuda.' + name, sources=[source(s) for s in files], include_dirs=includes, library_dirs=library_paths(device_type='cuda'), libraries=['c10', 'torch', 'torch_cpu', 'torch_python', 'amdhip64', 'c10_hip', 'torch_hip', 'hipblas'], extra_compile_args={'cxx': ['-O2', '-std=c++17', '-DGGML_USE_HIP'] + extra, 'nvcc': list(flags)}, language='c++') for name, files in modules.items()]
     suffix = os.environ.get('LLAMACPP_GGUF_CUDA_VERSION_SUFFIX', '+' + build_tag)
-    version = '1.0.26' + suffix
+    version = re.search(r'BASE_VERSION = "([^"]+)"', (root / 'setup.py').read_text(encoding='utf-8')).group(1) + suffix
 
     class HIPBuildPy(build_py):
         def find_package_modules(self, package, package_dir):
@@ -81,5 +85,12 @@ def build_hip():
                 f'__version__ = {version!r}\n__torch_version__ = {torch.__version__!r}\n'
                 f'__hip_version__ = {torch.version.hip!r}\n', encoding='utf-8')
 
+    class HIPBuildExtension(BuildExtension):
+        def build_extensions(self):
+            if os.name != 'nt':
+                # Conda's Python injects its prefix as an RPATH: keep the binaries free of build-machine paths.
+                self.compiler.linker_so = [flag for flag in self.compiler.linker_so if not flag.startswith('-Wl,-rpath,')]
+            super().build_extensions()
+
     (root / build_base).mkdir(parents=True, exist_ok=True)
-    setup(version=version, description='GGUF HIP kernels including WanGP PTQ1, Prism and paged attention.', packages=find_packages(where='src'), package_dir={'': 'src'}, include_package_data=False, options={'build': {'build_base': build_base}, 'egg_info': {'egg_base': build_base}}, ext_modules=extensions, cmdclass={'build_ext': BuildExtension, 'build_py': HIPBuildPy}, license_files=['_vendor/llama.cpp/LICENSE', '_vendor/llama.cpp/ggml/LICENSE'], zip_safe=False)
+    setup(version=version, description='GGUF HIP kernels including WanGP PTQ1, Prism and paged attention.', packages=find_packages(where='src'), package_dir={'': 'src'}, include_package_data=False, options={'build': {'build_base': build_base}, 'egg_info': {'egg_base': build_base}}, ext_modules=extensions, cmdclass={'build_ext': HIPBuildExtension, 'build_py': HIPBuildPy}, license_files=['_vendor/llama.cpp/LICENSE', '_vendor/llama.cpp/ggml/LICENSE'], zip_safe=False)

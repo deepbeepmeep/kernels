@@ -31,7 +31,9 @@ static __device__ __forceinline__ void mmq_pipe_wait(const unsigned int * counte
     if (threadIdx.x == 0 && threadIdx.y == 0) {
         unsigned int delay = 32;
         while (*(volatile const unsigned int *) counter < target) {
+#if __CUDA_ARCH__ >= 700
             __nanosleep(delay);
+#endif
             delay = min(delay * 2, 256u);
         }
         __threadfence();
@@ -53,6 +55,7 @@ static __global__ void mmq_chunked(
         const char * __restrict__ weight, const scalar_t * __restrict__ input, scalar_t * __restrict__ output,
         const scalar_t * __restrict__ bias, int * __restrict__ q8,
         unsigned int * __restrict__ sync, const int rows, const int k, const int n, const int step) {
+#if defined(TURING_MMA_AVAILABLE)  // the host only launches it with the tensor-core MMQ data layout
     constexpr int J        = 128;
     constexpr int I        = ggml_cuda_mmq_get_I(type, J, false);
     constexpr int threads  = ggml_cuda_mmq_get_nthreads(type, J, false);
@@ -140,4 +143,7 @@ static __global__ void mmq_chunked(
             mmq_pipe_signal(sync + 1 + S + c % S);
         }
     }
+#else
+    NO_DEVICE_CODE;
+#endif // defined(TURING_MMA_AVAILABLE)
 }

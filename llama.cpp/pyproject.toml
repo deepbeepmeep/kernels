@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "llamacpp-gguf-cuda"
 dynamic = ["version", "description"]
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 classifiers = [
   "Programming Language :: Python :: 3",
   "Environment :: GPU :: NVIDIA CUDA",

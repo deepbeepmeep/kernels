@@ -1,6 +1,6 @@
 param(
-    [string]$Python = 'D:\AMD\qwen-hip210\Scripts\python.exe',
-    [string]$Architectures = 'gfx1201',
+    [string]$Python = 'D:\ml\build_tools\gguf-rocm10\python.exe',
+    [string]$Architectures = 'gfx1200;gfx1201',
     [string]$OutputDirectory = 'D:\AMD\dist',
     [switch]$SkipBuild
 )
@@ -18,7 +18,7 @@ $env:CXX = 'clang-cl'
 $env:DISTUTILS_USE_SDK = '1'
 $env:PYTORCH_ROCM_ARCH = $Architectures
 $env:MAX_JOBS = '2'
-$env:PATH = "$sdkRoot\lib\llvm\bin;$sdkRoot\bin;$($vcRoot.FullName)\bin\Hostx64\x64;$winSdk\bin\$winVersion\x64;$(Split-Path $Python);$env:PATH"
+$env:PATH = "$sdkRoot\lib\llvm\bin;$sdkRoot\bin;$($vcRoot.FullName)\bin\Hostx64\x64;$winSdk\bin\$winVersion\x64;$(Split-Path $Python);$(Split-Path $Python)\Scripts;$env:PATH"
 $env:INCLUDE = "$($vcRoot.FullName)\include;$winSdk\Include\$winVersion\ucrt;$winSdk\Include\$winVersion\shared;$winSdk\Include\$winVersion\um"
 $env:LIB = "$($vcRoot.FullName)\lib\x64;$winSdk\Lib\$winVersion\ucrt\x64;$winSdk\Lib\$winVersion\um\x64"
 Push-Location $PSScriptRoot
