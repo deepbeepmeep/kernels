@@ -53,6 +53,7 @@ def main():
     run('hadamard', 'test_prism_hadamard.py')
     run('prism_decode', 'test_prism_decode.py', ['--output', out / 'prism_decode.json'])
     run('linear_fusions', 'test_linear_fusions.py')
+    run('linear_chunked', 'test_linear_chunked.py')
     report = dict(wheel=args.wheel.name, python=sys.version, checks=records, passed=True)
     (out / 'validation.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print('PASSED', args.wheel.name, flush=True)
