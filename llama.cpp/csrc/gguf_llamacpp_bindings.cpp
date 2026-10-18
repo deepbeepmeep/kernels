@@ -33,7 +33,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     );
     m.def("embedding", &gguf_cuda_embedding, "GGUF embedding lookup using CUDA row dequantization.");
     m.def("linear_chunked", &gguf_cuda_linear_chunked,
-        "Bounded cooperative MMQ row loop; returns None when the layout or device is unsupported.");
+        "Linear over many rows in one cooperative launch, its Q8 ring bounded by scratch_bytes; None when unsupported.");
+    m.def("linear_chunked_supported", &gguf_cuda_linear_chunked_supported,
+        "Whether linear_chunked takes this qtype, matrix shape, output type and bias on the device.");
 #if !defined(GGML_USE_HIP)
     m.def("set_short_batch_mode", &short_batch_set_mode, "Short-batch Q4_K/PTQ1_0 tensor-core policy: auto, native or mma.");
     m.def("short_batch_mode", &short_batch_mode, "Current short-batch tensor-core policy.");

@@ -230,23 +230,21 @@ def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor
     return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), mode)
 
 
-def linear_chunked(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype, chunk_rows: int):
-    """Run a bounded GPU row loop, or return None for the existing sliced path.
+def linear_chunked_supported(qtype_name: str, tensor_shape, output_dtype: torch.dtype, biased: bool, device_index: int) -> bool:
+    """Whether linear_chunked takes this qtype, matrix shape, 16-bit output type and bias on the device (structural limits only)."""
+    return _linear_mode() == "mmq" and _C.linear_chunked_supported(qtype_name, int(tensor_shape[0]), int(tensor_shape[1]), str(output_dtype).replace("torch.", ""), bool(biased), int(device_index))
 
-    chunk_rows is the caller's existing 128-row-aligned slice size. Keeping it
-    preserves the stream-K partitions and FP32 accumulation of separate calls.
-    Automatic use currently targets SM120 Q4_K/Q5_K/Q6_K configurations;
-    other devices, Q8_0, non-square Q5_K and narrow output projections retain
-    ordinary slices. These shapes did not benefit from the resident grid.
+
+def linear_chunked(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor: torch.Tensor, bias: torch.Tensor | None, output_dtype: torch.dtype, scratch_bytes: int):
+    """Linear over many rows in one cooperative launch, or None when unsupported.
+
+    Row chunks are quantized into a ring of Q8 slots (at most scratch_bytes, at least 3 x 128 rows) while other SMs multiply earlier chunks; each output
+    tile accumulates its whole K range (no stream-K split), so results do not depend on the chunk size or the GPU, and the bias is
+    added in the output type as a separate add would. Input must be contiguous and of the output type.
     """
-    if (_linear_mode() != "mmq" or qtype_name not in ("Q4_K", "Q5_K", "Q6_K")
-            or not input_tensor.is_contiguous()
-            or torch.cuda.get_device_capability(input_tensor.device) != (12, 0)
-            or (qtype_name == "Q5_K" and tensor_shape[0] != tensor_shape[1])
-            or (tensor_shape[0] < tensor_shape[1]
-                and (qtype_name != "Q6_K" or tensor_shape[0] < 4096))):
+    if _linear_mode() != "mmq" or not input_tensor.is_contiguous():
         return None
-    return _C.linear_chunked(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), chunk_rows)
+    return _C.linear_chunked(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), int(scratch_bytes))
 
 
 def embedding(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, indices: torch.Tensor, output_dtype: torch.dtype):
@@ -268,7 +266,7 @@ def prism_decode(input_tensor, raw_weight, signs, bias, rows, grouped_shape=(0, 
 __all__ = [
     "has_prism_decode", "prism_decode",
     "prism_hadamard",
-    "__version__", "embedding", "linear", "linear_chunked", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
+    "__version__", "embedding", "linear", "linear_chunked", "linear_chunked_supported", "load_error", "prepare_runtime_buffers", "release_runtime_buffers", "has_q8_paged_attention", "q8_paged_attention_format",
     "may_support_embedding_qtype_name", "may_support_linear_qtype_name", "q8_paged_attention", "q8_paged_attention_num_splits", "dense_paged_attention",
     "supports_embedding_qtype_name", "supports_linear_qtype_name", "supports_qtype_name", "supports_linear_fusions",
     "supports_linear_layout", "packed_row_kernel",

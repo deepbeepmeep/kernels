@@ -949,62 +949,121 @@ at::Tensor run_embedding_cuda(at::Tensor raw_weight, ggml_type type, std::vector
 }
 
 #if !defined(GGML_USE_HIP)
-template <ggml_type type, typename scalar_t>
-c10::optional<at::Tensor> run_linear_chunked(const at::Tensor & weight, const at::Tensor & input, int rows, int k, int n, int step) {
-    const int device = input.device().index();
+// Launch of the cooperative row loop for one kernel and device. Only structural limits decide: tensor-core MMQ data layout, cooperative
+// launch, shared memory and occupancy. Whether it beats the sliced path on a given GPU is measured by the caller.
+struct linear_chunked_plan {
+    bool checked   = false;
+    bool supported = false;
+    int grid       = 0;
+    int threads    = 0;
+    size_t shared  = 0;
+};
+
+template <ggml_type type, typename scalar_t, bool biased>
+const linear_chunked_plan & plan_linear_chunked(const int device) {
+    static std::mutex mutex;
+    static linear_chunked_plan plans[GGML_CUDA_MAX_DEVICES];
+    std::lock_guard<std::mutex> lock(mutex);
+    linear_chunked_plan & plan = plans[device];
+    if (plan.checked) {
+        return plan;
+    }
+    plan.checked = true;
     const auto & info = ggml_cuda_info().devices[device];
     const auto config = ggml_cuda_mmq_get_config(type, 128, false, info.cc);
-    if (config.type == GGML_TYPE_COUNT) return c10::nullopt;
-    const size_t shared = mmq_get_nbytes_shared(config, info.cc);
-    // Two compact stream-K partials must fit the existing per-model arena.
-    // Keep layouts with a different tile/partition scheme on ordinary slicing.
-    if (!config.use_mma_data_layout(info.cc) || !config.stream_k || config.I > 128 || n % config.I ||
-            shared > info.smpbo || k % config.K_vram ||
-            mmq_select_J(type, false, step, info.cc, info.smpbo) != 128 ||
-            int64_t((step + 127)/128) * (n/config.I) * (k/ggml_blck_size(type)) >= (1 << 30)) return c10::nullopt;
-    const int tail = rows % step;
-    int native_rows = tail && mmq_select_J(type, false, tail, info.cc, info.smpbo) != 128 ? rows - tail : rows;
     int cooperative = 0;
     CUDA_CHECK(cudaDeviceGetAttribute(&cooperative, cudaDevAttrCooperativeLaunch, device));
-    if (!cooperative) return c10::nullopt;
-    auto kernel = mmq_chunked<type, scalar_t>;
+    if (config.type == GGML_TYPE_COUNT || !config.use_mma_data_layout(info.cc) || !cooperative ||
+            mmq_get_q8_1_ds_layout(type) != mmq_chunked_ds_layout(type)) {
+        return plan;
+    }
+    const auto kernel = mmq_chunked<type, scalar_t, biased>;
+    cudaFuncAttributes attributes;
+    CUDA_CHECK(cudaFuncGetAttributes(&attributes, kernel));
+    const size_t shared = mmq_get_nbytes_shared(config, info.cc);
+    if (shared + attributes.sharedSizeBytes > info.smpbo) {
+        return plan;
+    }
     CUDA_CHECK(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, shared));
     int occupancy = 0;
     CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&occupancy, kernel, config.nthreads, shared));
-    if (occupancy < 1) return c10::nullopt;
-
-    const cudaStream_t stream = at::cuda::getCurrentCUDAStream(device).stream();
-    auto & pool = static_cast<gguf_cuda_pool_simple &>(get_backend_ctx(device, stream).pool(device));
-    const size_t partial_values = size_t(info.nsm) * config.I * 128;
-    pool.reserve(2 * partial_values * sizeof(float));
-    // All partials consumed by fixup are written by this launch; no memset is needed.
-    float * completed = static_cast<float *>(pool.buffer.data_ptr());
-    float * partial = completed + partial_values;
-    const int64_t q8_bytes = (int64_t(step) * GGML_PAD(k, MATRIX_ROW_PADDING) / 128 + 128) * sizeof(block_q8_1_mmq);
-    at::Tensor output = at::empty({rows, n}, input.options());
-    // Match the sliced path's allocation order so graph pools can reuse the
-    // output's physical chunks before placing the short-lived Q8 scratch.
-    at::Tensor q8_buffer = at::empty({q8_bytes}, input.options().dtype(at::kByte));
-    const char * w = static_cast<const char *>(weight.data_ptr());
-    const scalar_t * x = static_cast<const scalar_t *>(input.data_ptr());
-    scalar_t * y = static_cast<scalar_t *>(output.data_ptr());
-    int * q8 = static_cast<int *>(q8_buffer.data_ptr());
-    int nsm = info.nsm;
-    void * args[] = {&w, &x, &y, &q8, &completed, &partial, &native_rows, &k, &n, &step, &nsm};
-    CUDA_CHECK(cudaLaunchCooperativeKernel(reinterpret_cast<const void *>(kernel), dim3(nsm), dim3(32, config.nthreads/32), args, shared, stream));
-    if (native_rows < rows) {
-        // Preserve the original tail's tile size/accumulation. Free Q8 first so
-        // this bounded tail cannot add its scratch to the main loop's peak.
-        q8_buffer = at::Tensor();
-        output.narrow(0, native_rows, tail).copy_(run_linear_cuda(weight, type, {n, k}, input.narrow(0, native_rows, tail)));
+    if (occupancy < 1) {
+        return plan;
     }
+    plan.supported = true;
+    plan.grid      = info.nsm * occupancy;
+    plan.threads   = config.nthreads;
+    plan.shared    = shared;
+    return plan;
+}
+
+struct linear_chunked_call {
+    const at::Tensor * weight;   // nullptr: eligibility query only
+    const at::Tensor * input;
+    const at::Tensor * bias;
+    int64_t rows, k, n, scratch_bytes;
+    int device;
+};
+
+template <ggml_type type, typename scalar_t, bool biased>
+c10::optional<at::Tensor> run_linear_chunked(const linear_chunked_call & call) {
+    const auto config = ggml_cuda_mmq_get_config(type, 128, false, ggml_cuda_info().devices[call.device].cc);
+    const linear_chunked_plan & plan = plan_linear_chunked<type, scalar_t, biased>(call.device);
+    if (!plan.supported || call.n % config.I || call.k % config.K_vram) {
+        return c10::nullopt;
+    }
+    if (call.weight == nullptr) {
+        return at::Tensor();
+    }
+    // The Q8 ring, padding blocks included, stays within scratch_bytes: chunks of whole row tiles, no larger than the call.
+    const int padded = GGML_PAD(int(call.k), MATRIX_ROW_PADDING);
+    const int64_t row_bytes = int64_t(padded) / (4*QK8_1) * int64_t(sizeof(block_q8_1_mmq));
+    const int64_t slot_rows = (call.scratch_bytes / mmq_pipe_slots - 4*QK8_1 * int64_t(sizeof(block_q8_1_mmq))) / row_bytes / 128 * 128;
+    int step = int(std::min<int64_t>(GGML_PAD(call.rows, 128), std::max<int64_t>(128, slot_rows)));
+    const int64_t items = ((call.rows + step - 1) / step + 1) * (step / 128) * ((padded + 4*config.nthreads - 1) / (4*config.nthreads) + call.n / config.I);
+    if (items >= INT_MAX) {
+        return c10::nullopt;
+    }
+    const cudaStream_t stream = at::cuda::getCurrentCUDAStream(call.device).stream();
+    auto & pool = static_cast<gguf_cuda_pool_simple &>(get_backend_ctx(call.device, stream).pool(call.device));
+    pool.reserve(mmq_pipe_sync_words * sizeof(unsigned int));
+    unsigned int * sync = static_cast<unsigned int *>(pool.buffer.data_ptr());
+    CUDA_CHECK(cudaMemsetAsync(sync, 0, mmq_pipe_sync_words * sizeof(unsigned int), stream));
+    // Output first, as the sliced path allocates it: graph pools can reuse its chunks before placing the short-lived Q8 ring.
+    at::Tensor output = at::empty({call.rows, call.n}, call.input->options());
+    at::Tensor q8_ring = at::empty({mmq_pipe_slots * mmq_pipe_slot_ints(step, padded) * int64_t(sizeof(int))}, call.input->options().dtype(at::kByte));
+    const char * w = static_cast<const char *>(call.weight->data_ptr());
+    const scalar_t * x = static_cast<const scalar_t *>(call.input->data_ptr());
+    scalar_t * y = static_cast<scalar_t *>(output.data_ptr());
+    const scalar_t * b = biased ? static_cast<const scalar_t *>(call.bias->data_ptr()) : nullptr;
+    int * q8 = static_cast<int *>(q8_ring.data_ptr());
+    int rows = int(call.rows), k = int(call.k), n = int(call.n);
+    void * args[] = {&w, &x, &y, &b, &q8, &sync, &rows, &k, &n, &step};
+    CUDA_CHECK(cudaLaunchCooperativeKernel(reinterpret_cast<const void *>(mmq_chunked<type, scalar_t, biased>), dim3(plan.grid), dim3(32, plan.threads/32), args, plan.shared, stream));
     return output;
 }
 
 template <ggml_type type>
-c10::optional<at::Tensor> run_linear_chunked_dtype(const at::Tensor & weight, const at::Tensor & input, int rows, int k, int n, int step) {
-    if (input.scalar_type() == at::kHalf) return run_linear_chunked<type, half>(weight, input, rows, k, n, step);
-    return run_linear_chunked<type, nv_bfloat16>(weight, input, rows, k, n, step);
+c10::optional<at::Tensor> run_linear_chunked_variant(const linear_chunked_call & call, const at::ScalarType dtype, const bool biased) {
+    if (dtype == at::kHalf) {
+        return biased ? run_linear_chunked<type, half, true>(call) : run_linear_chunked<type, half, false>(call);
+    }
+    return biased ? run_linear_chunked<type, nv_bfloat16, true>(call) : run_linear_chunked<type, nv_bfloat16, false>(call);
+}
+
+// Matrices, output types and sizes the row loop takes (16-bit input = output type, 32-bit offsets); nullopt otherwise.
+c10::optional<at::Tensor> linear_chunked_dispatch(const ggml_type type, const at::ScalarType dtype, const bool biased, const linear_chunked_call & call) {
+    if ((dtype != at::kHalf && dtype != at::kBFloat16) || call.rows < 1 || call.rows > INT_MAX || call.n > INT_MAX || call.k > INT_MAX ||
+            call.k % ggml_blck_size(type) || call.n * (call.k / ggml_blck_size(type)) > INT_MAX) {
+        return c10::nullopt;
+    }
+    switch (type) {
+        case GGML_TYPE_Q4_K: return run_linear_chunked_variant<GGML_TYPE_Q4_K>(call, dtype, biased);
+        case GGML_TYPE_Q5_K: return run_linear_chunked_variant<GGML_TYPE_Q5_K>(call, dtype, biased);
+        case GGML_TYPE_Q6_K: return run_linear_chunked_variant<GGML_TYPE_Q6_K>(call, dtype, biased);
+        case GGML_TYPE_Q8_0: return run_linear_chunked_variant<GGML_TYPE_Q8_0>(call, dtype, biased);
+        default: return c10::nullopt;
+    }
 }
 #endif
 
@@ -1325,40 +1384,52 @@ at::Tensor gguf_cuda_linear(
 
 c10::optional<at::Tensor> gguf_cuda_linear_chunked(
     at::Tensor raw_weight, const std::string & qtype_name, std::vector<int64_t> tensor_shape,
-    at::Tensor input, c10::optional<at::Tensor> bias, const std::string & output_dtype_name, int64_t chunk_rows) {
+    at::Tensor input, c10::optional<at::Tensor> bias, const std::string & output_dtype_name, int64_t scratch_bytes) {
     TORCH_CHECK(tensor_shape.size() == 2 && tensor_shape[0] > 0 && tensor_shape[1] > 0, "Expected a positive GGUF matrix shape");
     check_cuda_tensor(raw_weight, "raw_weight");
     check_cuda_tensor(input, "input");
     TORCH_CHECK(input.dim() > 0 && input.size(-1) == tensor_shape[1], "Input width does not match GGUF matrix");
     TORCH_CHECK(raw_weight.device() == input.device(), "Weights and input must share a CUDA device");
-    TORCH_CHECK(chunk_rows > 0 && chunk_rows <= INT_MAX && chunk_rows % 128 == 0, "chunk_rows must be a positive 32-bit multiple of 128");
+    TORCH_CHECK(scratch_bytes > 0, "scratch_bytes must be positive");
 #if defined(GGML_USE_HIP)
     return c10::nullopt;
 #else
     const at::cuda::CUDAGuard guard(input.device());
     const ggml_type type = ggml_type_from_qtype_name(qtype_name);
     const auto dtype = scalar_type_from_name(output_dtype_name);
-    const int64_t rows = input.numel() / tensor_shape[1];
     const int64_t n = tensor_shape[0], k = tensor_shape[1];
-    if ((dtype != at::kHalf && dtype != at::kBFloat16) || input.scalar_type() != dtype ||
-            rows < 2*chunk_rows || rows > INT_MAX || n > INT_MAX || k > INT_MAX ||
-            n % 128 || k % 256 || n*k/ggml_blck_size(type) > INT_MAX) return c10::nullopt;
+    if (input.scalar_type() != dtype || !input.is_contiguous()) {
+        return c10::nullopt;
+    }
     TORCH_CHECK(raw_weight.scalar_type() == at::kByte && raw_weight.is_contiguous() &&
         raw_weight.numel() == n * (k / ggml_blck_size(type)) * ggml_type_size(type), "Invalid packed weight layout");
-    at::Tensor x = input.reshape({rows, k}).contiguous();
-    c10::optional<at::Tensor> result;
-    switch (type) {
-        case GGML_TYPE_Q4_K: result = run_linear_chunked_dtype<GGML_TYPE_Q4_K>(raw_weight, x, rows, k, n, chunk_rows); break;
-        case GGML_TYPE_Q5_K: result = run_linear_chunked_dtype<GGML_TYPE_Q5_K>(raw_weight, x, rows, k, n, chunk_rows); break;
-        case GGML_TYPE_Q6_K: result = run_linear_chunked_dtype<GGML_TYPE_Q6_K>(raw_weight, x, rows, k, n, chunk_rows); break;
-        case GGML_TYPE_Q8_0: result = run_linear_chunked_dtype<GGML_TYPE_Q8_0>(raw_weight, x, rows, k, n, chunk_rows); break;
-        default: return c10::nullopt;
+    // The sliced path adds the bias in the output type: the kernel does the same arithmetic in its write-back.
+    at::Tensor bias_tensor;
+    if (bias.has_value() && bias->defined()) {
+        TORCH_CHECK(bias->numel() == n, "Bias size does not match GGUF matrix");
+        bias_tensor = bias->to(input.device(), dtype).contiguous();
     }
-    if (!result) return c10::nullopt;
-    maybe_cast_bias_inplace(*result, bias);
+    const at::Tensor x = input.reshape({-1, k});
+    const linear_chunked_call call = {&raw_weight, &x, &bias_tensor, x.size(0), k, n, scratch_bytes, int(input.device().index())};
+    c10::optional<at::Tensor> result = linear_chunked_dispatch(type, dtype, bias_tensor.defined(), call);
+    if (!result) {
+        return c10::nullopt;
+    }
     std::vector<int64_t> shape(input.sizes().begin(), input.sizes().end() - 1);
     shape.push_back(n);
     return result->reshape(shape);
+#endif
+}
+
+bool gguf_cuda_linear_chunked_supported(
+    const std::string & qtype_name, int64_t out_features, int64_t in_features, const std::string & output_dtype_name, bool biased, int64_t device) {
+#if defined(GGML_USE_HIP)
+    return false;
+#else
+    TORCH_CHECK(device >= 0 && device < GGML_CUDA_MAX_DEVICES, "Invalid CUDA device index: ", device);
+    const at::cuda::CUDAGuard guard(int(device));
+    const linear_chunked_call call = {nullptr, nullptr, nullptr, 1, in_features, out_features, 1, int(device)};
+    return linear_chunked_dispatch(ggml_type_from_qtype_name(qtype_name), scalar_type_from_name(output_dtype_name), biased, call).has_value();
 #endif
 }
 

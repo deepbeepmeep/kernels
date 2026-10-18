@@ -473,9 +473,9 @@ template <ggml_type type, int J, bool fallback> static __device__ __forceinline_
     }
 }
 
-template<ggml_type type, int J, bool fallback, typename dst_t = float>
+template<ggml_type type, int J, bool fallback>
 static __device__ __forceinline__ void ggml_cuda_mmq_write_back_mma(
-            const float * __restrict__ sum, const int * __restrict__ ids_dst, dst_t * __restrict__ dst,
+            const float * __restrict__ sum, const int * __restrict__ ids_dst, float * __restrict__ dst,
             const float * __restrict__ y_scale, const int stride, const int i_max, const int j_max) {
 
 #if defined(AMD_MFMA_AVAILABLE) || defined(AMD_WMMA_AVAILABLE)
@@ -521,6 +521,53 @@ static __device__ __forceinline__ void ggml_cuda_mmq_write_back_mma(
                 } else {
                     dst[ids_dst[j]*stride + i] = sum[(j0/tile_C::J + n)*tile_C::ne + l];
                     GGML_UNUSED(y_scale_used);
+                }
+            }
+        }
+    }
+}
+
+// 16-bit write-back of a complete tile (row loop of mmq_chunked.cuh). The optional bias, in the output type, is added after rounding
+// as the PyTorch add of the sliced path does: round(float(round(sum)) + float(bias)).
+template<ggml_type type, int J, bool fallback, typename dst_t>
+static __device__ __forceinline__ void ggml_cuda_mmq_write_back_typed(
+            const float * __restrict__ sum, const int * __restrict__ ids_dst, dst_t * __restrict__ dst,
+            const dst_t * __restrict__ bias, const int stride, const int i_max, const int j_max) {
+
+#if defined(AMD_MFMA_AVAILABLE) || defined(AMD_WMMA_AVAILABLE)
+    typedef tile<16, 16, int, DATA_LAYOUT_J_MAJOR> tile_C;
+#else
+    typedef tile<16,  8, int> tile_C;
+#endif // defined(AMD_MFMA_AVAILABLE) || defined(AMD_WMMA_AVAILABLE)
+
+    constexpr int rows_per_warp = ggml_cuda_mmq_get_rows_per_warp(type, J, fallback);
+    constexpr int ntx           = rows_per_warp/tile_C::I; // Number of x minitiles per warp.
+
+    const int i0 = (threadIdx.y / ntx) * (ntx*tile_C::I);
+
+#pragma unroll
+    for (int j0 = 0; j0 < J; j0 += ntx*tile_C::J) {
+#pragma unroll
+        for (int n = 0; n < ntx; ++n) {
+#pragma unroll
+            for (int l = 0; l < tile_C::ne; ++l) {
+                const int j = j0 + (threadIdx.y % ntx) * tile_C::J + tile_C::get_j(l);
+
+                if (j > j_max) {
+                    continue;
+                }
+
+                const int i = i0 + n*tile_C::I + tile_C::get_i(l);
+
+                if (fallback && i > i_max) {
+                    continue;
+                }
+
+                const dst_t value = sum[(j0/tile_C::J + n)*tile_C::ne + l];
+                if (bias != nullptr) {
+                    dst[ids_dst[j]*stride + i] = dst_t(float(value) + float(bias[i]));
+                } else {
+                    dst[ids_dst[j]*stride + i] = value;
                 }
             }
         }
@@ -889,7 +936,7 @@ static __device__ __forceinline__ void mul_mat_q_process_tile(
         const float * __restrict__ y_scale,
         const int stride_row_x, const int ncols_y, const int stride_col_dst,
         const int tile_x_max_i, const int tile_y_max_j, const int kb0_start, const int kb0_stop,
-        dst_t * __restrict__ final = nullptr, const int logical_block = -1) {
+        dst_t * __restrict__ final = nullptr, const dst_t * __restrict__ bias = nullptr) {
 
     constexpr int              warp_size  = ggml_cuda_get_physical_warp_size();
     constexpr int              nwarps     = ggml_cuda_mmq_get_nthreads(type, J, fallback) / warp_size;
@@ -953,18 +1000,13 @@ static __device__ __forceinline__ void mul_mat_q_process_tile(
     }
 
     if (fixup) {
-        write_back(sum, ids_dst, tmp_fixup + (logical_block < 0 ? blockIdx.x : logical_block)*(J*I), y_scale, I, I, J);
+        write_back(sum, ids_dst, tmp_fixup + blockIdx.x*(J*I), y_scale, I, I, J);
     } else {
         if constexpr (std::is_same<dst_t, float>::value) {
             write_back(sum, ids_dst, dst, y_scale, stride_col_dst, tile_x_max_i, tile_y_max_j);
         } else {
-            // A completed tile can be rounded directly. A split tile must keep
-            // its final partial in FP32 until the stream-K fixup has finished.
-            if (kb0_start == 0) {
-                ggml_cuda_mmq_write_back_mma<type, J, fallback, dst_t>(sum, ids_dst, final, y_scale, stride_col_dst, tile_x_max_i, tile_y_max_j);
-            } else {
-                write_back(sum, ids_dst, dst + logical_block*(J*I), y_scale, I, tile_x_max_i, tile_y_max_j);
-            }
+            // Complete tiles of the 16-bit row loop (kb0_start == 0 .. kb0_stop == K): rounded here, no FP32 product.
+            ggml_cuda_mmq_write_back_typed<type, J, fallback, dst_t>(sum, ids_dst, final, bias, stride_col_dst, tile_x_max_i, tile_y_max_j);
         }
     }
 }

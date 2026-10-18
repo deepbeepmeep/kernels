@@ -32,4 +32,7 @@ bool gguf_cuda_supports_linear_fusions(const std::string & qtype_name, int64_t t
 
 c10::optional<at::Tensor> gguf_cuda_linear_chunked(
     at::Tensor raw_weight, const std::string & qtype_name, std::vector<int64_t> tensor_shape,
-    at::Tensor input, c10::optional<at::Tensor> bias, const std::string & output_dtype_name, int64_t chunk_rows);
+    at::Tensor input, c10::optional<at::Tensor> bias, const std::string & output_dtype_name, int64_t scratch_bytes);
+
+bool gguf_cuda_linear_chunked_supported(
+    const std::string & qtype_name, int64_t out_features, int64_t in_features, const std::string & output_dtype_name, bool biased, int64_t device);
