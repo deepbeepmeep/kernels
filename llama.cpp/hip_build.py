@@ -89,7 +89,10 @@ def build_hip():
         def build_extensions(self):
             if os.name != 'nt':
                 # Conda's Python injects its prefix as an RPATH: keep the binaries free of build-machine paths.
-                self.compiler.linker_so = [flag for flag in self.compiler.linker_so if not flag.startswith('-Wl,-rpath,')]
+                # setuptools 72+ links C++ extensions with linker_so_cxx.
+                for name in ('linker_so', 'linker_so_cxx'):
+                    if hasattr(self.compiler, name):
+                        setattr(self.compiler, name, [flag for flag in getattr(self.compiler, name) if not flag.startswith('-Wl,-rpath,')])
             super().build_extensions()
 
     (root / build_base).mkdir(parents=True, exist_ok=True)

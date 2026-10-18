@@ -193,7 +193,10 @@ class PortableBuildExtension(BuildExtension):
         if os.name != "nt":
             # Conda's Python can inject its absolute prefix into LDSHARED.
             # Keep only the explicit, package-relative runtime paths below.
-            self.compiler.linker_so = [flag for flag in self.compiler.linker_so if not flag.startswith("-Wl,-rpath,")]
+            # setuptools 72+ links C++ extensions with linker_so_cxx.
+            for name in ("linker_so", "linker_so_cxx"):
+                if hasattr(self.compiler, name):
+                    setattr(self.compiler, name, [flag for flag in getattr(self.compiler, name) if not flag.startswith("-Wl,-rpath,")])
         super().build_extensions()
 
 
