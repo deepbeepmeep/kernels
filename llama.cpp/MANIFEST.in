@@ -7,5 +7,4 @@ recursive-include src/llamacpp_gguf_cuda/kernels *.cubin *.json *.ptx
 graft _vendor
 recursive-include scripts *.py *.sh
 recursive-include tests *.py
-graft wangp
 global-exclude __pycache__ *.pyc *.pyd *.so *.o *.obj

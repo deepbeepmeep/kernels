@@ -19,4 +19,4 @@ Build notes:
 - The Windows CUDA wheels and the HIP wheel were built while `setup.py` / `hip_build.py` still declared 1.0.23; their metadata was relabelled to 1.0.24 with `wheel unpack/pack` (the binaries contain no version string). Both files now declare 1.0.24; the Linux wheels were built with it.
 - After building, `llamacpp_gguf_cuda/__init__.py` in all five wheels was replaced by the committed version, which validates short-batch policy arguments in Python. On the Linux builds a C++ check failure inside `_C` terminates the process instead of raising (also true of 1.0.23), so invalid values must not reach the native checks. Native binaries were not modified; all validation above ran on the final wheels.
 
-The adjacent JSON files preserve compiler configuration, source hashes, architecture lists, binary hashes and per-check durations. RTX 5090 measurements of the new path are recorded in the WanGP overlay (`wangp/specs/`); they are not a claim for other GPUs.
+The adjacent JSON files preserve compiler configuration, source hashes, architecture lists, binary hashes and per-check durations. RTX 5090 measurements of the new path are not a claim for other GPUs.

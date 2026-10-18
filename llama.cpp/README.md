@@ -48,7 +48,7 @@ Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 fo
 
 The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Hardware validation is performed on an RTX 5090; compilation coverage is not hardware testing on other GPU models. See `release/1.0.26/README.md` for the final build and validation records.
 
-The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. The current WanGP overlay enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
+The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. WanGP enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
 
 Validation scripts: `tests/test_quant_compatibility.py` compares saved old-format outputs bit-for-bit; `tests/test_ptq1.py` checks independent base-3 references, shape tails, bias, three dtypes and graph replay; `tests/test_prism_hadamard.py` checks independent signed FWHT references and GDN permutation. `tests/benchmark_quant_compatibility.py` measures unchanged formats before/after in separate processes.
 
@@ -66,7 +66,7 @@ has been compiled and imported (the 1.0.26 HIP wheel is a version-only relabel o
 - Maximum-tile MMQ activation padding for safe CUDA-graph replay. Output and scratch buffers avoid unnecessary zero fills.
 - Native Q8 paged attention and experimental dense FP16/BF16 paged attention. The Q8 vector path selects up to 64 automatic splits on SM120-class devices and 32 on other devices.
 - **Precompiled SM120 asynchronous-copy attention** for Q8 prefill and grouped decode/verification. Four cubins per CUDA major cover FP16/BF16 and prefill/grouped operation. Runtime query counts, heads, pages, context lengths and splits do not compile new variants. These use `cp.async`, not TMA. Native C++ launches the binaries on PyTorch's current CUDA stream, including during graph capture. This path has no runtime Triton dependency.
-- The WanGP overlay in `wangp/` preserves the shared engine/kernel integration and tests. Its dispatch enables the new async path only in the vLLM backend on compute capability 12.0, with head dimension 256. Other GPUs retain the shared implementations; legacy/cg retain their existing native/PyTorch paths.
+- WanGP's dispatch enables the new async path only in the vLLM backend on compute capability 12.0, with head dimension 256. Other GPUs retain the shared implementations; legacy/cg retain their existing native/PyTorch paths.
 
 The GPU binaries contain the same high/low tensor-core arithmetic as the validated Gluon source. This release does not change checkpoint quantization or sampling settings. Only an RTX5090 was available for hardware validation; fatbin coverage is not a claim of testing on every GPU.
 

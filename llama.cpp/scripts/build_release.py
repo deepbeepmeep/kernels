@@ -55,7 +55,7 @@ source.mkdir(exist_ok=True)
 changed_sources = [p.relative_to(ROOT) for directory in ('csrc', '_vendor') for p in (ROOT / directory).rglob('*') if p.is_file() and (source / p.relative_to(ROOT)).is_file() and p.read_bytes() != (source / p.relative_to(ROOT)).read_bytes()]
 for name in ('setup.py', 'pyproject.toml', 'MANIFEST.in', 'README.md', 'THIRD_PARTY_NOTICES.md', 'PRISM_PTQ1_PORT.md', 'LICENSE-WanGP.txt'):
     shutil.copy2(ROOT / name, source / name)
-for name in ('csrc', '_vendor', 'src', 'scripts', 'tests', 'wangp'):
+for name in ('csrc', '_vendor', 'src', 'scripts', 'tests'):
     shutil.copytree(ROOT / name, source / name, dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '*.pyd', '*.so', '*.egg-info', '.git'))
 
 # A changed source can predate the last build's object (e.g. checkout/copy2).
