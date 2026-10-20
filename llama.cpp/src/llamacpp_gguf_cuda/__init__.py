@@ -225,6 +225,12 @@ def linear(raw_weight: torch.Tensor, qtype_name: str, tensor_shape, input_tensor
         out = _packed.linear(raw_weight, qtype_name, tensor_shape, input_tensor, bias, output_dtype)
         _log_once(f'packed_flat_linear_{qtype_name}', f'[GGUF] Packed linear active for {qtype_name} rows crossing blocks.')
         return out
+    if qtype_name == 'PTQ1_0' and mode == 'mmq' and not silu_mul and input_tensor.is_cuda:
+        # SM75: MMVQ's rows (1-7) with the trits of each weight block decoded once for all rows (same results per row); its output is
+        # always written in the output dtype by the kernel, as fused_output asks
+        from . import _ptq1_turing
+        if _ptq1_turing.eligible(input_tensor.device.index) and input_tensor.numel() <= _ptq1_turing.MAX_ROWS * tensor_shape[1]:
+            return _ptq1_turing.ptq1_linear(input_tensor, raw_weight, list(tensor_shape), bias, output_dtype)
     if fused_output or silu_mul:
         return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), mode, fused_output, silu_mul)
     return _C.linear(raw_weight, qtype_name, list(tensor_shape), input_tensor, bias, str(output_dtype).replace("torch.", ""), mode)
