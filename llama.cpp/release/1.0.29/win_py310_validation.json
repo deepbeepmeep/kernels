@@ -1,0 +1,47 @@
+{
+  "wheel": "llamacpp_gguf_cuda-1.0.29+torch271cu128py310-cp310-cp310-win_amd64.whl",
+  "python": "3.10.9 | packaged by Anaconda, Inc. | (main, Mar  8 2023, 10:42:25) [MSC v.1916 64 bit (AMD64)]",
+  "checks": [
+    {
+      "name": "old_quant_reference",
+      "exit_code": 0,
+      "seconds": 3.3439999999973224
+    },
+    {
+      "name": "old_quant_exact",
+      "exit_code": 0,
+      "seconds": 2.313000000001921
+    },
+    {
+      "name": "standard",
+      "exit_code": 0,
+      "seconds": 5.578000000001339
+    },
+    {
+      "name": "ptq1",
+      "exit_code": 0,
+      "seconds": 5.063000000001921
+    },
+    {
+      "name": "hadamard",
+      "exit_code": 0,
+      "seconds": 4.2810000000026776
+    },
+    {
+      "name": "prism_decode",
+      "exit_code": 0,
+      "seconds": 6.452999999994063
+    },
+    {
+      "name": "linear_fusions",
+      "exit_code": 0,
+      "seconds": 2.0780000000013388
+    },
+    {
+      "name": "linear_chunked",
+      "exit_code": 0,
+      "seconds": 2.188000000001921
+    }
+  ],
+  "passed": true
+}

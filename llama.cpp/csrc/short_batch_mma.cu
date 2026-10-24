@@ -425,6 +425,8 @@ __global__ void __launch_bounds__(WARPS * 32) ptq1_mma_kernel(const uint8_t * __
     }
 }
 
+
+
 template <typename src_t>
 void quantize_rows(const at::Tensor & input, int8_t * xq, float2 * xds, int rows, int cols, bool silu_mul, bool ptq1, cudaStream_t stream) {
     const dim3 grid((cols / 32 + 7) / 8, rows);
@@ -441,9 +443,9 @@ void quantize_rows(const at::Tensor & input, int8_t * xq, float2 * xds, int rows
 }
 
 template <int NC, typename out_t>
-void launch_columns(bool ptq1, const uint8_t * W, const int8_t * xq, const float2 * xds, void * out, int K, int rows, cudaStream_t stream) {
+void launch_columns(int kind, const uint8_t * W, const int8_t * xq, const float2 * xds, void * out, int K, int rows, cudaStream_t stream) {
     static_assert(kSharedBytes <= 48 * 1024 && PtqTile<8>::SHARED <= 48 * 1024, "dynamic shared memory above the default limit");
-    if (!ptq1) {
+    if (kind == kKindQ4K) {
         q4k_mma_kernel<NC, out_t><<<(rows + kRows - 1) / kRows, kWarps * 32, kSharedBytes, stream>>>(W, xq, xds, static_cast<out_t *>(out), K, rows);
     } else if (rows <= 6144 || K >= 16384) {
         // Fewer output rows or longer rows: more split-K warps keep all SMs busy.
@@ -454,35 +456,39 @@ void launch_columns(bool ptq1, const uint8_t * W, const int8_t * xq, const float
 }
 
 template <typename out_t>
-void dispatch_columns(int columns, bool ptq1, const uint8_t * W, const int8_t * xq, const float2 * xds, void * out, int K, int rows, cudaStream_t stream) {
+void dispatch_columns(int columns, int kind, const uint8_t * W, const int8_t * xq, const float2 * xds, void * out, int K, int rows, cudaStream_t stream) {
     switch (columns) {
-        case 2: launch_columns<2, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
-        case 3: launch_columns<3, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
-        case 4: launch_columns<4, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
-        case 5: launch_columns<5, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
-        case 6: launch_columns<6, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
-        case 7: launch_columns<7, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
-        default: launch_columns<8, out_t>(ptq1, W, xq, xds, out, K, rows, stream); break;
+        case 2: launch_columns<2, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
+        case 3: launch_columns<3, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
+        case 4: launch_columns<4, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
+        case 5: launch_columns<5, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
+        case 6: launch_columns<6, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
+        case 7: launch_columns<7, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
+        default: launch_columns<8, out_t>(kind, W, xq, xds, out, K, rows, stream); break;
     }
 }
 
 enum class Mode { Auto, Native, Mma };
 std::mutex policy_mutex;
 Mode policy_mode = Mode::Auto;
-std::map<std::tuple<bool, int64_t, int64_t, int64_t>, bool> decisions;  // (ptq1, rows, N, K)
+std::map<std::tuple<int, int64_t, int64_t, int64_t>, bool> decisions;  // (kind, rows, N, K)
 
 }  // namespace
 
-bool short_batch_mma_selected(int cc, bool ptq1, int64_t batch_rows, int64_t out_features, int64_t in_features) {
-    if (cc < 800 || batch_rows < 2 || batch_rows > 8 || in_features % 256 != 0) {
+int short_batch_kind(const std::string & qtype_name) {
+    return qtype_name == "Q4_K" ? kKindQ4K : qtype_name == "PTQ1_0" ? kKindPtq1 : -1;
+}
+
+bool short_batch_mma_selected(int cc, int kind, int64_t batch_rows, int64_t out_features, int64_t in_features) {
+    if (cc < 800 || kind < 0 || batch_rows < 2 || batch_rows > 8 || in_features % 256 != 0) {
         return false;
     }
     std::lock_guard<std::mutex> lock(policy_mutex);
     if (policy_mode != Mode::Auto) {
         return policy_mode == Mode::Mma;
     }
-    const auto it = decisions.find({ptq1, batch_rows, out_features, in_features});
-    return it != decisions.end() ? it->second : cc == 1200;
+    const auto it = decisions.find({kind, batch_rows, out_features, in_features});
+    return it != decisions.end() ? it->second : cc == 1200;   // without a measured decision: tensor cores where they were validated
 }
 
 void short_batch_set_mode(const std::string & mode) {
@@ -497,9 +503,10 @@ std::string short_batch_mode() {
 }
 
 void short_batch_set_decision(const std::string & qtype_name, int64_t batch_rows, int64_t out_features, int64_t in_features, bool enabled) {
-    TORCH_CHECK(qtype_name == "Q4_K" || qtype_name == "PTQ1_0", "short-batch tensor-core path supports Q4_K and PTQ1_0, got ", qtype_name);
+    const int kind = short_batch_kind(qtype_name);
+    TORCH_CHECK(kind >= 0, "short-batch tensor-core path supports Q4_K and PTQ1_0, got ", qtype_name);
     std::lock_guard<std::mutex> lock(policy_mutex);
-    decisions[{qtype_name == "PTQ1_0", batch_rows, out_features, in_features}] = enabled;
+    decisions[{kind, batch_rows, out_features, in_features}] = enabled;
 }
 
 void short_batch_clear_decisions() {
@@ -507,8 +514,9 @@ void short_batch_clear_decisions() {
     decisions.clear();
 }
 
-void short_batch_mma_linear(const at::Tensor & raw_weight, bool ptq1, int64_t out_features, int64_t in_features, const at::Tensor & input, bool silu_mul, at::Tensor & output) {
+void short_batch_mma_linear(const at::Tensor & raw_weight, int kind, int64_t out_features, int64_t in_features, const at::Tensor & input, bool silu_mul, at::Tensor & output) {
     const int rows = static_cast<int>(input.size(0)), K = static_cast<int>(in_features), N = static_cast<int>(out_features);
+    const bool ptq1 = kind == kKindPtq1;
     const int64_t row_bytes = ptq1 ? static_cast<int64_t>(K / 128) * 28 : static_cast<int64_t>(K / 256) * 144;
     TORCH_CHECK(raw_weight.numel() * raw_weight.element_size() >= static_cast<int64_t>(N) * row_bytes, "GGUF weight is smaller than its logical shape");
     cudaStream_t stream = c10::cuda::getCurrentCUDAStream(input.device().index()).stream();
@@ -524,9 +532,9 @@ void short_batch_mma_linear(const at::Tensor & raw_weight, bool ptq1, int64_t ou
     }
     const uint8_t * W = static_cast<const uint8_t *>(raw_weight.data_ptr());
     switch (output.scalar_type()) {
-        case at::kFloat: dispatch_columns<float>(rows, ptq1, W, q, ds, output.data_ptr(), K, N, stream); break;
-        case at::kHalf: dispatch_columns<__half>(rows, ptq1, W, q, ds, output.data_ptr(), K, N, stream); break;
-        case at::kBFloat16: dispatch_columns<__nv_bfloat16>(rows, ptq1, W, q, ds, output.data_ptr(), K, N, stream); break;
+        case at::kFloat: dispatch_columns<float>(rows, kind, W, q, ds, output.data_ptr(), K, N, stream); break;
+        case at::kHalf: dispatch_columns<__half>(rows, kind, W, q, ds, output.data_ptr(), K, N, stream); break;
+        case at::kBFloat16: dispatch_columns<__nv_bfloat16>(rows, kind, W, q, ds, output.data_ptr(), K, N, stream); break;
         default: TORCH_CHECK(false, "Unsupported GGUF CUDA output dtype for linear: ", output.scalar_type());
     }
     C10_CUDA_KERNEL_LAUNCH_CHECK();

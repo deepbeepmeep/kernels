@@ -8,8 +8,10 @@
 // Policy: "native" keeps MMVQ, "mma" forces the tensor-core path, "auto" applies
 // per-shape decisions (set by the caller after measuring) and otherwise enables
 // it only on compute capability 12.0, where it was validated.
-bool short_batch_mma_selected(int cc, bool ptq1, int64_t batch_rows, int64_t out_features, int64_t in_features);
-void short_batch_mma_linear(const at::Tensor & raw_weight, bool ptq1, int64_t out_features, int64_t in_features, const at::Tensor & input, bool silu_mul, at::Tensor & output);
+constexpr int kKindQ4K = 0, kKindPtq1 = 1;
+int short_batch_kind(const std::string & qtype_name);   // -1: no tensor-core kernel for this type
+bool short_batch_mma_selected(int cc, int kind, int64_t batch_rows, int64_t out_features, int64_t in_features);
+void short_batch_mma_linear(const at::Tensor & raw_weight, int kind, int64_t out_features, int64_t in_features, const at::Tensor & input, bool silu_mul, at::Tensor & output);
 void short_batch_set_mode(const std::string & mode);
 std::string short_batch_mode();
 void short_batch_set_decision(const std::string & qtype_name, int64_t batch_rows, int64_t out_features, int64_t in_features, bool enabled);

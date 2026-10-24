@@ -36,6 +36,7 @@
 #include "quantize_mmq_typed.cuh"
 #if !defined(GGML_USE_HIP)
 #include "mmq_chunked.cuh"
+void gguf_cuda_mul_mat_q_bf16_switch_type(ggml_backend_cuda_context & ctx, const mmq_args & args, cudaStream_t stream);   // mmq_typed.cu
 #endif
 
 namespace {
@@ -693,6 +694,21 @@ void quantize_mmvq_q8_1_typed_cuda(const src_t * x, void * y, int64_t cols, int6
     }
 }
 
+// Whether MMQ can write this output type itself: BF16 through the MMA-layout write-back of the stream-k kernels (mmq_typed.cu), so a
+// prefill-sized linear has no FP32 product to convert. PTQ1_0 widths that are not a multiple of MMQ_ITER_K run bounded MMVQ batches.
+bool gguf_cuda_mmq_typed_output(ggml_type type, int64_t in_features, int cc, at::ScalarType output_dtype) {
+#if defined(GGML_USE_HIP)
+    GGML_UNUSED_VARS(type, in_features, cc, output_dtype);
+    return false;
+#else
+    if (output_dtype != at::kBFloat16 || (type == GGML_TYPE_PTQ1_0 && in_features % MMQ_ITER_K != 0)) {
+        return false;
+    }
+    // the typed write-back follows the MMA data layout, which Turing and later use for every tile width the launch may select
+    return ggml_cuda_mmq_get_config(type, 8, false, cc).type != GGML_TYPE_COUNT && turing_mma_available(cc);
+#endif
+}
+
 at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<int64_t> tensor_shape, at::Tensor input_2d, at::ScalarType output_dtype = at::kFloat, bool silu_mul = false) {
     const int64_t out_features = tensor_shape.at(0);
     const int64_t in_features = tensor_shape.at(1);
@@ -709,9 +725,10 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
     const int64_t padded_row = GGML_PAD(in_features, MATRIX_ROW_PADDING);
 #if !defined(GGML_USE_HIP)
-    if ((type == GGML_TYPE_Q4_K || type == GGML_TYPE_PTQ1_0) && short_batch_mma_selected(cc, type == GGML_TYPE_PTQ1_0, batch_rows, out_features, in_features)) {
+    const int short_batch = type == GGML_TYPE_Q4_K ? kKindQ4K : type == GGML_TYPE_PTQ1_0 ? kKindPtq1 : -1;
+    if (short_batch >= 0 && short_batch_mma_selected(cc, short_batch, batch_rows, out_features, in_features)) {
         // Short speculative batches: coalesced tile staging and INT8 tensor cores.
-        short_batch_mma_linear(raw_weight, type == GGML_TYPE_PTQ1_0, out_features, in_features, input, silu_mul, output);
+        short_batch_mma_linear(raw_weight, short_batch, out_features, in_features, input, silu_mul, output);
         return output;
     }
 #endif
@@ -760,7 +777,13 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
         return output;
     }
     const bool fallback = out_features % 128 != 0;
-    TORCH_CHECK(output_dtype == at::kFloat && !silu_mul, "Typed/fused output requires MMVQ dispatch");
+    TORCH_CHECK(!silu_mul, "Fused SiLU requires MMVQ dispatch");
+    const bool typed = output_dtype != at::kFloat;   // BF16 written by the kernels (gguf_cuda_mmq_typed_output)
+#if defined(GGML_USE_HIP)
+    TORCH_CHECK(!typed, "16-bit MMQ output requires CUDA");
+#else
+    TORCH_CHECK(!typed || output_dtype == at::kBFloat16, "MMQ output must be FP32 or BF16");
+#endif
 
     // The MMQ tile loader intentionally performs vectorized reads beyond the
     // logical final activation row. llama.cpp's CUDA pool supplies allocation
@@ -791,7 +814,7 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
         reinterpret_cast<const int *>(quantized_input.data_ptr()),
         nullptr,
         nullptr,
-        output.data_ptr<float>(),
+        typed ? nullptr : output.data_ptr<float>(),
         nullptr,
         in_features,
         out_features,
@@ -810,8 +833,16 @@ at::Tensor run_linear_cuda(at::Tensor raw_weight, ggml_type type, std::vector<in
         0,
         0,
         batch_rows,
+        typed ? output.data_ptr() : nullptr,
     };
-    gguf_cuda_mul_mat_q_switch_type(ctx, args, stream);
+#if !defined(GGML_USE_HIP)
+    if (typed) {
+        gguf_cuda_mul_mat_q_bf16_switch_type(ctx, args, stream);
+    } else
+#endif
+    {
+        gguf_cuda_mul_mat_q_switch_type(ctx, args, stream);
+    }
     CUDA_CHECK(cudaGetLastError());
     return output;
 }
@@ -1370,7 +1401,9 @@ at::Tensor gguf_cuda_linear(
         TORCH_CHECK(raw_weight.scalar_type() == at::kByte && raw_weight.is_contiguous() && raw_weight.numel() == tensor_shape[0] * (tensor_shape[1] / ggml_blck_size(type)) * ggml_type_size(type), "Invalid packed weight layout");
         output = run_linear_cuda(raw_weight, type, tensor_shape, input_2d, output_dtype, silu_mul);
     } else {
-        output = use_mmq ? run_linear_cuda(raw_weight, type, tensor_shape, input_2d) : run_linear_cuda_cublas(raw_weight, type, tensor_shape, input_2d, output_dtype);
+        // MMQ rows (beyond the MMVQ batch sizes) write a BF16 output themselves where the kernels support it
+        const bool typed = use_mmq && gguf_cuda_mmq_typed_output(type, tensor_shape[1], cc, output_dtype) && !ggml_cuda_should_use_mmvq(type, cc, input_2d.size(0));
+        output = use_mmq ? run_linear_cuda(raw_weight, type, tensor_shape, input_2d, typed ? output_dtype : at::kFloat) : run_linear_cuda_cublas(raw_weight, type, tensor_shape, input_2d, output_dtype);
     }
     if (output.scalar_type() != output_dtype) {
         output = output.to(output_dtype);
@@ -1430,6 +1463,14 @@ bool gguf_cuda_linear_chunked_supported(
     const at::cuda::CUDAGuard guard(int(device));
     const linear_chunked_call call = {nullptr, nullptr, nullptr, 1, in_features, out_features, 1, int(device)};
     return linear_chunked_dispatch(ggml_type_from_qtype_name(qtype_name), scalar_type_from_name(output_dtype_name), biased, call).has_value();
+#endif
+}
+
+bool gguf_cuda_has_typed_mmq() {
+#if defined(GGML_USE_HIP)
+    return false;
+#else
+    return true;
 #endif
 }
 

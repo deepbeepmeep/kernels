@@ -1,4 +1,19 @@
-# llamacpp-gguf-cuda 1.0.28
+# llamacpp-gguf-cuda 1.0.29
+
+## 1.0.29 additions: BF16 output of the MMQ kernels, PTQ1_0 tiles up to 128 columns
+
+`linear(..., output_dtype=bfloat16)` with more rows than the MMVQ batch sizes
+used to run llama.cpp's stream-k MMQ into an FP32 product and convert it
+afterwards. The MMQ kernels now write BF16 themselves: complete tiles are rounded
+once in the kernel; the FP32 partial sums of tiles split between blocks keep two
+fixup slots per block and the fixup kernel rounds their sum once, in the order of
+the FP32 path, so the results are bit for bit those of the FP32 product rounded
+to BF16 (`tests/test_mmq_typed_output.py`: 18 quantization types plus PTQ1_0,
+complete, split and edge tiles). FP16 outputs and the HIP builds keep the FP32
+product; `has_typed_mmq()` tells callers whether the path exists. The Ampere MMQ
+configuration of PTQ1_0 gains the 80, 96, 112 and 128 column tiles of Q8_0 (it
+stopped at 64), so each weight tile is decoded for as many rows as the other
+Q8_0-layout formats. The HIP wheels reuse the 1.0.28 native extensions.
 
 ## 1.0.28 additions: PTQ1_0 rows on Turing (SM75)
 
@@ -97,8 +112,8 @@ Prism's PTQ1_0 kernels are merged into the existing dispatch. The original 18 fo
 
 `prism_hadamard(input, signs, inverse=False, grouped_shape=(0, 0, 0))` applies normalized 1024-wide signed Sylvester transforms with FP32 accumulation. It supports forward/inverse transforms, the Prism GDN head permutation, FP16/BF16/FP32 inputs, PyTorch streams and CUDA graph capture. Signs are caller-owned tensors; the kernel retains no model weights or graph buffers. WanGP also needs its matching Prism GGUF metadata/loader integration: decoding ternary bytes alone does not correctly run a folded checkpoint.
 
-The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Compilation coverage is not hardware testing on every GPU model. See `release/1.0.27/README.md` for the final build and validation records of the native extensions, and `release/1.0.28/README.md`
-for the 1.0.28 wheels, which reuse them.
+The release builds cover Windows and Linux on both stacks in the target table below. All three native extensions contain the toolkit-wide SASS targets and highest-target PTX. Compilation coverage is not hardware testing on every GPU model. See `release/1.0.29/README.md` for the build and validation records of the 1.0.29 wheels (CUDA native extensions rebuilt, HIP
+extensions of 1.0.28), and `release/1.0.27/README.md` / `release/1.0.28/README.md` for the earlier ones.
 
 The separate native `_prism` extension fuses signed FWHT, Q8 activation preparation and PTQ1 matrix-vector decoding. It is built for the same architecture set as the other extensions. WanGP enables automatic fused-decode selection on SM120, with a numerical check and launch comparison before CUDA graph capture. Other architectures use the packed PTQ1 path.
 

@@ -161,6 +161,11 @@ def has_short_batch_policy() -> bool:
     return hasattr(_C, "set_short_batch_mode")
 
 
+def has_typed_mmq() -> bool:
+    """Whether MMQ linears (beyond the MMVQ batch sizes) write BF16 outputs in the kernel: no FP32 product, no conversion pass."""
+    return hasattr(_C, "has_typed_mmq") and bool(_C.has_typed_mmq())
+
+
 def set_short_batch_mode(mode: str) -> None:
     """auto: per-shape decisions, else on for compute capability 12.0 only; native: MMVQ; mma: tensor cores (8.0+)."""
     # Validate here: a native check failure terminates the process on Linux builds instead of raising.
