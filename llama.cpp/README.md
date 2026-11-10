@@ -1,4 +1,44 @@
-# llamacpp-gguf-cuda 1.0.29
+# llamacpp-gguf-cuda 1.0.30
+
+## 1.0.30 additions: multi-row IQ3_S / IQ2_S kernels, draft-head candidates, bounded batched reads
+
+All three are in the Python package and in kernels compiled at first use with NVRTC
+(the run-time compiler PyTorch installs), like the Turing kernels: the native
+extensions are those of 1.0.29, byte for byte, and no compiler is needed on the
+user's machine. The two new kernels are eligible only where NVRTC loads.
+
+**IQ3_S / IQ2_S with 1 to 8 rows** (`_iq_rows.cu`). llama.cpp's MMVQ decodes
+each block of these formats (grid lookups, signs) once per activation row, so the
+rows of a speculative verification cost almost as much as separate passes. The
+new kernels decode each block once for all the rows of a call: a DP4A variant
+from compute capability 6.1 and INT8 tensor-core variants with `cp.async` staging
+from 8.0 (`mma`, `mma2`, `mma2x2`). A row does not depend on the other rows of
+its call, and the error against an FP64 reference is within 1% of MMVQ's on
+ordinary inputs and far below it at the extremes (the activation scale stays in
+FP32). Which variant serves a weight shape and a row count is the caller's
+measured decision (`iq_rows_variants`, `set_iq_rows_decision`,
+`iq_rows_revision`); without one the package uses a tensor-core variant on
+compute capability 12.0 and MMVQ elsewhere. `LLAMACPP_GGUF_IQ_ROWS=0` turns the
+kernels off.
+
+**Draft-head candidates** (`_head_candidates.cu`, compute capability 5.0+).
+`head_sign_bits` makes a one-bit copy of an output head (a sign per weight and a
+scale per row), `head_group_bits` lays it out for the kernel, and
+`head_candidates` returns, for one hidden state, the best rows of each group of
+rows by that copy. A caller that drafts tokens scores only those rows exactly
+with the regular kernels instead of the whole head. `has_head_candidates(device)`
+tells whether the GPU is served.
+
+**Bounded batched reads.** The batched kernel (MMQ) takes a weight row by steps
+of 256 values; a row of 32-value blocks (Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, IQ4_NL)
+whose width is not a multiple of 256 was read past its end, and for the last
+rows past the end of the weight: a value that is not finite or an illegal
+access, depending on the memory that follows. `linear` now serves the last rows
+of such a weight from a copy followed by zero blocks (same kernel, same
+results) and `linear_chunked` leaves these weights to `linear`.
+`has_bounded_batched_reads()` tells callers the package does this itself.
+Formats of 256-value blocks and widths that are multiples of 256 were never
+affected.
 
 ## 1.0.29 additions: BF16 output of the MMQ kernels, PTQ1_0 tiles up to 128 columns
 

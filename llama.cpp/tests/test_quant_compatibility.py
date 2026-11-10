@@ -7,6 +7,12 @@ import torch
 import llamacpp_gguf_cuda as kernels
 from validate_release import QTYPES, packed_fixture
 
+if hasattr(kernels, 'iq_rows_revision'):
+    # The multi-row IQ3_S / IQ2_S kernels (1.0.30) are not MMVQ bit for bit: test_iq_rows.py holds their criteria. This snapshot
+    # compares the kernels both packages have.
+    from llamacpp_gguf_cuda import _iq_rows
+    _iq_rows.enabled = False
+
 
 @torch.inference_mode()
 def snapshot():

@@ -34,6 +34,16 @@ def _libraries():
     return rtc, driver
 
 
+@functools.cache
+def available():
+    """Whether the run-time compiler and the driver library load here: the kernels compiled from source need both."""
+    try:
+        _libraries()
+    except OSError:
+        return False
+    return True
+
+
 def _check(status, library, compiler=False):
     if status:
         if compiler:
