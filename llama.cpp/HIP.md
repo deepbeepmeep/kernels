@@ -27,7 +27,8 @@ keep their existing row slices.
 
 The HIP wheels now target the ROCm 10 stack on Windows and Linux x86-64:
 Python 3.12, PyTorch 2.13.0+rocm10.0.0 and the ROCm SDK 10.0.0 Python packages,
-for gfx1200 and gfx1201 (RDNA4). The build rejects other PyTorch and Python
+for RDNA3 (gfx1100, gfx1101, gfx1102, gfx1103, since the 1.0.30 HIP rebuild)
+and RDNA4 (gfx1200, gfx1201). The build rejects other PyTorch and Python
 versions; the wheel records and checks the exact ROCm PyTorch build at import.
 Wheels carry the `+torch213rocm100py312` version suffix. The earlier Python
 3.11 / PyTorch 2.10.0+rocm7.14.0 wheels remain available in the 1.0.25 and
@@ -55,7 +56,7 @@ their environment directly; it does not invoke vcvars64.bat:
 .\build_hip.ps1 -Python <environment>\python.exe -OutputDirectory <dist>
 ```
 
-`-Architectures` overrides the default `gfx1200;gfx1201`. Other architectures
+`-Architectures` overrides the default `gfx1100;gfx1101;gfx1102;gfx1103;gfx1200;gfx1201`. Other architectures
 require matching SDK device assets and their own validation.
 
 ## Reproduce on Linux
@@ -70,7 +71,7 @@ mamba create -p /opt/gcc13-sysroot228 -c conda-forge gcc_linux-64=13 gxx_linux-6
 T=/opt/gcc13-sysroot228
 G=$(echo $T/lib/gcc/x86_64-conda-linux-gnu/13.*)
 SDK=<environment>/lib/python3.12/site-packages/_rocm_sdk_devel
-export ROCM_HOME=$SDK HIP_PATH=$SDK PYTORCH_ROCM_ARCH='gfx1200;gfx1201'
+export ROCM_HOME=$SDK HIP_PATH=$SDK PYTORCH_ROCM_ARCH='gfx1100;gfx1101;gfx1102;gfx1103;gfx1200;gfx1201'
 export CC=$T/bin/x86_64-conda-linux-gnu-g++ CXX=$T/bin/x86_64-conda-linux-gnu-g++ LDSHARED="$T/bin/x86_64-conda-linux-gnu-g++ -shared"
 export LLAMACPP_GGUF_HIP_EXTRA_FLAGS="--sysroot=$T/x86_64-conda-linux-gnu/sysroot -nostdinc++ -isystem $G/include/c++ -isystem $G/include/c++/x86_64-conda-linux-gnu -isystem $G/include/c++/backward"
 export PATH=$SDK/bin:$SDK/lib/llvm/bin:<environment>/bin:$PATH

@@ -109,15 +109,31 @@ reads, which apply everywhere).
 | Linux x86-64 | 3.10 | 2.7.1 | CUDA 12.8 | SM50-SM120 (17 SASS) + PTX |
 | Windows x86-64 | 3.11 | 2.10.0 | CUDA 13.0 | SM75-SM121 (12 SASS) + PTX |
 | Linux x86-64 | 3.11 | 2.10.0 | CUDA 13.0 | SM75-SM121 (12 SASS) + PTX |
-| Windows x86-64 | 3.12 | 2.13.0+rocm10.0.0 | ROCm 10 | gfx1200, gfx1201 |
-| Linux x86-64 | 3.12 | 2.13.0+rocm10.0.0 | ROCm 10 | gfx1200, gfx1201 |
+| Windows x86-64 | 3.12 | 2.13.0+rocm10.0.0 | ROCm 10 | gfx1100, gfx1101, gfx1102, gfx1103, gfx1200, gfx1201 |
+| Linux x86-64 | 3.12 | 2.13.0+rocm10.0.0 | ROCm 10 | gfx1100, gfx1101, gfx1102, gfx1103, gfx1200, gfx1201 |
 
 The six wheels are the published 1.0.29 wheels with the Python package of this
 source: `__init__.py`, `_cuda_jit.py`, `version.py` and the new `_iq_rows.py`,
 `_head_candidates.py` and, in the CUDA wheels, their `.cu` sources (the HIP
 wheels carry no CUDA source, as before), plus the version and README in the
 metadata. Every other file, the native extensions and GPU binaries
-included, is byte-identical to 1.0.29.
+included, is byte-identical to 1.0.29, except
+the HIP native extensions, rebuilt for RDNA3 (below).
+
+## HIP wheels rebuilt for RDNA3
+
+The two HIP wheels were rebuilt from this source to add RDNA3 (gfx1100, gfx1101,
+gfx1102, gfx1103: Radeon RX 7600 to RX 7900 series and Radeon 780M / 760M)
+beside RDNA4. Their native extensions are compiled from the same sources as the
+1.0.29 HIP binaries (no native source changed in 1.0.30), now for six
+architectures; the Python package is unchanged. The wheel names and the
+`+torch213rocm100py312` version suffix stay the same, so installers that already
+point at these wheels need no change.
+
+Both wheels contain code objects for the six architectures in each of their three
+extensions and import under PyTorch 2.13.0+rocm10.0.0; the Linux wheel needs
+glibc 2.14 and GLIBCXX 3.4.21 or newer. Execution on AMD GPUs, numerical results
+and performance have not been validated.
 
 ## Validation results
 

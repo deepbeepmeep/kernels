@@ -163,8 +163,9 @@ Validation scripts: `tests/test_quant_compatibility.py` compares saved old-forma
 
 The maintained kernels also have a HIP build covering the local GGUF/PTQ1,
 Prism and paged-attention changes. See [HIP.md](HIP.md) for the Windows and
-Linux builds, hardware validation command and current limitations. The 1.0.27
-wheels target Python 3.12 / PyTorch 2.13.0+rocm10.0.0 for gfx1200 and gfx1201;
+Linux builds, hardware validation command and current limitations. The HIP
+wheels target Python 3.12 / PyTorch 2.13.0+rocm10.0.0 for RDNA3 (gfx1100-gfx1103)
+and RDNA4 (gfx1200, gfx1201);
 they have been compiled and imported, and AMD inference has not yet been
 hardware-validated. CUDA packed-row and row-loop additions are not included.
 
