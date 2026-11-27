@@ -1,0 +1,230 @@
+{
+  "version": "1.0.31",
+  "cuda_device": "GeForce RTX 5090 (SM120), Windows and WSL2 Linux",
+  "hip_validation": "Both ROCm 10 wheels imported in their matching PyTorch 2.13 / Python 3.12 environments. Entry points from extracted RDNA3 and RDNA4 code objects executed on a tinygrad CPU ISA emulator with ELF PC-relative addressing and coherent-memory cache invalidates. Results compared with independent gguf-py/NumPy references. Physical AMD execution and performance were not measured.",
+  "unchanged_native": "All pre-existing package binary payloads match the confirmed hashes of the public 1.0.30 wheels. Each target adds a newly compiled routed_iq library.",
+  "wheels": [
+    {
+      "target": "linux130",
+      "name": "llamacpp_gguf_cuda-1.0.31+torch210cu130py311-cp311-cp311-linux_x86_64.whl",
+      "size": 270613619,
+      "sha256": "4107e5dfdc74834c9eb977dbc63638e2b6ab2646ee038b7eedae34e57ff0aa60",
+      "native_sha256": "b83a4c89ea13fe74f3e614195f607d9cff1efa110a6b0628e86139a95bd30e05",
+      "parent_sha256": "61703e2079a2ba70321318a64016206a01a66ae9d742fab2fdba5e6974dd1ca6",
+      "import_validated": true,
+      "cuda_tests": "58 passed in 23.07s",
+      "images": [
+        "75",
+        "80",
+        "86",
+        "87",
+        "88",
+        "89",
+        "90",
+        "100",
+        "103",
+        "110",
+        "120",
+        "121"
+      ]
+    },
+    {
+      "target": "win130",
+      "name": "llamacpp_gguf_cuda-1.0.31+torch210cu130py311-cp311-cp311-win_amd64.whl",
+      "size": 258701790,
+      "sha256": "f17d9975671912fe44ba69ed92d35eca07dc5a4067d32b28eee2aa57b453b96e",
+      "native_sha256": "8e4ed47f71d7e07333209e9e03ce04a652b1de40be0555f1e6048004c63f78f7",
+      "parent_sha256": "569b6bb24575909abc159f5f21c43b9a2d9bf08ec2071ad9fc22344c501367ee",
+      "import_validated": true,
+      "cuda_tests": "58 passed in 27.32s",
+      "images": [
+        "75",
+        "80",
+        "86",
+        "87",
+        "88",
+        "89",
+        "90",
+        "100",
+        "103",
+        "110",
+        "120",
+        "121"
+      ]
+    },
+    {
+      "target": "linux128",
+      "name": "llamacpp_gguf_cuda-1.0.31+torch271cu128py310-cp310-cp310-linux_x86_64.whl",
+      "size": 393965816,
+      "sha256": "a1b523d56bfe3e32eb4c581746141b54cdc6c94c0f288aaa126caaf1058f5d61",
+      "native_sha256": "bc4cf558f8184af3dcbc5d41df59e5ccb292040a12db3d0451fdb77f720df866",
+      "parent_sha256": "dcbaec84a8a36649fb61f0dac97a49a5d867665fec4cdde384a328540d404c9f",
+      "import_validated": true,
+      "cuda_tests": "58 passed in 20.97s",
+      "images": [
+        "61",
+        "62",
+        "70",
+        "72",
+        "75",
+        "80",
+        "86",
+        "87",
+        "89",
+        "90",
+        "100",
+        "101",
+        "120"
+      ]
+    },
+    {
+      "target": "win128",
+      "name": "llamacpp_gguf_cuda-1.0.31+torch271cu128py310-cp310-cp310-win_amd64.whl",
+      "size": 382385824,
+      "sha256": "280b8523dfe488099d525480ac1ca286a380e27aabcebfaaec97c6ad34a36bcc",
+      "native_sha256": "44064070ee14429022fa5b298d5c3f3b03a51fd652526c072832d532e861ef1f",
+      "parent_sha256": "166191d3f4e821fa937f3dda6d295e2de8c908b88745fbd78e1d8e5333f79b13",
+      "import_validated": true,
+      "cuda_tests": "58 passed in 32.21s",
+      "images": [
+        "61",
+        "62",
+        "70",
+        "72",
+        "75",
+        "80",
+        "86",
+        "87",
+        "89",
+        "90",
+        "100",
+        "101",
+        "120"
+      ]
+    },
+    {
+      "target": "linuxhip",
+      "name": "llamacpp_gguf_cuda-1.0.31+torch213rocm100py312-cp312-cp312-linux_x86_64.whl",
+      "size": 31660268,
+      "sha256": "430453e12e58a4084eb360c2656188631a4cf4446454c06e23dff69545d211af",
+      "native_sha256": "ba580e40b6a90c8881f39ca12b27c35a86bbbb9caa869ac1a11ae9dfae6ceff0",
+      "parent_sha256": "a8220812730fcf9efd279fe6604c5276e5a490aa146eedf52ac315906238b725",
+      "import_validated": true,
+      "images": [
+        "gfx1100",
+        "gfx1101",
+        "gfx1102",
+        "gfx1103",
+        "gfx1200",
+        "gfx1201"
+      ]
+    },
+    {
+      "target": "winhip",
+      "name": "llamacpp_gguf_cuda-1.0.31+torch213rocm100py312-cp312-cp312-win_amd64.whl",
+      "size": 27420990,
+      "sha256": "68374d5ebd2df2a5f9f173a3ff922c5d57f05e2154f50de7bcd14cc8908e0d94",
+      "native_sha256": "0b37dd6fadb9895f3ffe3ad28702c71450ea5c2d75f24b45fd56fa3b5111dafc",
+      "parent_sha256": "f0f82f60c7f6dcaf31adac6a59fee9f442c66081148e201b72a2b8cefb3f5133",
+      "import_validated": true,
+      "images": [
+        "gfx1100",
+        "gfx1101",
+        "gfx1102",
+        "gfx1103",
+        "gfx1200",
+        "gfx1201"
+      ]
+    }
+  ],
+  "amd_isa": {
+    "Linux gfx1100": {
+      "activation_pack": true,
+      "code_object_sha256": "89722540f2d85e8cb31d6fc216bffd750d582a5087429659ebf0b32e491d958b",
+      "dot_relative_rms": {
+        "42": 0.0037532,
+        "20": 0.0059729,
+        "19": 0.009657,
+        "29": 0.0078933,
+        "16": 0.0083,
+        "17": 0.0068334,
+        "22": 0.0068074,
+        "18": 0.0038579
+      },
+      "matrix_relative_rms": {
+        "19": 0.0005639,
+        "29": 0.0003518,
+        "16": 0.0003297,
+        "17": 0.0007359,
+        "22": 0.0006433,
+        "18": 0.0003217
+      }
+    },
+    "Linux gfx1201": {
+      "activation_pack": true,
+      "code_object_sha256": "58484cb8324349b82062d8c0521570cae7f1566a1847fc61215b2e01ec46520a",
+      "dot_relative_rms": {
+        "42": 0.0037532,
+        "20": 0.0059729,
+        "19": 0.009657,
+        "29": 0.0078933,
+        "16": 0.0083,
+        "17": 0.0068334,
+        "22": 0.0068074,
+        "18": 0.0038579
+      },
+      "matrix_relative_rms": {
+        "19": 0.000564,
+        "29": 0.0003519,
+        "16": 0.0003297,
+        "17": 0.0007358,
+        "22": 0.0006433,
+        "18": 0.0003217
+      }
+    },
+    "Windows gfx1100": {
+      "activation_pack": true,
+      "code_object_sha256": "be14b8c5ff20030c5a58c26b1ef1eaf7e95a2bc950b013cb1f4f7a1a8d41f016",
+      "dot_relative_rms": {
+        "42": 0.0037532,
+        "20": 0.0059729,
+        "19": 0.009657,
+        "29": 0.0078933,
+        "16": 0.0083,
+        "17": 0.0068334,
+        "22": 0.0068074,
+        "18": 0.0038579
+      },
+      "matrix_relative_rms": {
+        "19": 0.0005639,
+        "29": 0.0003518,
+        "16": 0.0003297,
+        "17": 0.0007359,
+        "22": 0.0006433,
+        "18": 0.0003217
+      }
+    },
+    "Windows gfx1201": {
+      "activation_pack": true,
+      "code_object_sha256": "2c0b16bfccc68d24e19889abe03b7aab845301bb1d9397b449b320d076872472",
+      "dot_relative_rms": {
+        "42": 0.0037532,
+        "20": 0.0059729,
+        "19": 0.009657,
+        "29": 0.0078933,
+        "16": 0.0083,
+        "17": 0.0068334,
+        "22": 0.0068074,
+        "18": 0.0038579
+      },
+      "matrix_relative_rms": {
+        "19": 0.000564,
+        "29": 0.0003519,
+        "16": 0.0003297,
+        "17": 0.0007358,
+        "22": 0.0006433,
+        "18": 0.0003217
+      }
+    }
+  }
+}

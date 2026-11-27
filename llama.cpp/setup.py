@@ -74,7 +74,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 ROOT = Path(__file__).resolve().parent
 CSRC = Path("csrc")
 GGML = Path("_vendor") / "llama.cpp" / "ggml"
-BASE_VERSION = "1.0.30"
+BASE_VERSION = "1.0.31"
 VERSION_SUFFIX = os.environ.get("LLAMACPP_GGUF_CUDA_VERSION_SUFFIX", "").strip()
 PACKAGE_VERSION = BASE_VERSION + VERSION_SUFFIX
 PACKAGE_DESCRIPTION = os.environ.get("LLAMACPP_GGUF_CUDA_DESCRIPTION", "Reusable GGUF CUDA kernels built from llama.cpp CUDA code paths.")
@@ -199,6 +199,13 @@ class PortableBuildExtension(BuildExtension):
                 if hasattr(self.compiler, name):
                     setattr(self.compiler, name, [flag for flag in getattr(self.compiler, name) if not flag.startswith("-Wl,-rpath,")])
         super().build_extensions()
+        from scripts.build_routed_iq import build
+        binary = "routed_iq.dll" if os.name == "nt" else "librouted_iq.so"
+        package = Path(self.get_ext_fullpath("llamacpp_gguf_cuda._C")).parent
+        nvcc = Path(os.environ["CUDA_HOME"]) / "bin" / ("nvcc.exe" if os.name == "nt" else "nvcc")
+        targets = os.environ.get("TORCH_CUDA_ARCH_LIST", "").replace(";", " ").split()
+        archs = [t.removesuffix("+PTX").replace(".", "") for t in targets]
+        build(nvcc, package / binary, [a for a in archs if a.isdigit() and int(a) >= 61] or None)
 
 
 setup(

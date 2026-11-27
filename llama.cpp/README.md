@@ -1,4 +1,22 @@
-# llamacpp-gguf-cuda 1.0.30
+# llamacpp-gguf-cuda 1.0.31
+
+## Routed IQ experts for Inkling 2 Mini
+
+The six CUDA and ROCm wheels include an ahead-of-time compiled library for the
+mixed-format experts in GSQ-RCO Q2_K_XL. Each expert supplies gate, up and down
+addresses. The gate and up rows use IQ1_S, IQ1_M, IQ2_XXS, IQ2_XS, IQ2_S or
+IQ3_XXS. Down rows use Q2_0 or IQ4_NL. A zero address skips the expert so the
+host can compute the remaining part of a token.
+
+Short passes use packed integer dot products and FP32 accumulation. Dense
+routing groups in prompts reuse each decoded weight tile over 16 tokens with
+NVIDIA tensor cores or AMD wave matrix instructions. The gate kernel applies
+the separate gate and up soft caps. The decode entry point supports CUDA graph
+replay. The ROCm builds contain device code for gfx1100–gfx1103 and
+gfx1200–gfx1201.
+
+Run `python -m pytest tests/test_routed_iq.py` in the installed wheel's GPU
+environment to compare every expert-format combination with gguf-py.
 
 ## 1.0.30 additions: multi-row IQ3_S / IQ2_S kernels, draft-head candidates, bounded batched reads
 

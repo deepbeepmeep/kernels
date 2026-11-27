@@ -34,7 +34,7 @@ def build_hip():
 
     for folder in ('csrc', '_vendor'):
         shutil.copytree(root / folder, stage / folder, dirs_exist_ok=True, copy_function=copy_changed)
-    sources = [str(stage / 'csrc' / p.name) for p in (root / 'csrc').glob('*') if p.suffix in ('.cu', '.cpp', '.h') and p.name != 'sm120_bindings.cpp']
+    sources = [str(stage / 'csrc' / p.name) for p in (root / 'csrc').glob('*') if p.suffix in ('.cu', '.cpp', '.h') and p.name not in ('sm120_bindings.cpp', 'routed_iq.cu')]
     converted = hipify_python.hipify(project_directory=str(stage), output_directory=str(stage), includes=[str(stage / 'csrc' / '*')], ignores=[str(stage / '_vendor' / '*')], extra_files=sources, is_pytorch_extension=True, hipify_extra_files_only=True, show_detailed=False)
     # hipify rewrites some headers in place; unchanged generated headers should
     # not force every GGML template to be compiled again on the next build.
@@ -94,6 +94,13 @@ def build_hip():
                     if hasattr(self.compiler, name):
                         setattr(self.compiler, name, [flag for flag in getattr(self.compiler, name) if not flag.startswith('-Wl,-rpath,')])
             super().build_extensions()
+            from scripts.build_routed_iq import build
+            from torch.utils.cpp_extension import ROCM_HOME
+            package = Path(self.get_ext_fullpath("llamacpp_gguf_cuda._C")).parent
+            binary = "routed_iq.dll" if os.name == "nt" else "librouted_iq.so"
+            compiler = Path(ROCM_HOME) / "bin" / ("hipcc.exe" if os.name == "nt" else "hipcc")
+            targets = os.environ.get("PYTORCH_ROCM_ARCH", "").replace(";", " ").split()
+            build(compiler, package / binary, targets or None)
 
     (root / build_base).mkdir(parents=True, exist_ok=True)
     setup(version=version, description='GGUF HIP kernels including WanGP PTQ1, Prism and paged attention.', packages=find_packages(where='src'), package_dir={'': 'src'}, include_package_data=False, options={'build': {'build_base': build_base}, 'egg_info': {'egg_base': build_base}}, ext_modules=extensions, cmdclass={'build_ext': HIPBuildExtension, 'build_py': HIPBuildPy}, license_files=['_vendor/llama.cpp/LICENSE', '_vendor/llama.cpp/ggml/LICENSE'], zip_safe=False)
